@@ -1,0 +1,12 @@
+{
+  "appName": "Houmi Studio",
+  "appVersion": "1.0.0",
+  "patchVersion": "1.0.0-p1",
+  "releaseDate": "2026-08-31T15:44:32.748059+00:00",
+  "sourceCommit": "88feaece7535715bc5b1e270060801510dcb96e9",
+  "compatibleFrom": "1.0.0",
+  "archiveName": "houmi-v1.0.0-p1.zip",
+  "sha256": "f099f8d14791cbc85c8092ad1a4dc1af868042868eedf6893adb27ac9ef6da6f",
+  "sizeBytes": 827239,
+  "totalFiles": 136
+}
