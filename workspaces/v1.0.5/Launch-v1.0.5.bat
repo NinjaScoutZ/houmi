@@ -34,14 +34,16 @@ if not exist "%~dp0frontend\dist\index.html" (
     )
 )
 
-echo [*] [1/2] Starting Python Local AI Engine & Real-Time Debug Console...
-echo [*] [2/2] Launching Native GPU-Accelerated Desktop Studio Window...
+echo [*] [1/2] Starting Native Tauri v2 Rust Host + AI Sidecar Supervisor...
+echo [*] [2/2] Launching Native GPU-Accelerated Tauri Studio Window...
 echo.
 
-if exist "%~dp0backend\.venv\Scripts\python.exe" (
+if exist "%~dp0frontend\src-tauri\target\debug\houmi-studio.exe" (
+    start "Houmi Studio v1.0.5 (Tauri v2)" /D "%~dp0frontend\src-tauri" "%~dp0frontend\src-tauri\target\debug\houmi-studio.exe"
+) else if exist "%~dp0frontend\src-tauri\target\release\houmi-studio.exe" (
+    start "Houmi Studio v1.0.5 (Tauri v2)" /D "%~dp0frontend\src-tauri" "%~dp0frontend\src-tauri\target\release\houmi-studio.exe"
+) else if exist "%~dp0backend\.venv\Scripts\python.exe" (
     start "Houmi Studio v1.0.5" /D "%~dp0" "%~dp0backend\.venv\Scripts\python.exe" "%~dp0run_desktop.py"
-) else if exist "%~dp0..\..\backend\.venv\Scripts\python.exe" (
-    start "Houmi Studio v1.0.5" /D "%~dp0" "%~dp0..\..\backend\.venv\Scripts\python.exe" "%~dp0run_desktop.py"
 ) else (
     start "Houmi Studio v1.0.5" /D "%~dp0" python.exe "%~dp0run_desktop.py"
 )

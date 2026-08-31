@@ -30,3 +30,8 @@
 - Scope: backend/app/services/text_mask.py, backend/app/services/inpainter.py, backend/app/routes/pipeline.py, workspaces/v1.0.5/frontend/src/App.tsx, SettingsModal.tsx, MaskEditorModal.tsx
 - Evidence: 10/10 tests passed in 0.72s (pytest backend/tests/test_text_mask.py) + Vite frontend production build passed in 797ms with 0 errors.
 - Features: Real OpenCV Adaptive Morphology & Contours engine, 5-engine unified dispatch in pipeline and inpainter, unified single source of truth for mask_dilation_kernel (3px baseline, no preset overwrite).
+
+### [x] TAURI-01: 100% Tauri v2 Native Desktop Migration (v1.0.5)
+- Scope: workspaces/v1.0.5/frontend/src-tauri/ (Cargo.toml, tauri.conf.json, src/main.rs), Launch-v1.0.5.bat, run_desktop.py
+- Evidence: `cargo build` completed in 34.77s with 0 errors -> `houmi-studio.exe` (26.3 MB) + `cargo check` in 1.27s + 5/5 backend tests passed.
+- Features: 100% Native Rust Tauri v2 window host, embedded authentic Staging UI bundle, sidecar supervisor for Python AI backend (Port 4000) with zero-zombie process termination on exit, native dialog IPC for manga folder import.

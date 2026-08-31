@@ -1,11 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Houmi Studio",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "identifier": "com.houmi.studio",
   "build": {
-    "beforeDevCommand": "npm run dev -- --host 127.0.0.1",
-    "devUrl": "http://127.0.0.1:5173",
     "frontendDist": "../dist"
   },
   "app": {
@@ -13,15 +11,17 @@
       {
         "label": "main",
         "title": "Houmi Studio",
-        "width": 1440,
-        "height": 920,
-        "minWidth": 1024,
-        "minHeight": 700,
-        "useHttpsScheme": true
+        "width": 1500,
+        "height": 960,
+        "minWidth": 1100,
+        "minHeight": 720,
+        "resizable": true,
+        "fullscreen": false,
+        "useHttpsScheme": false
       }
     ],
     "security": {
-      "csp": "default-src 'self' ipc: http://ipc.localhost; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:4317 http://127.0.0.1:4000 ws://127.0.0.1:4317 ws://127.0.0.1:4000 https://houmi.click wss://houmi.click; img-src 'self' asset: http://asset.localhost http://127.0.0.1:4317 http://127.0.0.1:4000 blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'"
+      "csp": "default-src 'self' ipc: http://ipc.localhost; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:4000 ws://127.0.0.1:4000 http://127.0.0.1:2322 https://houmi.click wss://houmi.click; img-src 'self' asset: http://asset.localhost http://127.0.0.1:4000 blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'"
     }
   },
   "bundle": {
@@ -32,7 +32,7 @@
       "msi"
     ],
     "icon": [
-      "../src/assets/hero.png"
+      "icons/icon.ico"
     ],
     "externalBin": [
       "binaries/houmi-local"

@@ -347,9 +347,30 @@ def main():
     if not server_ready:
         print("Warning: Backend server did not respond in 30s, opening window anyway...")
 
+    # Check for headless sidecar mode (for Tauri v2 host)
+    if "--headless" in sys.argv or os.environ.get("HOUMI_HEADLESS") == "1":
+        print("[INFO] Running in headless sidecar mode for Tauri v2 host...")
+        try:
+            while True:
+                time.sleep(1)
+        except (KeyboardInterrupt, SystemExit):
+            pass
+        server_thread.shutdown()
+        if proxy_proc:
+            try:
+                import psutil
+                parent = psutil.Process(proxy_proc.pid)
+                for child in parent.children(recursive=True):
+                    child.terminate()
+                parent.terminate()
+            except Exception:
+                pass
+        sys.exit(0)
+
+    # 3. Create Webview window
+    print("Launching Desktop Webview window...")
     try:
         # 2. Start pywebview window pointing to localhost with registered desktop JS API
-        print("Launching Desktop Webview window...")
         api = DesktopApi()
         port = int(os.environ.get("HOUMI_PORT", "4000"))
         webview.create_window(
