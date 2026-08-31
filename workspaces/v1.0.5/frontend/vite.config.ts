@@ -19,6 +19,17 @@ export default defineConfig({
     __HOUMI_RELEASE_CHANNEL__: JSON.stringify(releaseChannel),
     __HOUMI_UPDATES_ENABLED__: JSON.stringify(updatesEnabled),
   },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/index.js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/index.[ext]',
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,
