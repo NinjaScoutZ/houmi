@@ -1,0 +1,538 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Silkscreen:wght@400;700&family=VT323&display=swap');
+@import "tailwindcss";
+
+:root {
+  font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #f8fafc;
+  background-color: #09090b; /* Obsidian Black */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  /* Dark charcoal black with warm yellow ambient glow */
+  background: radial-gradient(circle at 0% 0%, #1e1b12 0%, #09090b 70%, #020203 100%);
+  overflow: hidden;
+}
+
+/* Premium Minimalistic Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(63, 63, 70, 0.4); /* Zinc 700 with opacity */
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 191, 36, 0.6); /* Amber hover */
+}
+
+/* UI Utilities & Glassmorphism System */
+.glass-panel {
+  background: rgba(18, 18, 22, 0.75); /* Charcoal glass */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06); /* Ultra thin soft border */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.glass-panel-heavy {
+  background: rgba(12, 12, 15, 0.92);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+}
+
+.accent-glow {
+  box-shadow: 0 0 20px rgba(254, 240, 138, 0.08);
+}
+
+.glow-btn {
+  background: #eab308; /* Yellow accent */
+  border: 1px solid #eab308;
+  box-shadow: 0 2px 8px rgba(234, 179, 8, 0.15);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
+}
+
+.glow-btn:hover {
+  background: #fbbf24;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.25);
+}
+
+.glow-btn:active {
+  transform: translateY(0.5px);
+}
+
+/* Cosmic Ambient Glow Behind Canvas */
+.cosmic-glow {
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(234, 179, 8, 0.04) 0%, rgba(251, 191, 36, 0.01) 60%, rgba(0, 0, 0, 0) 100%);
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glassmorphism Cards & Panels */
+.card-glass {
+  background: rgba(9, 9, 11, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-glass:hover {
+  border-color: rgba(234, 179, 8, 0.12);
+  background: rgba(9, 9, 11, 0.5);
+  box-shadow: 0 12px 40px 0 rgba(234, 179, 8, 0.03);
+}
+
+/* Premium Neon Border */
+.neon-shadow {
+  box-shadow: 0 0 35px rgba(234, 179, 8, 0.04), inset 0 0 15px rgba(255, 255, 255, 0.01);
+}
+
+/* Glass Inputs & Textareas */
+.input-glass {
+  background: rgba(3, 7, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.input-glass:focus {
+  border-color: rgba(234, 179, 8, 0.4);
+  box-shadow: 0 0 14px rgba(234, 179, 8, 0.1);
+  background: rgba(9, 9, 11, 0.85);
+  outline: none;
+}
+
+/* Hover Zoom Actions with Smooth Transitions */
+.hover-zoom {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-zoom:hover {
+  transform: scale(1.025) translateY(-0.5px);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Micro-animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.95; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.015); }
+}
+
+.pulse {
+  animation: pulse-slow 4.5s infinite ease-in-out;
+}
+
+/* Status Badges */
+.badge-active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(4, 120, 87, 0.02) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.badge-pending {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(180, 83, 9, 0.02) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+/* Canvas Background Grid (Houzi Premium Obsidian Grid) */
+.canvas-grid-bg {
+  background-color: #060608;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.06), transparent 50%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 24px 24px, 24px 24px;
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 1.2s linear infinite;
+}
+
+/* Smooth Transitions for tabs and clicks */
+.tab-transition {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Entrance Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.975); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.checkered-mask-grid {
+  background-color: #09090b;
+  background-image: 
+    linear-gradient(45deg, #18181b 25%, transparent 25%), 
+    linear-gradient(-45deg, #18181b 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #18181b 75%), 
+    linear-gradient(-45deg, transparent 75%, #18181b 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+
+.font-pixel {
+  font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+}
+
+.font-pixel-large {
+  font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+}
+
+/* Custom modern minimal black & yellow elements */
+.pixel-panel {
+  background: #121214;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+.pixel-panel-header {
+  background: #18181b;
+  border-bottom: 1px solid #27272a;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Secondary Actions / Normal Steps (Sleek Dark button with Yellow hover highlights) */
+.pixel-btn-purple {
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #d4d4d8;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.pixel-btn-purple:hover:not(:disabled) {
+  background: #27272a;
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.08);
+}
+
+.pixel-btn-purple:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pixel-btn-purple:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Primary Highlights / Run Batch (Vibrant Yellow style) */
+.pixel-btn-magenta {
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  border: 1px solid #eab308;
+  color: #09090b;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 6px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(234, 179, 8, 0.15);
+}
+
+.pixel-btn-magenta:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fbbf24 0%, #eab308 100%);
+  border-color: #fbbf24;
+  box-shadow: 0 4px 16px rgba(234, 179, 8, 0.3);
+}
+
+.pixel-btn-magenta:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pixel-btn-magenta:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Tertiary / Training Actions */
+.pixel-btn-green {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  color: #f4f4f5;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.pixel-btn-green:hover:not(:disabled) {
+  background: #3f3f46;
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.08);
+}
+
+.pixel-btn-green:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pixel-btn-green:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* XP Bar fallback */
+.xp-bar-container {
+  background: #18181b;
+  border: 1px solid #27272a;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.xp-bar-fill {
+  background: linear-gradient(to right, #eab308, #facc15);
+  height: 100%;
+}
+
+.xp-level-text {
+  font-family: 'Outfit', sans-serif;
+  color: #fbbf24;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.portal-glow {
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.2);
+}
+
+.input-glass {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(18, 18, 22, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-radius: 6px !important;
+  color: #f8fafc !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.input-glass:focus {
+  border-color: rgba(234, 179, 8, 0.55) !important;
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.25) !important;
+  background: rgba(9, 9, 11, 0.85) !important;
+}
+
+/* Premium active pill tab indicator */
+.tab-active-pill {
+  position: relative;
+  z-index: 1;
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+}
+
+.tab-active-pill::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 6px;
+  z-index: -1;
+  animation: fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Premium Sidebar Card */
+.page-list-scroll {
+  contain: strict;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  will-change: scroll-position;
+}
+
+.sidebar-page-card {
+  transition: border-color 120ms ease, background-color 120ms ease;
+  position: relative;
+  contain: layout paint style;
+  content-visibility: auto;
+  contain-intrinsic-size: 86px;
+}
+
+.sidebar-page-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+
+.sidebar-page-card.active-page-card {
+  background: linear-gradient(90deg, rgba(234, 179, 8, 0.03) 0%, rgba(9, 9, 11, 0) 100%) !important;
+  border-color: rgba(234, 179, 8, 0.45) !important;
+  box-shadow: inset 3px 0 0 rgba(234, 179, 8, 0.85) !important;
+}
+
+.sidebar-page-card.active-page-card::before {
+  background: #eab308;
+  box-shadow: none;
+}
+
+.sidebar-page-card:hover:not(.active-page-card) {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Smooth Spring Transition utility */
+.spring-transition {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Checkered skeleton overlay pattern */
+.skeleton-checkered-mask {
+  background-image: 
+    linear-gradient(45deg, rgba(24, 24, 27, 0.45) 25%, transparent 25%), 
+    linear-gradient(-45deg, rgba(24, 24, 27, 0.45) 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, rgba(24, 24, 27, 0.45) 75%), 
+    linear-gradient(-45deg, transparent 75%, rgba(24, 24, 27, 0.45) 75%);
+  background-size: 30px 30px;
+  background-position: 0 0, 0 15px, 15px -15px, -15px 0px;
+}
+
+/* Override any default image or canvas scaling constraints from CSS framework / Preflight reset */
+.canvas-container, .lower-canvas, .upper-canvas {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Premium micro-animations & glowing effects */
+
+/* 1. Shimmer Loading skeleton */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer-loading {
+  background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+/* 2. Processing Pulse Ring Ripple */
+@keyframes pulse-ring {
+  0% { transform: scale(0.35); opacity: 0; }
+  50% { opacity: 0.75; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+.ripple-dot {
+  position: relative;
+}
+.ripple-dot::before {
+  content: '';
+  position: absolute;
+  box-sizing: border-box;
+  width: 250%;
+  height: 250%;
+  left: -75%;
+  top: -75%;
+  border-radius: 50%;
+  background-color: var(--ripple-color, #eab308);
+  animation: pulse-ring 1.8s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+  pointer-events: none;
+}
+
+/* 3. Neon Breathing Border Glow */
+@keyframes neon-glow {
+  0%, 100% { border-color: rgba(234, 179, 8, 0.4); box-shadow: 0 0 5px rgba(234, 179, 8, 0.15); }
+  50% { border-color: rgba(234, 179, 8, 0.8); box-shadow: 0 0 12px rgba(234, 179, 8, 0.4); }
+}
+.canvas-neon-border {
+  animation: neon-glow 2s ease-in-out infinite;
+}
+
+/* 4. Glow Card light spotlight */
+.glow-card {
+  position: relative;
+  overflow: hidden;
+}
+.glow-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(234, 179, 8, 0.06), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.glow-card:hover::after {
+  opacity: 1;
+}
+
+/* pywebview Frameless Window Dragging Controls */
+.pywebview-drag, .window-drag-region {
+  -webkit-app-region: drag !important;
+}
+.pywebview-no-drag, .window-no-drag-region {
+  -webkit-app-region: no-drag !important;
+}
+

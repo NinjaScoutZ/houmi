@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_08c5de54",
+    "kind": "feature",
+    "goal": "Canvas system upgrade plan — Visual Effects parity, activate orphaned components, architecture improvements",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-27T15:11:40.819084+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

@@ -1,0 +1,58 @@
+name: houmi-central
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: houmi-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-houmi_production}
+      POSTGRES_USER: ${POSTGRES_USER:-houmi_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-houmi_secure_password_2026}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-houmi_admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  host-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: houmi-host-api
+    restart: always
+    ports:
+      - "8000:4000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/data:/data
+      - ./data:/app/data
+      - ./frontend/dist:/app/frontend/dist
+      - ./frontend/dist:/frontend/dist
+    environment:
+      HOUMI_RUNTIME_MODE: host
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-houmi_admin}:${POSTGRES_PASSWORD:-houmi_secure_password_2026}@postgres:5432/${POSTGRES_DB:-houmi_production}
+      HOUMI_JWT_SECRET: ${HOUMI_JWT_SECRET:-change_me_super_secret_jwt_key_2026}
+      HOUMI_WORKER_SHARED_SECRET: ${HOUMI_WORKER_SHARED_SECRET:-change_me_worker_secret_2026}
+      HOUMI_PORT: 4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: houmi-cloudflared
+    restart: always
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflared-config.yml:/etc/cloudflared/config.yml
+      - C:\Users\dansa\.cloudflared\2d754bde-eac7-4995-ad66-2757249f4340.json:/etc/cloudflared/credentials.json
+    depends_on:
+      - host-api
+
+volumes:
+  postgres_data:

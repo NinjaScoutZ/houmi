@@ -1,0 +1,24 @@
+{
+  "handle": {
+    "task_id": "task_507baa11",
+    "kind": "bugfix",
+    "goal": "Debug why TF Phethai only shows Italic style instead of both Regular and Italic in font selector",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "bugfix_v1",
+    "metadata": {
+      "mode": "debug",
+      "require_self_ctf": true
+    },
+    "created_at": "2026-08-16T07:20:42.849686+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

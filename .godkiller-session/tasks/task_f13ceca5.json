@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_f13ceca5",
+    "kind": "feature",
+    "goal": "Add image resize/stitch tool into File Toolbar menu in Houmi Studio",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-18T05:16:36.301284+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

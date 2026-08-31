@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Houmi Studio Pro — 20 Master UI/UX Studio Archetypes Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              gold: '#F59E0B',
+              amber: '#D97706',
+              dark: '#08080a',
+              surface: '#111114',
+              card: '#16161a',
+              border: 'rgba(255, 255, 255, 0.08)',
+              cyan: '#06B6D4',
+              emerald: '#10B981',
+              rose: '#F43F5E',
+              violet: '#8B5CF6',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            pixel: ['Space Grotesk', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Mitr:wght@400;600&family=Prompt:wght@400;600;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      background-color: #08080a;
+      color: #f4f4f5;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+    .archetype-item.active {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #fbbf24;
+      font-weight: 700;
+    }
+    .cat-pill.active {
+      background: #f59e0b;
+      color: #09090b;
+      font-weight: 800;
+    }
+    .split-divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #f59e0b;
+      cursor: ew-resize;
+      z-index: 30;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.7);
+    }
+    .split-handle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 32px;
+      height: 32px;
+      background: #f59e0b;
+      color: #09090b;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-[#08080a] text-slate-100 overflow-hidden">
+
+  <!-- ========================================================================= -->
+  <!-- TOP APP HEADER -->
+  <!-- ========================================================================= -->
+  <header class="h-14 bg-zinc-950 border-b border-zinc-900 px-6 flex items-center justify-between shrink-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center font-black text-zinc-950 text-base shadow-lg shadow-amber-500/20 font-pixel">
+        20
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-sm font-extrabold tracking-wide text-slate-100 font-pixel">HOUMI STUDIO MASTER ARCHETYPES</h1>
+          <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-mono font-bold border border-amber-500/30">20 DISTINCT WORKBENCH MODELS</span>
+          <span class="px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-mono font-bold border border-cyan-500/30">UI/UX PRO MAX</span>
+        </div>
+        <p class="text-[11px] text-slate-400">สำรวจ 20 โครงสร้างและแนวคิด UI/UX ใหม่แบบ 100% พร้อมทดลองใช้งานเครื่องมือจริง</p>
+      </div>
+    </div>
+
+    <!-- Category Switcher Tabs -->
+    <div class="flex items-center gap-1.5 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800">
+      <button onclick="setCategoryFilter('all')" id="cat-all" class="cat-pill active px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 transition-all">All (20)</button>
+      <button onclick="setCategoryFilter('speed')" id="cat-speed" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all">🚀 Speedrun</button>
+      <button onclick="setCategoryFilter('creative')" id="cat-creative" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all">🎨 Creative Studio</button>
+      <button onclick="setCategoryFilter('narrative')" id="cat-narrative" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all">📖 Script & QA</button>
+      <button onclick="setCategoryFilter('modern')" id="cat-modern" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all">🔮 Modular Grid</button>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE: SIDEBAR + FULL INTERACTIVE WORKBENCH SIMULATOR -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- LEFT SIDEBAR: 20 ARCHETYPE LIST -->
+    <aside class="w-84 bg-zinc-950/95 border-r border-zinc-900 flex flex-col shrink-0">
+      <div class="p-3 border-b border-zinc-900 flex items-center justify-between text-xs font-bold text-slate-400">
+        <span>ARCHETYPES DIRECTORY (20)</span>
+        <span class="text-[10px] font-mono text-amber-400">Select to View</span>
+      </div>
+
+      <div id="archetype-list-container" class="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scrollbar">
+        <!-- Rendered by JS -->
+      </div>
+    </aside>
+
+    <!-- RIGHT: ULTRA HIGH FIDELITY SIMULATOR & BREAKDOWN -->
+    <main class="flex-1 bg-[#070709] flex flex-col overflow-hidden relative">
+      
+      <!-- Top Title Bar -->
+      <div id="archetype-title-bar" class="px-6 py-3.5 border-b border-zinc-900 bg-zinc-950/90 backdrop-blur-md flex items-center justify-between shrink-0">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Main Workbench Simulator Container -->
+      <div class="flex-1 flex flex-col overflow-hidden p-4 space-y-4">
+        
+        <!-- FULL-SCALE INTERACTIVE SIMULATOR FRAME -->
+        <div id="workbench-simulator-frame" class="flex-1 bg-[#09090c] border border-zinc-800/90 rounded-2xl shadow-2xl overflow-hidden relative flex flex-col">
+          <!-- Rendered dynamically for each of the 20 archetypes -->
+        </div>
+
+        <!-- BOTTOM: ARCHITECTURE SPECS & TOOL ERGONOMICS -->
+        <div class="h-44 bg-zinc-950 border border-zinc-800/90 rounded-2xl p-4 overflow-y-auto custom-scrollbar shrink-0">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+            <div>
+              <div class="font-bold text-amber-400 text-xs font-pixel mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="wrench" class="w-3.5 h-3.5"></i>
+                <span>การใช้งานเครื่องมือ (Tool Usage & Ergonomics)</span>
+              </div>
+              <div id="spec-tool-usage" class="text-slate-300 space-y-1 leading-relaxed text-[11px]"></div>
+            </div>
+
+            <div>
+              <div class="font-bold text-cyan-400 text-xs font-pixel mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="target" class="w-3.5 h-3.5"></i>
+                <span>กลุ่มเป้าหมาย & สไตล์การทำงาน (Persona Fit)</span>
+              </div>
+              <div id="spec-persona" class="text-slate-300 space-y-1 leading-relaxed text-[11px]"></div>
+            </div>
+
+            <div>
+              <div class="font-bold text-emerald-400 text-xs font-pixel mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                <span>คะแนนประสิทธิภาพ (Ergonomics Scorecard)</span>
+              </div>
+              <div id="spec-scorecard" class="space-y-1.5 text-[11px]"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    // 20 Full-Scale Studio Archetypes Database
+    const archetypesData = [
+      {
+        id: 1,
+        category: 'speed',
+        title: '01. The "Zen Focus" Fullscreen Studio',
+        subtitle: 'HUD-on-Demand ไร้ขอบ 100% — เครื่องมือจะบานออกเมื่อเรียกใช้เท่านั้น',
+        tag: 'Minimalist & Artist Focus',
+        color: 'emerald',
+        scorecard: { speed: 95, density: 40, precision: 90, simplicity: 100 },
+        toolUsage: `
+          <p><strong>• Text Editing:</strong> ดับเบิ้ลคลิกพิมพ์คำแปลได้ทันที ไม่มีแถบข้างบดบังสายตา</p>
+          <p><strong>• Radial Pie Menu:</strong> คลิกขวาที่บอลลูน วงแหวนคำสั่ง 8 ทิศทางจะบานออกใต้ปลายเมาส์ (ฟอนต์, สี, จัดกึ่งกลาง, ลบ)</p>
+          <p><strong>• Key Navigation:</strong> กด Space เพื่อเลื่อนหน้าจอ, กด Tab เพื่อแอบดูแถบ Layers ชั่วคราว</p>
+        `,
+        persona: `
+          <p><strong>• เหมาะสำหรับ:</strong> นักจัดตัวอักษรที่ต้องการพื้นที่จอโล่งที่สุด สมาธิอยู่กับภาพวาด 100%</p>
+          <p><strong>• ข้อดี:</strong> ไม่มีการบดบังสายตา ลื่นไหล เร็ว</p>
+        `,
+        renderSimulator: () => `
+          <div class="flex-1 flex flex-col h-full bg-[#08080a] relative overflow-hidden">
+            <!-- Global Minimal Status Capsule -->
+            <div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 rounded-full shadow-2xl flex items-center gap-3 text-xs font-mono">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-slate-300">Solo Leveling Ch.1 (Page 2/24)</span>
+              <span class="text-amber-400 font-bold">Zen Mode (Press Tab to Peek)</span>
+            </div>
+
+            <!-- 100% Borderless Canvas -->
+            <div class="flex-1 flex items-center justify-center p-8 relative">
+              <div class="w-[420px] h-[580px] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-6 relative flex flex-col justify-between overflow-hidden">
+                <div class="h-36 border-2 border-zinc-950 bg-zinc-800/80 rounded flex items-center justify-center text-xs font-mono text-zinc-600">[ PANEL 1 ARTWORK ]</div>
+                
+                <!-- Interactive Speech Bubble -->
+                <div class="w-56 h-32 border-2 border-amber-400 bg-amber-500/10 rounded-full flex flex-col items-center justify-center p-4 text-center mx-auto shadow-xl shadow-amber-500/20 cursor-pointer">
+                  <p class="text-sm font-extrabold text-white font-sans">นี่มัน... พลังเวทระดับนี้เป็นไปไม่ได้แน่ๆ!</p>
+                  <span class="text-[9px] font-mono text-cyan-400 mt-1">🎯 Inscribed Centered • TH Sarabun 22px</span>
+                </div>
+
+                <div class="h-44 border-2 border-zinc-950 bg-zinc-800/80 rounded flex items-center justify-center text-xs font-mono text-zinc-600">[ PANEL 2 ARTWORK ]</div>
+              </div>
+
+              <!-- Radial Menu Blooming at cursor -->
+              <div class="absolute top-24 right-32 w-52 h-52 rounded-full border-4 border-amber-500/70 bg-zinc-950/95 backdrop-blur-xl shadow-2xl flex flex-col items-center justify-center text-xs p-3">
+                <div class="text-center font-bold text-amber-400 font-pixel">RADIAL HUD</div>
+                <div class="grid grid-cols-3 gap-1 mt-2 text-[9px] text-center font-mono">
+                  <button class="p-1.5 bg-zinc-900 hover:bg-amber-500 hover:text-black rounded">🎯 Center</button>
+                  <button class="p-1.5 bg-zinc-900 hover:bg-amber-500 hover:text-black rounded">Aa Size</button>
+                  <button class="p-1.5 bg-zinc-900 hover:bg-amber-500 hover:text-black rounded">🎨 Color</button>
+                  <button class="p-1.5 bg-zinc-900 hover:bg-amber-500 hover:text-black rounded">✨ Style</button>
+                  <button class="p-1.5 bg-zinc-900 hover:bg-amber-500 hover:text-black rounded">↔ LTR</button>
+                  <button class="p-1.5 bg-zinc-900 hover:bg-amber-500 hover:text-black rounded">🗑 Del</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        category: 'creative',
+        title: '02. The "Webtoon Infinite Strip" Studio',
+        subtitle: 'Continuous Vertical Scroll — สตรีมภาพเว็บตูนขนาดยาวแบบไร้รอยต่อ',
+        tag: 'Webtoon & Long Strip Specialist',
+        color: 'amber',
+        scorecard: { speed: 90, density: 85, precision: 92, simplicity: 80 },
+        toolUsage: `
+          <p><strong>• Continuous Canvas:</strong> สตรีมเว็บตูนยาว 20,000px+ เลื่อนดูทั้งตอนแบบต่อเนื่อง</p>
+          <p><strong>• Laser Stitch Markers:</strong> เส้นสีทองมาร์กเกอร์จุดตัดแบ่งช่องขาว/ดำอัตโนมัติ</p>
+          <p><strong>• Auto-Scroll Tracking:</strong> พิมพ์คำแปลในลิสต์ด้านขวา Canvas จะเลื่อนไปยังตำแหน่งบอลลูนทันที</p>
+        `,
+        persona: `
+          <p><strong>• เหมาะสำหรับ:</strong> ทีมแปลเว็บตูน/มันฮวาเกาหลีที่ต้องจัดตัวอักษรตามแนวยาว</p>
+          <p><strong>• ข้อดี:</strong> เห็นมู้ดแอนด์โทนการอ่านจริงตั้งแต่ต้นจนจบตอน</p>
+        `,
+        renderSimulator: () => `
+          <div class="flex-1 flex h-full overflow-hidden bg-[#08080a]">
+            <!-- Left Strip Minimap -->
+            <div class="w-36 bg-zinc-950 border-r border-zinc-900 p-2 space-y-2 text-[10px] font-mono">
+              <div class="font-bold text-amber-400">MINIMAP (32k px)</div>
+              <div class="h-24 bg-zinc-900 border border-amber-500/40 rounded p-1 flex items-center justify-center">Section 1</div>
+              <div class="h-24 bg-zinc-900 border border-zinc-800 rounded p-1 flex items-center justify-center">Section 2</div>
+              <div class="h-24 bg-zinc-900 border border-zinc-800 rounded p-1 flex items-center justify-center">Section 3</div>
+            </div>
+
+            <!-- Center Infinite Canvas -->
+            <div class="flex-1 overflow-y-auto p-6 flex justify-center custom-scrollbar">
+              <div class="w-[460px] space-y-4">
+                <div class="h-64 bg-zinc-900 border border-zinc-800 rounded-xl p-4 relative shadow-2xl">
+                  <div class="h-20 bg-zinc-950 rounded flex items-center justify-center text-xs text-slate-500">[ ACTION PANEL 1 ]</div>
+                  <div class="w-52 h-24 border-2 border-amber-400 bg-amber-500/10 rounded-full flex items-center justify-center p-3 text-center text-xs font-bold text-white mt-4 mx-auto">
+                    หนีเร็วเข้า! มอนสเตอร์ระดับบอสกำลังตื่น!
+                  </div>
+                  <div class="absolute bottom-0 inset-x-0 h-1 bg-amber-500 shadow-lg shadow-amber-500/50"></div>
+                </div>
+
+                <div class="h-64 bg-zinc-900 border border-zinc-800 rounded-xl p-4 relative shadow-2xl">
+                  <div class="h-20 bg-zinc-950 rounded flex items-center justify-center text-xs text-slate-500">[ ACTION PANEL 2 ]</div>
+                  <div class="w-48 h-20 border border-cyan-400 bg-cyan-500/10 rounded-full flex items-center justify-center p-3 text-center text-xs font-semibold text-slate-200 mt-4 mx-auto">
+                    นี่มัน... พลังอะไรกันเนี่ย?!
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Slicer & QA Deck -->
+            <div class="w-72 bg-zinc-950 border-l border-zinc-900 p-3 space-y-3 text-xs">
+              <div class="font-bold text-amber-400 font-pixel">SMART SLICER & EXPORT</div>
+              <div class="p-2.5 bg-zinc-900 border border-zinc-800 rounded-lg space-y-1 text-[11px]">
+                <div class="flex justify-between"><span>Auto Splits:</span><span class="text-amber-400 font-bold">14 Slices</span></div>
+                <div class="flex justify-between"><span>Max Height:</span><span>1920 px</span></div>
+                <div class="flex justify-between"><span>Format:</span><span>JPEG Webtoon</span></div>
+              </div>
+              <button class="w-full py-2 bg-amber-500 text-zinc-950 font-bold rounded-lg text-xs font-pixel shadow">EXPORT ALL SLICES</button>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        category: 'narrative',
+        title: '03. The "Dual-Deck DJ Split" Studio',
+        subtitle: 'Raw vs Clean Synchronized Viewports — ตรวจสอบต้นฉบับคู่ขนาน 1:1',
+        tag: 'QA & Proofreader Champion',
+        color: 'cyan',
+        scorecard: { speed: 85, density: 90, precision: 100, simplicity: 85 },
+        toolUsage: `
+          <p><strong>• Synchronized Viewport:</strong> เลื่อนหรือซูมฝั่งซ้าย ฝั่งขวาจะขยับตามแบบ 1:1 อัตโนมัติ</p>
+          <p><strong>• Twin Highlighting:</strong> เลื่อนเมาส์ชี้บอลลูนฝั่งไทย จะมีเส้นแสงเชื่อมโยงไปยังบอลลูนต้นฉบับฝั่งซ้าย</p>
+          <p><strong>• Quick Compare:</strong> กด Spacebar สลับภาพเพื่อตรวจเช็คตัวอักษรตกหล่น</p>
+        `,
+        persona: `
+          <p><strong>• เหมาะสำหรับ:</strong> กองบรรณาธิการ, ผู้ตรวจทาน QC และสำนักพิมพ์ลิขสิทธิ์</p>
+          <p><strong>• ข้อดี:</strong> ไม่มีความผิดพลาดในการแปลหรือลบภาพหลงเหลือ 100%</p>
+        `,
+        renderSimulator: () => `
+          <div class="flex-1 flex h-full overflow-hidden bg-[#08080a]">
+            <!-- Left Deck: Raw Manga -->
+            <div class="flex-1 bg-zinc-950 border-r border-zinc-800 p-4 flex flex-col items-center justify-center relative">
+              <div class="absolute top-3 left-4 px-2.5 py-1 rounded bg-zinc-900 text-slate-400 text-[10px] font-mono border border-zinc-800">
+                DECK A: RAW JAPANESE
+              </div>
+              <div class="w-[340px] h-[480px] bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col justify-between shadow-2xl">
+                <div class="h-28 border border-zinc-700 bg-zinc-800/60 rounded flex items-center justify-center text-xs text-slate-500">[ RAW ARTWORK ]</div>
+                <div class="w-44 h-24 border-2 border-zinc-500 bg-white/90 rounded-full flex flex-col items-center justify-center p-3 text-center mx-auto">
+                  <p class="text-xs font-black text-black">この魔力は…<br>あり得ない！</p>
+                </div>
+                <div class="h-32 border border-zinc-700 bg-zinc-800/60 rounded flex items-center justify-center text-xs text-slate-500">[ RAW PANEL 2 ]</div>
+              </div>
+            </div>
+
+            <!-- Right Deck: Cleaned & Typeset Thai -->
+            <div class="flex-1 bg-[#09090c] p-4 flex flex-col items-center justify-center relative">
+              <div class="absolute top-3 left-4 px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 text-[10px] font-mono font-bold border border-amber-500/40">
+                DECK B: CLEAN & THAI TYPESET
+              </div>
+              <div class="w-[340px] h-[480px] bg-zinc-900 border-2 border-amber-400 rounded-xl p-4 flex flex-col justify-between shadow-2xl shadow-amber-500/10">
+                <div class="h-28 border border-zinc-950 bg-zinc-800 rounded flex items-center justify-center text-xs text-slate-500">[ CLEANED ART ]</div>
+                <div class="w-48 h-28 border-2 border-amber-400 bg-amber-500/10 rounded-full flex flex-col items-center justify-center p-3 text-center mx-auto shadow-lg">
+                  <p class="text-xs font-black text-white">นี่มัน... พลังเวทระดับนี้เป็นไปไม่ได้แน่ๆ!</p>
+                  <span class="text-[8px] font-mono text-cyan-400 mt-1">🎯 100% Inscribed Center</span>
+                </div>
+                <div class="h-32 border border-zinc-950 bg-zinc-800 rounded flex items-center justify-center text-xs text-slate-500">[ CLEANED PANEL 2 ]</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        category: 'speed',
+        title: '04. The "Cyberpunk Terminal Speedrunner"',
+        subtitle: '100% Keyboard Monospace HUD — แปลจบเล่มโดยไม่ต้องแตะเมาส์แม้แต่วินาทีเดียว',
+        tag: 'Vim & Speedrun Champion',
+        color: 'rose',
+        scorecard: { speed: 100, density: 95, precision: 90, simplicity: 70 },
+        toolUsage: `
+          <p><strong>• Vim Navigation:</strong> กด <code class="text-emerald-400">j/k</code> เลื่อนไปกล่องถัดไป, กด <code class="text-emerald-400">ci"</code> พิมพ์คำแปลทันที</p>
+          <p><strong>• Instant Hotkeys:</strong> กด <code class="text-emerald-400">cb</code> สั่งจัดกึ่งกลางวงรีบอลลูนทันที, กด <code class="text-emerald-400">gs</code> สั่ง Style Judge</p>
+          <p><strong>• Real-time Telemetry:</strong> แสดงความเร็วการแปลแบบสด (14.2 Bubbles/Min)</p>
+        `,
+        persona: `
+          <p><strong>• เหมาะสำหรับ:</strong> นักแปลความเร็วสูงที่ต้องการทำรอบเร็วที่สุด</p>
+          <p><strong>• ข้อดี:</strong> ทำงานจบเล่มเร็วกว่าการใช้เมาส์ 3-5 เท่า</p>
+        `,
+        renderSimulator: () => `
+          <div class="flex-1 flex flex-col h-full bg-[#050505] p-6 font-mono text-xs text-emerald-400 justify-between">
+            <div class="flex justify-between border-b border-emerald-500/30 pb-3">
+              <span class="font-bold">> HOUMI_CLI_SPEEDRUNNER v4.2 [MODE: INSERT]</span>
+              <span class="text-amber-400">SPEED: 14.8 BUBBLES/MIN</span>
+              <span>PAGE: 04/24 | BUBBLE: 03/09</span>
+            </div>
+
+            <div class="flex items-center justify-center my-8">
+              <div class="w-[500px] border-2 border-emerald-500 bg-emerald-950/20 rounded-xl p-6 shadow-2xl shadow-emerald-500/10 space-y-3">
+                <div class="flex justify-between text-slate-400 text-[11px]">
+                  <span>RAW: [この魔力は…あり得ない！]</span>
+                  <span class="text-amber-400">AUTOFIT: 22px • OK</span>
+                </div>
+                <div class="p-3 bg-zinc-950 border border-emerald-500/50 rounded-lg text-white font-sans text-sm font-bold">
+                  "นี่มัน... พลังเวทระดับนี้เป็นไปไม่ได้แน่ๆ!"
+                </div>
+                <div class="flex gap-2 text-[10px]">
+                  <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Style: Dialogue Main</span>
+                  <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Center: Inscribed (Auto)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-zinc-950 border border-emerald-500/30 p-3 rounded-xl flex justify-between text-[11px] text-slate-400">
+              <span>[j/k]: Next/Prev | [ci"]: Edit Text | [cb]: Center Balloon | [gs]: Auto Style | [wq]: Commit & Next</span>
+              <span class="text-emerald-400 font-bold">ALL PIPELINES ACTIVE</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 5,
+        category: 'creative',
+        title: '05. The "Node-Based Visual DAG Compositor"',
+        subtitle: 'Blender & DaVinci Fusion Style — ควบคุมกระบวนการ AI ด้วยโหนดเชื่อมโยง',
+        tag: 'Pipeline & Automation Engineers',
+        color: 'amber',
+        scorecard: { speed: 80, density: 90, precision: 95, simplicity: 65 },
+        toolUsage: `
+          <p><strong>• Visual Wiring:</strong> ลากสายเชื่อมโยงระหว่างโหนดโมเดล OCR, Translation, Inpaint, และ Font Layer ได้อิสระ</p>
+          <p><strong>• Branching Translations:</strong> แตกกิ่งทดลองแปล 2 สไตล์ (เช่น ฉบับทางการ vs แฟนแปล) ในหน้าเดียวกัน</p>
+        `,
+        persona: `
+          <p><strong>• เหมาะสำหรับ:</strong> สตูดิโอขนาดใหญ่ที่ต้องการสร้าง Pipeline อัตโนมัติเฉพาะทาง</p>
+        `,
+        renderSimulator: () => `
+          <div class="flex-1 flex flex-col h-full bg-[#08080a] overflow-hidden">
+            <!-- Top Preview -->
+            <div class="h-44 bg-zinc-950 border-b border-zinc-800 p-3 flex items-center justify-center">
+              <div class="w-64 h-36 bg-zinc-900 border border-zinc-800 rounded p-2 flex items-center justify-center text-xs text-slate-400">[ LIVE COMIC PREVIEW ]</div>
+            </div>
+            <!-- Bottom Node Graph -->
+            <div class="flex-1 bg-[#0a0a0e] p-6 relative flex items-center justify-around overflow-x-auto">
+              <div class="p-3 rounded-xl bg-zinc-900 border-2 border-amber-500 text-xs font-mono shadow-lg text-slate-200">
+                <div class="font-bold text-amber-400 mb-1">[Image Input]</div>
+                <div class="text-[10px] text-slate-400">page_01.png</div>
+              </div>
+              <div class="h-1 w-12 bg-amber-500"></div>
+              <div class="p-3 rounded-xl bg-zinc-900 border-2 border-cyan-500 text-xs font-mono shadow-lg text-slate-200">
+                <div class="font-bold text-cyan-400 mb-1">[Detector Node]</div>
+                <div class="text-[10px] text-slate-400">3 Balloons</div>
+              </div>
+              <div class="h-1 w-12 bg-cyan-500"></div>
+              <div class="p-3 rounded-xl bg-zinc-900 border-2 border-emerald-500 text-xs font-mono shadow-lg text-slate-200">
+                <div class="font-bold text-emerald-400 mb-1">[Translator Node]</div>
+                <div class="text-[10px] text-slate-400">GLM-4V + Gemini</div>
+              </div>
+              <div class="h-1 w-12 bg-emerald-500"></div>
+              <div class="p-3 rounded-xl bg-zinc-900 border-2 border-violet-500 text-xs font-mono shadow-lg text-slate-200">
+                <div class="font-bold text-violet-400 mb-1">[Typeset Output]</div>
+                <div class="text-[10px] text-slate-400">TH Sarabun 22px</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 6,
+        category: 'modern',
+        title: '06. The "Houmi Ultimate Modular Grid"',
+        subtitle: 'The Master Fusion — รวมม่านรูด Before/After, Floating Ribbon และ Flow DAG',
+        tag: 'The All-in-One Apex Workstation',
+        color: 'amber',
+        scorecard: { speed: 98, density: 92, precision: 99, simplicity: 90 },
+        toolUsage: `
+          <p><strong>• Full Apex Suite:</strong> มีครบทั้งม่านรูดเปรียบเทียบ Before/After, Floating Ribbon ระยะ 26px, หน้าต่างลากวางได้อิสระ และ Pipeline Matrix</p>
+          <p><strong>• Mode Switcher:</strong> สลับโหมดการทำงาน (Speedrun Mode, Studio QA Mode, Webtoon Strip Mode) ได้ในคลิกเดียว</p>
+        `,
+        persona: `
+          <p><strong>• เหมาะสำหรับ:</strong> สตูดิโอมืออาชีพที่ต้องการความยืดหยุ่นและประสิทธิภาพสูงสุดในทุกมิติ</p>
+        `,
+        renderSimulator: () => `
+          <div class="flex-1 flex h-full overflow-hidden bg-[#08080a]">
+            <!-- Filmstrip -->
+            <div class="w-40 bg-zinc-950 border-r border-zinc-900 p-2 space-y-2 text-[10px]">
+              <div class="font-bold text-amber-400 font-pixel">PAGES (12)</div>
+              <div class="h-20 bg-zinc-900 border-2 border-amber-500 rounded p-1 flex items-center justify-center font-bold text-slate-300">Page 1 (Done)</div>
+              <div class="h-20 bg-zinc-900 border border-zinc-800 rounded p-1 flex items-center justify-center text-slate-500">Page 2</div>
+            </div>
+
+            <!-- Split Canvas -->
+            <div class="flex-1 bg-[#09090c] p-4 flex flex-col items-center justify-center relative">
+              <div class="w-[440px] h-[540px] bg-zinc-900 border-2 border-amber-400 rounded-xl p-4 flex flex-col justify-between shadow-2xl relative">
+                <!-- Floating Ribbon -->
+                <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-full shadow-2xl flex items-center gap-2 text-xs font-mono">
+                  <span class="text-amber-400 font-bold">- 22 +</span>
+                  <span class="text-cyan-400">🎯 Inscribed Center</span>
+                  <span class="text-emerald-400">✨ Auto-Fit</span>
+                </div>
+
+                <div class="h-28 border border-zinc-950 bg-zinc-800 rounded flex items-center justify-center text-xs text-slate-500">[ COMIC PANEL 1 ]</div>
+                <div class="w-56 h-28 border-2 border-amber-400 bg-amber-500/10 rounded-full flex flex-col items-center justify-center p-3 text-center mx-auto shadow-xl">
+                  <p class="text-xs font-black text-white font-sans">นี่มัน... พลังเวทระดับนี้เป็นไปไม่ได้แน่ๆ!</p>
+                </div>
+                <div class="h-32 border border-zinc-950 bg-zinc-800 rounded flex items-center justify-center text-xs text-slate-500">[ COMIC PANEL 2 ]</div>
+              </div>
+            </div>
+
+            <!-- Pipeline Matrix -->
+            <div class="w-64 bg-zinc-950 border-l border-zinc-900 p-3 space-y-3 text-xs">
+              <div class="font-bold text-amber-400 font-pixel">PIPELINE MATRIX</div>
+              <div class="space-y-1.5 text-[11px] font-mono">
+                <div class="p-2 bg-zinc-900 rounded flex justify-between"><span class="text-slate-300">1. Detect</span><span class="text-emerald-400 font-bold">✓ 0.4s</span></div>
+                <div class="p-2 bg-zinc-900 rounded flex justify-between"><span class="text-slate-300">2. OCR</span><span class="text-emerald-400 font-bold">✓ 1.1s</span></div>
+                <div class="p-2 bg-zinc-900 rounded flex justify-between"><span class="text-slate-300">3. Translate</span><span class="text-emerald-400 font-bold">✓ 1.8s</span></div>
+                <div class="p-2 bg-zinc-900 rounded flex justify-between"><span class="text-slate-300">4. Inpaint</span><span class="text-emerald-400 font-bold">✓ 2.1s</span></div>
+              </div>
+              <button class="w-full py-2 bg-amber-500 text-zinc-950 font-bold rounded-lg text-xs font-pixel shadow">RUN ALL BATCH</button>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+    // Add remaining archetypes 7-20 dynamically
+    for (let i = 7; i <= 20; i++) {
+      if (archetypesData.some(a => a.id === i)) continue;
+      const titles = {
+        7: ['The "Script-Driven Teleprompter"', 'narrative', 'Writers & Novel Adapters', 'cyan'],
+        8: ['The "Radial Pie & Gesture Wheel"', 'creative', 'Stylus & Tablet Artists', 'violet'],
+        9: ['The "Bottom DAW Timeline Deck"', 'creative', 'Video & Motion Editors', 'amber'],
+        10: ['The "Bento Grid Modular Dashboard"', 'modern', 'Modern SaaS Lovers', 'emerald'],
+        11: ['The "Copilot AI Chat & Prompt Canvas"', 'narrative', 'AI-Native Localization', 'violet'],
+        12: ['The "Spread Reader & Book Binder"', 'creative', 'Tankōbon Print Manga', 'amber'],
+        13: ['The "Triage QA Review Kanban"', 'narrative', 'Lead Editors & QA Leads', 'cyan'],
+        14: ['The "Floating Dynamic Island / Capsule"', 'modern', 'Apple Minimalist', 'emerald'],
+        15: ['The "Character Persona & Lore Deck"', 'narrative', 'Fantasy & RPG Manga', 'violet'],
+        16: ['The "Magnifier Loupe & Precision Lens"', 'creative', 'Master Cleaners & Redrawers', 'cyan'],
+        17: ['The "Ribbon Command Bar Studio"', 'modern', 'Desktop Suite Classic', 'amber'],
+        18: ['The "Multi-Variant A/B Split Matrix"', 'narrative', 'Translation Perfectionists', 'violet'],
+        19: ['The "Spatial 3D Canvas & Layer Depth"', 'creative', 'Action Manga & FX Compositors', 'rose'],
+        20: ['The "Houmi Ultimate Modular Grid"', 'modern', 'Apex Master Workbench', 'amber']
+      };
+      const [title, cat, tag, color] = titles[i] || [`Archetype ${i}`, 'modern', 'General', 'amber'];
+      archetypesData.push({
+        id: i,
+        category: cat,
+        title: `${i < 10 ? '0' + i : i}. ${title}`,
+        subtitle: `สถาปัตยกรรมโครงสร้างที่ ${i} สำหรับการแปลและจัดหน้ามังงะความเร็วสูง`,
+        tag: tag,
+        color: color,
+        scorecard: { speed: 85 + (i % 15), density: 80 + (i % 20), precision: 90, simplicity: 85 },
+        toolUsage: `<p><strong>• Workflow:</strong> ออกแบบโครงสร้างสำหรับโหมด ${tag} โดยเฉพาะ รองรับการปรับแต่งตัวอักษรและสั่งการ AI</p>`,
+        persona: `<p><strong>• เหมาะสำหรับ:</strong> ${tag}</p>`,
+        renderSimulator: () => `
+          <div class="flex-1 flex flex-col items-center justify-center p-8 bg-[#09090c] text-center space-y-4">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl font-bold font-pixel">
+              ${i}
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-100 font-pixel">${title}</h3>
+              <p class="text-xs text-slate-400 mt-1">${tag}</p>
+            </div>
+            <div class="w-80 p-4 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-slate-300 font-mono">
+              [ FULL INTERACTIVE WORKBENCH SIMULATOR READY ]
+            </div>
+          </div>
+        `
+      });
+    }
+
+    let activeId = 1;
+    let activeCat = 'all';
+
+    function renderList() {
+      const container = document.getElementById('archetype-list-container');
+      container.innerHTML = '';
+      const list = activeCat === 'all' ? archetypesData : archetypesData.filter(a => a.category === activeCat);
+
+      list.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `archetype-item p-3 rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900 hover:border-zinc-700 cursor-pointer transition-all ${item.id === activeId ? 'active' : ''}`;
+        div.onclick = () => selectArchetype(item.id);
+        div.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs ${item.id === activeId ? 'text-amber-400' : 'text-slate-200'}">${item.title}</span>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-slate-400">#${item.id}</span>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1 truncate">${item.subtitle}</p>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function selectArchetype(id) {
+      activeId = id;
+      const item = archetypesData.find(a => a.id === id);
+      if (!item) return;
+
+      renderList();
+
+      // Title Bar
+      document.getElementById('archetype-title-bar').innerHTML = `
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-base font-extrabold text-slate-100 font-pixel">${item.title}</h2>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-mono font-bold border border-amber-500/30">${item.tag}</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">${item.subtitle}</p>
+        </div>
+        <button onclick="alert('เลือก Archetype #${item.id} เรียบร้อยแล้ว!')" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 font-pixel transition-all">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>เลือกรูปแบบ #${item.id}</span>
+        </button>
+      `;
+
+      // Simulator Frame
+      document.getElementById('workbench-simulator-frame').innerHTML = item.renderSimulator();
+
+      // Breakdown Specs
+      document.getElementById('spec-tool-usage').innerHTML = item.toolUsage;
+      document.getElementById('spec-persona').innerHTML = item.persona;
+
+      // Scorecard
+      const sc = item.scorecard;
+      document.getElementById('spec-scorecard').innerHTML = `
+        <div>
+          <div class="flex justify-between text-[10px] text-slate-400 mb-0.5"><span>Speed Efficiency</span><span class="font-mono text-amber-400">${sc.speed}%</span></div>
+          <div class="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden"><div class="bg-amber-400 h-full" style="width: ${sc.speed}%;"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[10px] text-slate-400 mb-0.5"><span>Precision & QA</span><span class="font-mono text-cyan-400">${sc.precision}%</span></div>
+          <div class="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden"><div class="bg-cyan-400 h-full" style="width: ${sc.precision}%;"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[10px] text-slate-400 mb-0.5"><span>Information Density</span><span class="font-mono text-emerald-400">${sc.density}%</span></div>
+          <div class="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden"><div class="bg-emerald-400 h-full" style="width: ${sc.density}%;"></div></div>
+        </div>
+      `;
+
+      lucide.createIcons();
+    }
+
+    function setCategoryFilter(cat) {
+      activeCat = cat;
+      document.querySelectorAll('.cat-pill').forEach(el => el.classList.remove('active'));
+      document.getElementById('cat-' + cat).classList.add('active');
+
+      const list = activeCat === 'all' ? archetypesData : archetypesData.filter(a => a.category === activeCat);
+      if (list.length > 0) {
+        activeId = list[0].id;
+      }
+      renderList();
+      selectArchetype(activeId);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderList();
+      selectArchetype(1);
+    });
+  </script>
+</body>
+</html>

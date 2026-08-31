@@ -1,0 +1,30 @@
+{
+  "slug": "m_33b7e576",
+  "task_id": "task_33b7e576",
+  "kind": "feature",
+  "goal": "Design 20 radical new structural studio layouts with interactive explorer simulator and full architectural breakdown",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-28T18:42:47.312870+00:00",
+  "updated_at": "2026-08-28T18:42:47.331896+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-28T18:42:47.328903+00:00",
+      "updated_at": "2026-08-28T18:42:47.328903+00:00"
+    }
+  }
+}

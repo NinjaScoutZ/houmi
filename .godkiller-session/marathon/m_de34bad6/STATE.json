@@ -1,0 +1,30 @@
+{
+  "slug": "m_de34bad6",
+  "task_id": "task_de34bad6",
+  "kind": "feature",
+  "goal": "Build standalone staging Main UI web application with new Dark Minimal UX/UI, Global Settings theme switcher, 5-step pipeline, 6 soft-gradient font templates, and real Fabric.js balloon controls",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-29T12:38:47.199655+00:00",
+  "updated_at": "2026-08-29T12:38:47.211692+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-29T12:38:47.209686+00:00",
+      "updated_at": "2026-08-29T12:38:47.209686+00:00"
+    }
+  }
+}

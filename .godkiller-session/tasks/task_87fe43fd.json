@@ -1,0 +1,35 @@
+{
+  "handle": {
+    "task_id": "task_87fe43fd",
+    "kind": "feature",
+    "goal": "Phase 1: Create CustomWorkflowModal.tsx in frontend/src/components/",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "ultradeep_file_gate": {
+        "enabled": true,
+        "queue": [],
+        "files": {},
+        "current": null,
+        "max_files_per_edit_call": 1,
+        "require_hypotheses": 3,
+        "created_at": "2026-08-20T02:09:29.961665+00:00",
+        "updated_at": "2026-08-20T02:09:29.961665+00:00"
+      },
+      "mode": "ultradeep",
+      "marathon_slug": "m_87fe43fd",
+      "require_swarm": true
+    },
+    "created_at": "2026-08-20T02:09:29.947652+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

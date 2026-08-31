@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_ac548730",
+    "kind": "feature",
+    "goal": "Deep study of MangaToolPlus codebase, features, architecture, algorithms, and UI compared to Houmi",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "view"
+    },
+    "created_at": "2026-08-27T16:38:05.529789+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

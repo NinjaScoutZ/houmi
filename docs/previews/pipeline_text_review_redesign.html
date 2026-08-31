@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Houmi Studio - Direct 1-Click Pipeline Stage Matrix Redesign</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070709;
+      --bg-panel: rgba(15, 15, 20, 0.92);
+      --bg-card: rgba(24, 24, 32, 0.8);
+      --bg-card-hover: rgba(36, 36, 48, 0.95);
+      --bg-input: rgba(10, 10, 14, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(245, 158, 11, 0.35);
+      --accent-amber: #f59e0b;
+      --accent-amber-glow: rgba(245, 158, 11, 0.35);
+      --accent-emerald: #10b981;
+      --accent-cyan: #06b6d4;
+      --accent-rose: #f43f5e;
+      --text-main: #f4f4f5;
+      --text-muted: #9496a1;
+      --font-main: 'Kanit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      font-size: 13px;
+      line-height: 1.5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Nav Bar */
+    header {
+      background: rgba(15, 15, 20, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 52px; z-index: 100;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #fbbf24, #d97706);
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      font-weight: 900; color: #000; font-size: 16px;
+      box-shadow: 0 0 20px var(--accent-amber-glow);
+    }
+    .brand-title { font-size: 15px; font-weight: 700; }
+    .badge {
+      background: rgba(245, 158, 11, 0.12); color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.35); padding: 3px 10px;
+      border-radius: 999px; font-size: 10.5px; font-weight: 600;
+    }
+
+    /* Main Grid Workspace */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 52px);
+      position: relative;
+    }
+
+    /* Left Workspace Canvas Area */
+    .canvas-viewport {
+      flex: 1;
+      background: #050508;
+      background-image: radial-gradient(rgba(245, 158, 11, 0.05) 1px, transparent 1px);
+      background-size: 24px 24px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-mockup {
+      width: 510px; height: 690px; background: #14141a;
+      border-radius: 16px; box-shadow: 0 30px 70px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06);
+      position: relative; overflow: hidden;
+    }
+
+    .balloon {
+      position: absolute; border: 2px dashed rgba(245, 158, 11, 0.5);
+      background: rgba(245, 158, 11, 0.06); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 500; font-size: 13px; cursor: pointer; text-align: center;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .balloon:hover { transform: scale(1.02); border-color: var(--accent-amber); }
+    .balloon.active {
+      border: 2.5px solid var(--accent-amber);
+      background: rgba(245, 158, 11, 0.2);
+      box-shadow: 0 0 30px var(--accent-amber-glow);
+    }
+    .b1 { top: 75px; left: 85px; width: 165px; height: 115px; }
+    .b2 { top: 240px; right: 65px; width: 175px; height: 135px; }
+    .b3 { bottom: 80px; left: 95px; width: 195px; height: 155px; }
+
+    /* ================= PHOTOSHOP STYLE VERTICAL ICON RAIL ================= */
+    .ps-dock-rail {
+      width: 36px;
+      background: rgba(18, 18, 24, 0.95);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border-color);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 8px 0; gap: 8px; z-index: 150;
+    }
+
+    .rail-collapse-btn {
+      color: var(--text-muted); font-size: 11px; cursor: pointer; padding: 4px;
+      transition: color 0.2s; font-weight: 700;
+    }
+    .rail-collapse-btn:hover { color: #fff; }
+
+    .rail-icon-btn {
+      width: 28px; height: 28px; background: transparent; border: 1px solid transparent;
+      color: var(--text-muted); border-radius: 6px; font-weight: 700; font-size: 12px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; position: relative;
+    }
+    .rail-icon-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .rail-icon-btn.active {
+      background: rgba(245, 158, 11, 0.15); border-color: var(--accent-amber);
+      color: var(--accent-amber); box-shadow: 0 0 10px var(--accent-amber-glow);
+    }
+
+    /* ================= HOUMI "TEXT & FORMATTING" FLYOUT PANEL ================= */
+    .houmi-formatting-widget {
+      position: absolute;
+      top: 12px; right: 36px;
+      width: 325px; max-height: calc(100vh - 76px);
+      background: rgba(16, 16, 22, 0.96); backdrop-filter: blur(24px);
+      border: 1px solid var(--border-accent); border-radius: 12px;
+      box-shadow: -15px 10px 35px rgba(0,0,0,0.85), 0 0 20px var(--accent-amber-glow);
+      z-index: 200; display: flex; flex-direction: column; overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .houmi-formatting-widget.collapsed {
+      opacity: 0; pointer-events: none; transform: translateX(16px) scale(0.95);
+    }
+
+    .houmi-widget-header {
+      padding: 12px 14px; background: rgba(22, 22, 30, 0.95); border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .houmi-widget-title { font-size: 11.5px; font-weight: 800; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.08em; }
+    .accordion-arrow { color: var(--accent-amber); font-size: 11px; font-weight: 700; cursor: pointer; }
+
+    .widget-content-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    .section-subhead { font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
+
+    .current-template-box { background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.4); border-radius: 6px; padding: 8px 12px; font-size: 11px; color: var(--accent-cyan); display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+    .template-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .template-card-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 2px; }
+    .template-card-item:hover { border-color: rgba(255,255,255,0.25); background: var(--bg-card-hover); }
+    .template-card-item.active-template { border-color: var(--accent-amber); background: rgba(245, 158, 11, 0.12); }
+    .template-item-name { font-size: 11.5px; font-weight: 700; color: #fff; }
+    .template-item-meta { font-size: 9.5px; color: var(--text-muted); font-family: var(--font-mono); }
+
+    .field-label { font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+    .modern-input, .modern-select { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 7px 10px; border-radius: 8px; font-size: 12px; outline: none; font-family: var(--font-main); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .style-pill-group { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 2px; gap: 2px; }
+    .style-pill-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); height: 28px; border-radius: 6px; font-weight: 700; font-size: 11.5px; cursor: pointer; }
+    .style-pill-btn.active { background: var(--accent-amber); color: #000; }
+    .color-swatch-picker { display: flex; align-items: center; justify-content: space-between; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; }
+    .swatch-circle { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; }
+    .btn-manage-templates { width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 8px; font-family: var(--font-main); font-weight: 700; font-size: 10.5px; text-transform: uppercase; cursor: pointer; }
+
+    /* ================= 2. RIGHT SIDEBAR (STACKED PANELS DOCK) ================= */
+    .sidebar-dock {
+      width: 395px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(24px);
+      border-left: 1px solid var(--border-color);
+      display: flex; flex-direction: column;
+      height: 100%; z-index: 100;
+    }
+
+    /* TOP DOCK PANEL: PIPELINE CONTROLS */
+    .dock-panel-pipeline {
+      background: rgba(20, 20, 26, 0.9);
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px; display: flex; flex-direction: column; gap: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+
+    .pipeline-header { display: flex; align-items: center; justify-content: space-between; }
+    .pipeline-title { font-size: 11.5px; font-weight: 700; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; }
+
+    .scope-selector {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: rgba(9, 9, 11, 0.8); padding: 3px; border-radius: 8px; border: 1px solid var(--border-color);
+    }
+    .scope-btn {
+      background: transparent; border: none; color: var(--text-muted);
+      padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .scope-btn.active { background: #272732; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+
+    .btn-run-pipeline {
+      position: relative; width: 100%; height: 36px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: none; color: #000; border-radius: 8px;
+      font-family: var(--font-main); font-weight: 700; font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 16px var(--accent-amber-glow); overflow: hidden;
+    }
+
+    /* ================= REDESIGNED DIRECT 1-CLICK PIPELINE MATRIX (NO 2-STEP CLICKS!) ================= */
+    .direct-pipeline-grid {
+      display: flex; flex-direction: column; gap: 6px; margin-top: 2px;
+    }
+
+    .pipeline-stage-card {
+      background: rgba(12, 12, 16, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 8px; padding: 7px 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .pipeline-stage-card.done { border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.06); }
+    .pipeline-stage-card.recommended {
+      border-color: var(--accent-amber); background: rgba(245, 158, 11, 0.1);
+      box-shadow: 0 0 12px var(--accent-amber-glow);
+    }
+
+    .stage-card-info { display: flex; align-items: center; gap: 8px; }
+    .stage-card-badge {
+      font-size: 9px; font-family: var(--font-mono); font-weight: 700;
+      padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-muted);
+    }
+    .pipeline-stage-card.done .stage-card-badge { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); }
+    .pipeline-stage-card.recommended .stage-card-badge { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+
+    .stage-card-title { font-size: 11px; font-weight: 700; color: #fff; }
+
+    /* Direct 1-Click Action Button Group Embedded Right Inside Every Stage! */
+    .stage-direct-actions { display: flex; items-center; gap: 4px; }
+    
+    .btn-direct-action {
+      background: rgba(26, 26, 34, 0.9); border: 1px solid var(--border-color);
+      color: #ddd; padding: 4px 7px; border-radius: 5px; font-size: 10px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 3px;
+    }
+    .btn-direct-action:hover {
+      border-color: var(--accent-amber); color: var(--accent-amber); background: rgba(245, 158, 11, 0.15);
+      transform: translateY(-1px);
+    }
+    .btn-direct-action.danger:hover {
+      border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(244, 63, 94, 0.15);
+    }
+
+    /* BOTTOM DOCK PANEL: LAYERS & TEXT REVIEW */
+    .dock-panel-layers { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .layers-header {
+      padding: 10px 14px; background: rgba(14, 14, 18, 0.6); border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .layers-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .count-tag { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); font-family: var(--font-mono); padding: 2px 8px; border-radius: 999px; font-size: 10px; }
+
+    .layers-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .layer-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .layer-card.selected { border-color: var(--accent-amber); background: rgba(245, 158, 11, 0.12); }
+    .block-idx { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); font-family: var(--font-mono); font-weight: 700; font-size: 10px; padding: 2px 6px; border-radius: 5px; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .card-text-box { background: rgba(9, 9, 11, 0.7); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 7px 9px; font-size: 12px; color: #f4f4f5; margin-top: 5px; }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed; bottom: 24px; left: 24px;
+      background: rgba(26, 26, 32, 0.95); backdrop-filter: blur(16px);
+      border: 1px solid var(--accent-amber); color: var(--accent-amber);
+      padding: 12px 20px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.6); opacity: 0; transform: translateY(12px); transition: all 0.3s; pointer-events: none; z-index: 1000;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">H</div>
+      <div class="brand-title">Houmi Studio <span class="badge">Direct 1-Click Pipeline Actions (No 2-Step Clicks!)</span></div>
+    </div>
+  </header>
+
+  <!-- Main Grid Workspace -->
+  <div class="app-container">
+    
+    <!-- Left Workspace Canvas Area -->
+    <div class="canvas-viewport">
+
+      <!-- ================= 1. HOUMI "TEXT & FORMATTING" FLYOUT PANEL ================= -->
+      <div class="houmi-formatting-widget" id="houmi-widget">
+        
+        <!-- Accordion Title Bar -->
+        <div class="houmi-widget-header">
+          <span class="houmi-widget-title">🎨 TEXT & FORMATTING (<span id="widget-block-id">#1</span>)</span>
+          <span class="accordion-arrow" onclick="toggleWidget()" title="Collapse Panel">«</span>
+        </div>
+
+        <!-- UNIFIED SINGLE VIEWPORT CONTENT -->
+        <div class="widget-content-body">
+          
+          <!-- 1. TEMPLATES SECTION -->
+          <div>
+            <span class="section-subhead">🎨 Style Templates</span>
+            
+            <!-- Current Active Template Box -->
+            <div class="current-template-box" style="margin-bottom: 8px;">
+              <span id="active-template-label">Current ตัวละครพูด · TH SarabunPSK · 50px</span>
+              <span>✓</span>
+            </div>
+
+            <!-- 2x3 Template Grid -->
+            <div class="template-cards-grid">
+              <div class="template-card-item active-template" id="tpl-card-1" onclick="selectTemplatePreset('ตัวละครพูด', 'TH SarabunPSK', '50px', 1)">
+                <span class="template-item-name">ตัวละครพูด</span>
+                <span class="template-item-meta">TH SarabunPSK · 50px</span>
+              </div>
+              <div class="template-card-item" id="tpl-card-2" onclick="selectTemplatePreset('คำบรรยาย', 'TF Phethai', '52px', 2)">
+                <span class="template-item-name">คำบรรยาย</span>
+                <span class="template-item-meta">TF Phethai · 52px</span>
+              </div>
+              <div class="template-card-item" id="tpl-card-3" onclick="selectTemplatePreset('ตะโกน', 'TF Phethai', '72px', 3)">
+                <span class="template-item-name">ตะโกน</span>
+                <span class="template-item-meta">TF Phethai · 72px</span>
+              </div>
+              <div class="template-card-item" id="tpl-card-4" onclick="selectTemplatePreset('เสียงเอฟเฟกต์', 'Tahoma', '84px', 4)">
+                <span class="template-item-name">เสียงเอฟเฟกต์</span>
+                <span class="template-item-meta">Tahoma · 84px</span>
+              </div>
+              <div class="template-card-item" id="tpl-card-5" onclick="selectTemplatePreset('คิดในใจ', 'TF Phethai', '52px', 5)">
+                <span class="template-item-name">คิดในใจ</span>
+                <span class="template-item-meta">TF Phethai · 52px</span>
+              </div>
+              <div class="template-card-item" id="tpl-card-6" onclick="selectTemplatePreset('ระบบพูด', 'Block', '48px', 6)">
+                <span class="template-item-name">ระบบพูด</span>
+                <span class="template-item-meta">Block · 48px</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 2px 0;"></div>
+
+          <!-- 2. CUSTOM TEXT STYLE & TRANSLATION SECTION -->
+          <div>
+            <span class="section-subhead">🔤 Custom Text Style</span>
+            
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div>
+                <span class="field-label">คำแปล (Translation Text)</span>
+                <input type="text" id="input-translation" class="modern-input" value="อย่าทำแบบนั้นนะ!" oninput="updateTextFromInput(this.value)">
+              </div>
+
+              <div class="grid-2">
+                <div>
+                  <span class="field-label">Font Family</span>
+                  <select class="modern-select" id="char-font" onchange="updateFont(this.value)">
+                    <option value="FC Sukhumvit">FC Sukhumvit</option>
+                    <option value="TH SarabunPSK">TH SarabunPSK</option>
+                    <option value="TF Phethai">TF Phethai</option>
+                    <option value="Tahoma">Tahoma</option>
+                  </select>
+                </div>
+
+                <div>
+                  <span class="field-label">Font Size (px)</span>
+                  <div style="display:flex; gap:6px;">
+                    <input type="number" class="modern-input" id="char-size" value="50" min="6" max="150" onchange="updateFontSize(this.value)">
+                    <button class="auto-fit-badge" onclick="showToast('⚡ Auto Fit Font Size เรียบร้อย!')">⚡ Fit</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div>
+                  <span class="field-label">Font Style</span>
+                  <div class="style-pill-group">
+                    <button class="style-pill-btn" id="btn-bold" onclick="toggleStyle('bold')">B</button>
+                    <button class="style-pill-btn" id="btn-italic" onclick="toggleStyle('italic')">I</button>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="field-label">Align</span>
+                  <div class="style-pill-group">
+                    <button class="style-pill-btn" onclick="setAlign('left')">⬅</button>
+                    <button class="style-pill-btn active" onclick="setAlign('center')">↔</button>
+                    <button class="style-pill-btn" onclick="setAlign('right')">➡</button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <span class="field-label">Text Color</span>
+                <div class="color-swatch-picker">
+                  <span style="font-size:11.5px; color:#fff;" id="hex-val">#FFFFFF</span>
+                  <div class="swatch-circle" id="color-circle" style="background:#ffffff;" onclick="changeColor()" title="คลิกสุ่มเลือกสี"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manage Templates Button -->
+          <button class="btn-manage-templates" onclick="showToast('⚙️ เปิดหน้าต่างจัดการข้อมูล MANAGE TEMPLATES')">
+            MANAGE TEMPLATES
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Page Mockup -->
+      <div class="page-mockup">
+        <div class="balloon b1 active" id="canvas-b1" onclick="selectBalloon(1)">
+          <span id="canvas-text-1">อย่าทำแบบนั้นนะ!</span>
+        </div>
+        <div class="balloon b2" id="canvas-b2" onclick="selectBalloon(2)">
+          <span id="canvas-text-2">รีบไปกันเถอะ</span>
+        </div>
+        <div class="balloon b3" id="canvas-b3" onclick="selectBalloon(3)">
+          <span id="canvas-text-3">เอ๊ะ... อะไรน่ะ?</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 2. VERTICAL ICON RAIL (PHOTOSHOP FLYOUT STRIP ATTACHED TO SIDEBAR) ================= -->
+    <div class="ps-dock-rail">
+      <span class="rail-collapse-btn" onclick="toggleWidget()" id="rail-toggle-arrow" title="เปิด/ปิด แผงสไตล์ข้อความ">«</span>
+      <button class="rail-icon-btn active" id="rail-btn-char" onclick="toggleWidget()" title="🎨 Text Formatting">A|</button>
+      <button class="rail-icon-btn" onclick="showToast('⚡ Quick Pipeline Status')" title="⚡ Pipeline Status">⚡</button>
+      <button class="rail-icon-btn" onclick="showToast('📑 Quick Layers Stack')" title="📑 Layers Stack">📑</button>
+    </div>
+
+    <!-- ================= 3. RIGHT SIDEBAR (STACKED PANELS DOCK) ================= -->
+    <div class="sidebar-dock">
+      
+      <!-- TOP DOCK PANEL: PIPELINE CONTROLS WITH DIRECT 1-CLICK ACTIONS -->
+      <div class="dock-panel-pipeline">
+        <div class="pipeline-header">
+          <span class="pipeline-title">⚡ Pipeline Controls</span>
+          <div class="scope-selector">
+            <button class="scope-btn active" onclick="setScope(this, 'หน้าปัจจุบัน')">หน้าปัจจุบัน</button>
+            <button class="scope-btn" onclick="setScope(this, 'ทั้งโปรเจกต์ (17)')">ทั้งโปรเจกต์ (17)</button>
+          </div>
+        </div>
+
+        <button class="btn-run-pipeline" onclick="showToast('🚀 เริ่มรัน Auto Pipeline ทั้งหมดเรียบร้อย!')">
+          <span>▶ RUN PIPELINE (ทั้งโปรเจกต์)</span>
+        </button>
+
+        <!-- REDESIGNED DIRECT 1-CLICK PIPELINE MATRIX (EVERY STAGE HAS DIRECT ACTION BUTTONS!) -->
+        <div class="direct-pipeline-grid">
+          
+          <!-- STAGE 1: DETECT -->
+          <div class="pipeline-stage-card done">
+            <div class="stage-card-info">
+              <span class="stage-card-badge">✓ 1</span>
+              <span class="stage-card-title">🎈 Detect</span>
+            </div>
+            <div class="stage-direct-actions">
+              <button class="btn-direct-action" onclick="showToast('➕ Stage 1: เพิ่มกรอบ Detect ใหม่ 1-Click!')">➕ เพิ่ม</button>
+              <button class="btn-direct-action danger" onclick="showToast('🗑️ Stage 1: ลบ Detect 1-Click!')">🗑️</button>
+              <button class="btn-direct-action" onclick="showToast('🔄 Stage 1: รัน Detect ใหม่ 1-Click!')">🔄</button>
+            </div>
+          </div>
+
+          <!-- STAGE 2: OCR -->
+          <div class="pipeline-stage-card done">
+            <div class="stage-card-info">
+              <span class="stage-card-badge">✓ 2</span>
+              <span class="stage-card-title">📝 OCR</span>
+            </div>
+            <div class="stage-direct-actions">
+              <button class="btn-direct-action" onclick="showToast('➕ Stage 2: เพิ่มข้อความ OCR 1-Click!')">➕ เพิ่ม</button>
+              <button class="btn-direct-action danger" onclick="showToast('🗑️ Stage 2: ลบ OCR 1-Click!')">🗑️</button>
+              <button class="btn-direct-action" onclick="showToast('🔄 Stage 2: รัน OCR ใหม่ 1-Click!')">🔄</button>
+            </div>
+          </div>
+
+          <!-- STAGE 3: MASK (RECOMMENDED / ACTIVE) -->
+          <div class="pipeline-stage-card recommended">
+            <div class="stage-card-info">
+              <span class="stage-card-badge">👉 3</span>
+              <span class="stage-card-title">🎭 Mask</span>
+            </div>
+            <div class="stage-direct-actions">
+              <button class="btn-direct-action" onclick="showToast('➕ Stage 3: เพิ่ม Mask 1-Click ทันที!')">➕ เพิ่ม</button>
+              <button class="btn-direct-action danger" onclick="showToast('🗑️ Stage 3: ลบ Mask 1-Click ทันที!')">🗑️ ลบ</button>
+              <button class="btn-direct-action" onclick="showToast('🔄 Stage 3: รัน Mask ใหม่ 1-Click ทันที!')">🔄 รับใหม่</button>
+            </div>
+          </div>
+
+          <!-- STAGE 4: CLEAN -->
+          <div class="pipeline-stage-card">
+            <div class="stage-card-info">
+              <span class="stage-card-badge">4</span>
+              <span class="stage-card-title">🧹 Clean</span>
+            </div>
+            <div class="stage-direct-actions">
+              <button class="btn-direct-action" onclick="showToast('➕ Stage 4: เพิ่ม Clean 1-Click!')">➕ เพิ่ม</button>
+              <button class="btn-direct-action danger" onclick="showToast('🗑️ Stage 4: ลบ Clean 1-Click!')">🗑️</button>
+              <button class="btn-direct-action" onclick="showToast('🔄 Stage 4: รัน Clean ใหม่ 1-Click!')">🔄</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- BOTTOM DOCK PANEL: LAYERS & TEXT REVIEW -->
+      <div class="dock-panel-layers">
+        <div class="layers-header">
+          <span class="layers-title">📑 Layers & Text Review</span>
+          <span class="count-tag">3 Blocks</span>
+        </div>
+
+        <div class="layers-list">
+          <div class="layer-card selected" id="card-1" onclick="selectBalloon(1)">
+            <div class="card-meta">
+              <span class="block-idx">#1</span>
+              <span class="role-name">ตัวละครพูด (Bubble)</span>
+            </div>
+            <div class="card-text-box">
+              <strong id="card-text-val-1">อย่าทำแบบนั้นนะ!</strong>
+            </div>
+          </div>
+
+          <div class="layer-card" id="card-2" onclick="selectBalloon(2)">
+            <div class="card-meta">
+              <span class="block-idx">#2</span>
+              <span class="role-name">ตัวละครพูด (Bubble)</span>
+            </div>
+            <div class="card-text-box">
+              <strong id="card-text-val-2">รีบไปกันเถอะ</strong>
+            </div>
+          </div>
+
+          <div class="layer-card" id="card-3" onclick="selectBalloon(3)">
+            <div class="card-meta">
+              <span class="block-idx">#3</span>
+              <span class="role-name">คิดในใจ (Thought)</span>
+            </div>
+            <div class="card-text-box">
+              <strong id="card-text-val-3">เอ๊ะ... อะไรน่ะ?</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span>✨</span>
+    <span id="toast-text">Action Triggered!</span>
+  </div>
+
+  <script>
+    let activeBlockId = 1;
+
+    function toggleWidget() {
+      const w = document.getElementById('houmi-widget');
+      const btn = document.getElementById('rail-btn-char');
+      const arrow = document.getElementById('rail-toggle-arrow');
+
+      const isCollapsed = w.classList.toggle('collapsed');
+      btn.classList.toggle('active', !isCollapsed);
+      arrow.innerText = isCollapsed ? '»' : '«';
+
+      showToast(isCollapsed ? 'ย่อพับแผง Text Formatting' : 'ขยายเปิดแผง Text Formatting');
+    }
+
+    function selectTemplatePreset(name, font, size, id) {
+      document.querySelectorAll('.template-card-item').forEach(c => c.classList.remove('active-template'));
+      document.getElementById('tpl-card-' + id).classList.add('active-template');
+
+      document.getElementById('active-template-label').innerText = 'Current ' + name + ' · ' + font + ' · ' + size;
+      document.getElementById('char-font').value = font;
+      
+      const target = document.getElementById('canvas-b' + activeBlockId);
+      target.style.fontFamily = font;
+      showToast('นำเข้าสไตล์เทมเพลต: ' + name + ' (' + font + ' - ' + size + ')');
+    }
+
+    function selectBalloon(id) {
+      activeBlockId = id;
+      document.querySelectorAll('.balloon').forEach((b, idx) => b.classList.toggle('active', (idx + 1) === id));
+      document.querySelectorAll('.layer-card').forEach((c, idx) => c.classList.toggle('selected', (idx + 1) === id));
+      document.getElementById('widget-block-id').innerText = '#' + id;
+
+      const currentText = document.getElementById('canvas-text-' + id).innerText;
+      document.getElementById('input-translation').value = currentText;
+
+      showToast('เลือก Block #' + id);
+    }
+
+    function setScope(btn, label) {
+      document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      showToast('สลับขอบเขต: ' + label);
+    }
+
+    function updateTextFromInput(val) {
+      document.getElementById('canvas-text-' + activeBlockId).innerText = val;
+      document.getElementById('card-text-val-' + activeBlockId).innerText = val;
+    }
+
+    function updateFont(fontName) {
+      document.getElementById('canvas-b' + activeBlockId).style.fontFamily = fontName;
+      showToast('เปลี่ยนฟอนต์เป็น: ' + fontName);
+    }
+
+    function updateFontSize(size) {
+      document.getElementById('canvas-b' + activeBlockId).style.fontSize = size + 'px';
+      showToast('เปลี่ยนขนาดฟอนต์เป็น: ' + size + 'px');
+    }
+
+    function toggleStyle(style) {
+      const btn = document.getElementById('btn-' + style);
+      btn.classList.toggle('active');
+      const isBold = document.getElementById('btn-bold').classList.contains('active');
+      const isItalic = document.getElementById('btn-italic').classList.contains('active');
+      
+      const target = document.getElementById('canvas-b' + activeBlockId);
+      target.style.fontWeight = isBold ? '700' : '500';
+      target.style.fontStyle = isItalic ? 'italic' : 'normal';
+      showToast('ปรับสไตล์ข้อความ: ' + (isBold ? 'Bold ' : '') + (isItalic ? 'Italic' : ''));
+    }
+
+    function setAlign(align) {
+      document.getElementById('canvas-b' + activeBlockId).style.textAlign = align;
+      showToast('จัดตำแหน่งข้อความ: ' + align);
+    }
+
+    function changeColor() {
+      const colors = ['#ffffff', '#f59e0b', '#10b981', '#06b6d4', '#f43f5e', '#a855f7'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      document.getElementById('color-circle').style.background = randomColor;
+      document.getElementById('hex-val').innerText = randomColor.toUpperCase();
+      document.getElementById('canvas-b' + activeBlockId).style.color = randomColor;
+      showToast('เปลี่ยนสีข้อความ: ' + randomColor);
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-text').innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "handle": {
+    "task_id": "task_85f72600",
+    "kind": "feature",
+    "goal": "Rebuild effects panel to match MangaToolPlus production quality with 3-tab popup, real angle dials, gradient bar, collapsible effect groups, custom sliders",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "ultradeep_file_gate": {
+        "enabled": true,
+        "queue": [],
+        "files": {},
+        "current": null,
+        "max_files_per_edit_call": 1,
+        "require_hypotheses": 3,
+        "created_at": "2026-08-29T06:48:39.123977+00:00",
+        "updated_at": "2026-08-29T06:48:39.123977+00:00"
+      },
+      "mode": "ultradeep",
+      "marathon_slug": "m_85f72600",
+      "require_swarm": true
+    },
+    "created_at": "2026-08-29T06:48:39.112947+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

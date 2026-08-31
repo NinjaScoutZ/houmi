@@ -1,0 +1,35 @@
+{
+  "handle": {
+    "task_id": "task_4371a880",
+    "kind": "feature",
+    "goal": "Phase 1 — Discord Browser Scraper Engine with Playwright persistent session & link extractor",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "ultradeep_file_gate": {
+        "enabled": true,
+        "queue": [],
+        "files": {},
+        "current": null,
+        "max_files_per_edit_call": 1,
+        "require_hypotheses": 3,
+        "created_at": "2026-08-28T11:23:48.686766+00:00",
+        "updated_at": "2026-08-28T11:23:48.686766+00:00"
+      },
+      "mode": "ultradeep",
+      "marathon_slug": "m_4371a880",
+      "require_swarm": true
+    },
+    "created_at": "2026-08-28T11:23:48.674510+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

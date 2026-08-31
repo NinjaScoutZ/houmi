@@ -1,0 +1,549 @@
+{
+  "handle": {
+    "task_id": "task_31a247ae",
+    "kind": "feature",
+    "goal": "Audit Canvas system — identify what exists, what's incomplete, what needs development",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "ask"
+    },
+    "created_at": "2026-08-27T15:03:25.356008+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [
+    {
+      "id": "ev_02d3f9e9",
+      "task_id": "task_31a247ae",
+      "type": "log",
+      "summary": "exit_checklist reject",
+      "description": "",
+      "payload": {
+        "status": "blocked",
+        "directive": "reject",
+        "profile": "ship",
+        "ship_mode": true,
+        "blocking": [
+          "rubric",
+          "phase",
+          "verify",
+          "hollow",
+          "plan",
+          "fault_probe",
+          "council",
+          "search",
+          "skill",
+          "write_guard",
+          "quality"
+        ],
+        "gates": [
+          {
+            "gate": "rubric",
+            "ok": false,
+            "detail": "acceptance_defined: Missing required phase(s): ['hypothesize']; ui_or_test_proof: Missing required phase(s): ['verify']"
+          },
+          {
+            "gate": "phase",
+            "ok": false,
+            "detail": "Must reach VERIFY"
+          },
+          {
+            "gate": "verify",
+            "ok": false,
+            "detail": "verify_bundle evidence missing, failed, or not server-authored"
+          },
+          {
+            "gate": "hollow",
+            "ok": false,
+            "detail": "hollow_surface: no edit paths recorded — use blast_radius/edit_safe or pass workspace; cannot claim with empty scan on code tasks"
+          },
+          {
+            "gate": "plan",
+            "ok": false,
+            "detail": "Forced gate: write-through-plan — call gk_meta.plan_validate with full 9-step plan (UI/web/game must also declare playtest→capture→inspect→recheck phases) before claim_done / edit_safe."
+          },
+          {
+            "gate": "fault_probe",
+            "ok": false,
+            "detail": "fault_probe: no python edit paths — record edits via blast/edit_safe or run fault_probe(targets=...) before claim"
+          },
+          {
+            "gate": "council",
+            "ok": false,
+            "detail": "Forced gate: run gk_code.council → submit all roles (Hacker REJECT must have real critique+must_fix) → council_finalize → COUNCIL_PASS before claim_done"
+          },
+          {
+            "gate": "swarm",
+            "ok": true,
+            "detail": "swarm not required for this task"
+          },
+          {
+            "gate": "search",
+            "ok": false,
+            "detail": "Forced search gate: need ≥5 recorded search queries for feature; have 0. Call search_web, then submit_evidence with { \"source\":\"web_search\", \"queries\":[...] } or marathon_save_progress(search_queries=...). Local skills do NOT waive this."
+          },
+          {
+            "gate": "skill",
+            "ok": false,
+            "detail": "Forced skill scan: call skill_catalog(query=goal, task_id=...) before proceeding. FORBIDDEN excuse: 'I already know enough' / training memory / activate_mode shortlist alone. Look-then-choose requires a real catalog call."
+          },
+          {
+            "gate": "tool_propose",
+            "ok": true,
+            "detail": "tool_propose N/A for ask"
+          },
+          {
+            "gate": "write_guard",
+            "ok": false,
+            "detail": "PROFILE=ship: set GODKILLER_WRITE_GUARD_PROVEN=1 only after live PreToolUse deny/allow via godkiller-write-guard — native Write still bypasses MCP until then. See docs/WRITE_GUARD_HOOKS.md / docs/HOST_VS_MCP.md"
+          },
+          {
+            "gate": "quality",
+            "ok": false,
+            "detail": "Ambition ladder: at L0_core, need at least L1_presence before claim (advance via set_ambition_ladder / next phase)."
+          }
+        ],
+        "stage_board": {
+          "passed": [
+            "swarm",
+            "tool_propose"
+          ],
+          "failed": [
+            {
+              "gate": "rubric",
+              "detail": "acceptance_defined: Missing required phase(s): ['hypothesize']; ui_or_test_proof: Missing required phase(s): ['verify']"
+            },
+            {
+              "gate": "phase",
+              "detail": "Must reach VERIFY"
+            },
+            {
+              "gate": "verify",
+              "detail": "verify_bundle evidence missing, failed, or not server-authored"
+            },
+            {
+              "gate": "hollow",
+              "detail": "hollow_surface: no edit paths recorded — use blast_radius/edit_safe or pass workspace; cannot claim with empty scan on code tasks"
+            },
+            {
+              "gate": "plan",
+              "detail": "Forced gate: write-through-plan — call gk_meta.plan_validate with full 9-step plan (UI/web/game must also declare playtest→capture→inspect→recheck phases) before claim_done / edit_safe."
+            },
+            {
+              "gate": "fault_probe",
+              "detail": "fault_probe: no python edit paths — record edits via blast/edit_safe or run fault_probe(targets=...) before claim"
+            },
+            {
+              "gate": "council",
+              "detail": "Forced gate: run gk_code.council → submit all roles (Hacker REJECT must have real critique+must_fix) → council_finalize → COUNCIL_PASS before claim_done"
+            },
+            {
+              "gate": "search",
+              "detail": "Forced search gate: need ≥5 recorded search queries for feature; have 0. Call search_web, then submit_evidence with { \"source\":\"web_search\", \"queries\":[...] } or marathon_save_progress(search_queries=...). Local skills do NOT waive this."
+            },
+            {
+              "gate": "skill",
+              "detail": "Forced skill scan: call skill_catalog(query=goal, task_id=...) before proceeding. FORBIDDEN excuse: 'I already know enough' / training memory / activate_mode shortlist alone. Look-then-choose requires a real catalog call."
+            },
+            {
+              "gate": "write_guard",
+              "detail": "PROFILE=ship: set GODKILLER_WRITE_GUARD_PROVEN=1 only after live PreToolUse deny/allow via godkiller-write-guard — native Write still bypasses MCP until then. See docs/WRITE_GUARD_HOOKS.md / docs/HOST_VS_MCP.md"
+            },
+            {
+              "gate": "quality",
+              "detail": "Ambition ladder: at L0_core, need at least L1_presence before claim (advance via set_ambition_ladder / next phase)."
+            }
+          ],
+          "remaining": [
+            "rubric",
+            "phase",
+            "verify",
+            "hollow",
+            "plan",
+            "fault_probe",
+            "council",
+            "search",
+            "skill",
+            "write_guard",
+            "quality"
+          ],
+          "current": "rubric",
+          "score": "2/13",
+          "confirm": "CONFIRMED 2/13 clear. FAILED: rubric, phase, verify, hollow, plan, fault_probe, council, search, skill, write_guard, quality. NEXT STAGE: rubric. LEFT: rubric → phase → verify → hollow → plan → fault_probe → council → search → skill → write_guard → quality."
+        },
+        "agent_role": {
+          "may_propose_done": true,
+          "may_decide_done": false,
+          "chat_summary_is_not_status": true,
+          "narrate_from_stage_board": true
+        },
+        "next": "Wire PreToolUse → godkiller-write-guard, live deny/allow, then GODKILLER_WRITE_GUARD_PROVEN=1 (PROFILE=ship).",
+        "source": "exit_checklist",
+        "server_authored": true,
+        "evidence_seal": "451847215770e7d0c0e17e3dd7e247e6766ac02567ed0bb3bcb6730e8c76aed7"
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-27T16:46:27.462427+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_2224a44d",
+      "task_id": "task_31a247ae",
+      "type": "log",
+      "summary": "exit_checklist reject",
+      "description": "",
+      "payload": {
+        "status": "blocked",
+        "directive": "reject",
+        "profile": "ship",
+        "ship_mode": true,
+        "blocking": [
+          "rubric",
+          "phase",
+          "verify",
+          "hollow",
+          "plan",
+          "fault_probe",
+          "council",
+          "search",
+          "skill",
+          "write_guard",
+          "quality"
+        ],
+        "gates": [
+          {
+            "gate": "rubric",
+            "ok": false,
+            "detail": "acceptance_defined: Missing required phase(s): ['hypothesize']; ui_or_test_proof: Missing required phase(s): ['verify']"
+          },
+          {
+            "gate": "phase",
+            "ok": false,
+            "detail": "Must reach VERIFY"
+          },
+          {
+            "gate": "verify",
+            "ok": false,
+            "detail": "verify_bundle evidence missing, failed, or not server-authored"
+          },
+          {
+            "gate": "hollow",
+            "ok": false,
+            "detail": "hollow_surface: no edit paths recorded — use blast_radius/edit_safe or pass workspace; cannot claim with empty scan on code tasks"
+          },
+          {
+            "gate": "plan",
+            "ok": false,
+            "detail": "Forced gate: write-through-plan — call gk_meta.plan_validate with full 9-step plan (UI/web/game must also declare playtest→capture→inspect→recheck phases) before claim_done / edit_safe."
+          },
+          {
+            "gate": "fault_probe",
+            "ok": false,
+            "detail": "fault_probe: no python edit paths — record edits via blast/edit_safe or run fault_probe(targets=...) before claim"
+          },
+          {
+            "gate": "council",
+            "ok": false,
+            "detail": "Forced gate: run gk_code.council → submit all roles (Hacker REJECT must have real critique+must_fix) → council_finalize → COUNCIL_PASS before claim_done"
+          },
+          {
+            "gate": "swarm",
+            "ok": true,
+            "detail": "swarm not required for this task"
+          },
+          {
+            "gate": "search",
+            "ok": false,
+            "detail": "Forced search gate: need ≥5 recorded search queries for feature; have 0. Call search_web, then submit_evidence with { \"source\":\"web_search\", \"queries\":[...] } or marathon_save_progress(search_queries=...). Local skills do NOT waive this."
+          },
+          {
+            "gate": "skill",
+            "ok": false,
+            "detail": "Forced skill scan: call skill_catalog(query=goal, task_id=...) before proceeding. FORBIDDEN excuse: 'I already know enough' / training memory / activate_mode shortlist alone. Look-then-choose requires a real catalog call."
+          },
+          {
+            "gate": "tool_propose",
+            "ok": true,
+            "detail": "tool_propose N/A for ask"
+          },
+          {
+            "gate": "write_guard",
+            "ok": false,
+            "detail": "PROFILE=ship: set GODKILLER_WRITE_GUARD_PROVEN=1 only after live PreToolUse deny/allow via godkiller-write-guard — native Write still bypasses MCP until then. See docs/WRITE_GUARD_HOOKS.md / docs/HOST_VS_MCP.md"
+          },
+          {
+            "gate": "quality",
+            "ok": false,
+            "detail": "Ambition ladder: at L0_core, need at least L1_presence before claim (advance via set_ambition_ladder / next phase)."
+          }
+        ],
+        "stage_board": {
+          "passed": [
+            "swarm",
+            "tool_propose"
+          ],
+          "failed": [
+            {
+              "gate": "rubric",
+              "detail": "acceptance_defined: Missing required phase(s): ['hypothesize']; ui_or_test_proof: Missing required phase(s): ['verify']"
+            },
+            {
+              "gate": "phase",
+              "detail": "Must reach VERIFY"
+            },
+            {
+              "gate": "verify",
+              "detail": "verify_bundle evidence missing, failed, or not server-authored"
+            },
+            {
+              "gate": "hollow",
+              "detail": "hollow_surface: no edit paths recorded — use blast_radius/edit_safe or pass workspace; cannot claim with empty scan on code tasks"
+            },
+            {
+              "gate": "plan",
+              "detail": "Forced gate: write-through-plan — call gk_meta.plan_validate with full 9-step plan (UI/web/game must also declare playtest→capture→inspect→recheck phases) before claim_done / edit_safe."
+            },
+            {
+              "gate": "fault_probe",
+              "detail": "fault_probe: no python edit paths — record edits via blast/edit_safe or run fault_probe(targets=...) before claim"
+            },
+            {
+              "gate": "council",
+              "detail": "Forced gate: run gk_code.council → submit all roles (Hacker REJECT must have real critique+must_fix) → council_finalize → COUNCIL_PASS before claim_done"
+            },
+            {
+              "gate": "search",
+              "detail": "Forced search gate: need ≥5 recorded search queries for feature; have 0. Call search_web, then submit_evidence with { \"source\":\"web_search\", \"queries\":[...] } or marathon_save_progress(search_queries=...). Local skills do NOT waive this."
+            },
+            {
+              "gate": "skill",
+              "detail": "Forced skill scan: call skill_catalog(query=goal, task_id=...) before proceeding. FORBIDDEN excuse: 'I already know enough' / training memory / activate_mode shortlist alone. Look-then-choose requires a real catalog call."
+            },
+            {
+              "gate": "write_guard",
+              "detail": "PROFILE=ship: set GODKILLER_WRITE_GUARD_PROVEN=1 only after live PreToolUse deny/allow via godkiller-write-guard — native Write still bypasses MCP until then. See docs/WRITE_GUARD_HOOKS.md / docs/HOST_VS_MCP.md"
+            },
+            {
+              "gate": "quality",
+              "detail": "Ambition ladder: at L0_core, need at least L1_presence before claim (advance via set_ambition_ladder / next phase)."
+            }
+          ],
+          "remaining": [
+            "rubric",
+            "phase",
+            "verify",
+            "hollow",
+            "plan",
+            "fault_probe",
+            "council",
+            "search",
+            "skill",
+            "write_guard",
+            "quality"
+          ],
+          "current": "rubric",
+          "score": "2/13",
+          "confirm": "CONFIRMED 2/13 clear. FAILED: rubric, phase, verify, hollow, plan, fault_probe, council, search, skill, write_guard, quality. NEXT STAGE: rubric. LEFT: rubric → phase → verify → hollow → plan → fault_probe → council → search → skill → write_guard → quality."
+        },
+        "agent_role": {
+          "may_propose_done": true,
+          "may_decide_done": false,
+          "chat_summary_is_not_status": true,
+          "narrate_from_stage_board": true
+        },
+        "next": "Wire PreToolUse → godkiller-write-guard, live deny/allow, then GODKILLER_WRITE_GUARD_PROVEN=1 (PROFILE=ship).",
+        "source": "exit_checklist",
+        "server_authored": true,
+        "evidence_seal": "451847215770e7d0c0e17e3dd7e247e6766ac02567ed0bb3bcb6730e8c76aed7"
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-27T17:12:34.970494+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_84ef96c2",
+      "task_id": "task_31a247ae",
+      "type": "log",
+      "summary": "exit_checklist reject",
+      "description": "",
+      "payload": {
+        "status": "blocked",
+        "directive": "reject",
+        "profile": "ship",
+        "ship_mode": true,
+        "blocking": [
+          "rubric",
+          "phase",
+          "verify",
+          "hollow",
+          "plan",
+          "fault_probe",
+          "council",
+          "search",
+          "skill",
+          "write_guard",
+          "quality"
+        ],
+        "gates": [
+          {
+            "gate": "rubric",
+            "ok": false,
+            "detail": "acceptance_defined: Missing required phase(s): ['hypothesize']; ui_or_test_proof: Missing required phase(s): ['verify']"
+          },
+          {
+            "gate": "phase",
+            "ok": false,
+            "detail": "Must reach VERIFY"
+          },
+          {
+            "gate": "verify",
+            "ok": false,
+            "detail": "verify_bundle evidence missing, failed, or not server-authored"
+          },
+          {
+            "gate": "hollow",
+            "ok": false,
+            "detail": "hollow_surface: no edit paths recorded — use blast_radius/edit_safe or pass workspace; cannot claim with empty scan on code tasks"
+          },
+          {
+            "gate": "plan",
+            "ok": false,
+            "detail": "Forced gate: write-through-plan — call gk_meta.plan_validate with full 9-step plan (UI/web/game must also declare playtest→capture→inspect→recheck phases) before claim_done / edit_safe."
+          },
+          {
+            "gate": "fault_probe",
+            "ok": false,
+            "detail": "fault_probe: no python edit paths — record edits via blast/edit_safe or run fault_probe(targets=...) before claim"
+          },
+          {
+            "gate": "council",
+            "ok": false,
+            "detail": "Forced gate: run gk_code.council → submit all roles (Hacker REJECT must have real critique+must_fix) → council_finalize → COUNCIL_PASS before claim_done"
+          },
+          {
+            "gate": "swarm",
+            "ok": true,
+            "detail": "swarm not required for this task"
+          },
+          {
+            "gate": "search",
+            "ok": false,
+            "detail": "Forced search gate: need ≥5 recorded search queries for feature; have 0. Call search_web, then submit_evidence with { \"source\":\"web_search\", \"queries\":[...] } or marathon_save_progress(search_queries=...). Local skills do NOT waive this."
+          },
+          {
+            "gate": "skill",
+            "ok": false,
+            "detail": "Forced skill scan: call skill_catalog(query=goal, task_id=...) before proceeding. FORBIDDEN excuse: 'I already know enough' / training memory / activate_mode shortlist alone. Look-then-choose requires a real catalog call."
+          },
+          {
+            "gate": "tool_propose",
+            "ok": true,
+            "detail": "tool_propose N/A for ask"
+          },
+          {
+            "gate": "write_guard",
+            "ok": false,
+            "detail": "PROFILE=ship: set GODKILLER_WRITE_GUARD_PROVEN=1 only after live PreToolUse deny/allow via godkiller-write-guard — native Write still bypasses MCP until then. See docs/WRITE_GUARD_HOOKS.md / docs/HOST_VS_MCP.md"
+          },
+          {
+            "gate": "quality",
+            "ok": false,
+            "detail": "Ambition ladder: at L0_core, need at least L1_presence before claim (advance via set_ambition_ladder / next phase)."
+          }
+        ],
+        "stage_board": {
+          "passed": [
+            "swarm",
+            "tool_propose"
+          ],
+          "failed": [
+            {
+              "gate": "rubric",
+              "detail": "acceptance_defined: Missing required phase(s): ['hypothesize']; ui_or_test_proof: Missing required phase(s): ['verify']"
+            },
+            {
+              "gate": "phase",
+              "detail": "Must reach VERIFY"
+            },
+            {
+              "gate": "verify",
+              "detail": "verify_bundle evidence missing, failed, or not server-authored"
+            },
+            {
+              "gate": "hollow",
+              "detail": "hollow_surface: no edit paths recorded — use blast_radius/edit_safe or pass workspace; cannot claim with empty scan on code tasks"
+            },
+            {
+              "gate": "plan",
+              "detail": "Forced gate: write-through-plan — call gk_meta.plan_validate with full 9-step plan (UI/web/game must also declare playtest→capture→inspect→recheck phases) before claim_done / edit_safe."
+            },
+            {
+              "gate": "fault_probe",
+              "detail": "fault_probe: no python edit paths — record edits via blast/edit_safe or run fault_probe(targets=...) before claim"
+            },
+            {
+              "gate": "council",
+              "detail": "Forced gate: run gk_code.council → submit all roles (Hacker REJECT must have real critique+must_fix) → council_finalize → COUNCIL_PASS before claim_done"
+            },
+            {
+              "gate": "search",
+              "detail": "Forced search gate: need ≥5 recorded search queries for feature; have 0. Call search_web, then submit_evidence with { \"source\":\"web_search\", \"queries\":[...] } or marathon_save_progress(search_queries=...). Local skills do NOT waive this."
+            },
+            {
+              "gate": "skill",
+              "detail": "Forced skill scan: call skill_catalog(query=goal, task_id=...) before proceeding. FORBIDDEN excuse: 'I already know enough' / training memory / activate_mode shortlist alone. Look-then-choose requires a real catalog call."
+            },
+            {
+              "gate": "write_guard",
+              "detail": "PROFILE=ship: set GODKILLER_WRITE_GUARD_PROVEN=1 only after live PreToolUse deny/allow via godkiller-write-guard — native Write still bypasses MCP until then. See docs/WRITE_GUARD_HOOKS.md / docs/HOST_VS_MCP.md"
+            },
+            {
+              "gate": "quality",
+              "detail": "Ambition ladder: at L0_core, need at least L1_presence before claim (advance via set_ambition_ladder / next phase)."
+            }
+          ],
+          "remaining": [
+            "rubric",
+            "phase",
+            "verify",
+            "hollow",
+            "plan",
+            "fault_probe",
+            "council",
+            "search",
+            "skill",
+            "write_guard",
+            "quality"
+          ],
+          "current": "rubric",
+          "score": "2/13",
+          "confirm": "CONFIRMED 2/13 clear. FAILED: rubric, phase, verify, hollow, plan, fault_probe, council, search, skill, write_guard, quality. NEXT STAGE: rubric. LEFT: rubric → phase → verify → hollow → plan → fault_probe → council → search → skill → write_guard → quality."
+        },
+        "agent_role": {
+          "may_propose_done": true,
+          "may_decide_done": false,
+          "chat_summary_is_not_status": true,
+          "narrate_from_stage_board": true
+        },
+        "next": "Wire PreToolUse → godkiller-write-guard, live deny/allow, then GODKILLER_WRITE_GUARD_PROVEN=1 (PROFILE=ship).",
+        "source": "exit_checklist",
+        "server_authored": true,
+        "evidence_seal": "451847215770e7d0c0e17e3dd7e247e6766ac02567ed0bb3bcb6730e8c76aed7"
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-27T17:19:30.262676+00:00",
+      "ref_ids": []
+    }
+  ],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

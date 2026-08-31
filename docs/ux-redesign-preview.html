@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Houmi Studio — ข้อเสนอปรับปรุง UX/UI (Preview)</title>
+<style>
+/* ============================================================
+   PREVIEW ONLY — ไม่ผูกกับโค้ดจริง
+   ใช้ system font stack (ไม่มี CDN) เพื่อพิสูจน์ข้อเสนอ offline-first
+   ============================================================ */
+:root{
+  --bg:#0a0a0c; --panel:#121215; --raised:#18181b; --sunken:#08080a;
+  --line:#27272a; --line-soft:#1c1c20;
+  --fg:#fafafa; --fg-mute:#a1a1aa; --fg-faint:#71717a;
+  --amber:#eab308; --amber-hi:#facc15;
+  --done:#10b981; --run:#eab308; --wait:#52525b; --err:#f43f5e; --stale:#f59e0b; --ai:#22d3ee;
+  /* type scale: 6 ขั้น ฐาน 13px — ไม่มีอะไรต่ำกว่า 11px */
+  --t-badge:11px; --t-label:12px; --t-body:13px; --t-title:15px; --t-panel:18px; --t-page:22px;
+  /* z scale: 6 ชั้นมีชื่อ */
+  --z-base:0; --z-canvas-ui:10; --z-panel:20; --z-overlay:30; --z-modal:40; --z-toast:50;
+  --r:8px; --r-sm:5px;
+  --font:"Segoe UI","Leelawadee UI","Noto Sans Thai",system-ui,-apple-system,sans-serif;
+  --mono:"Cascadia Mono","Consolas",ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:var(--t-body);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--amber)}
+code,.mono{font-family:var(--mono);font-size:12px}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1280px;margin:0 auto;padding:32px 24px 96px}
+.doc-head{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:28px}
+.doc-head h1{font-size:26px;font-weight:650;letter-spacing:-.01em}
+.doc-head p{color:var(--fg-mute);margin-top:8px;max-width:70ch}
+.tag{display:inline-block;font-size:var(--t-badge);font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;padding:3px 9px;border-radius:999px;
+  background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.32);color:var(--amber-hi);
+  vertical-align:middle;margin-left:12px}
+
+/* ---------- tabs ---------- */
+nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:32px;flex-wrap:wrap}
+nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--fg-faint);
+  font-family:inherit;font-size:var(--t-body);font-weight:550;padding:11px 16px;cursor:pointer;
+  transition:color .15s,border-color .15s}
+nav.tabs button:hover{color:var(--fg-mute)}
+nav.tabs button[aria-selected="true"]{color:var(--amber-hi);border-bottom-color:var(--amber)}
+section[role=tabpanel]{display:none;animation:fade .25s ease}
+section[role=tabpanel].on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- generic blocks ---------- */
+h2.sec{font-size:var(--t-panel);font-weight:650;margin:0 0 6px;letter-spacing:-.01em}
+h3.sub{font-size:var(--t-title);font-weight:600;margin:32px 0 10px;color:var(--fg)}
+p.lede{color:var(--fg-mute);max-width:78ch;margin-bottom:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+/* before / after */
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+@media(max-width:900px){.ba{grid-template-columns:1fr}}
+.ba>div{border-radius:var(--r);border:1px solid var(--line);overflow:hidden;background:var(--panel)}
+.ba .hd{font-size:var(--t-label);font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:9px 14px;border-bottom:1px solid var(--line)}
+.ba .before .hd{background:rgba(244,63,94,.09);color:#fb7185}
+.ba .after  .hd{background:rgba(16,185,129,.09);color:#34d399}
+.ba .bd{padding:16px}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:var(--t-label);margin:10px 0 4px}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{color:var(--fg-faint);font-size:var(--t-badge);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+td.num{font-family:var(--mono);color:var(--amber-hi);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+
+/* severity pills */
+.sev{display:inline-block;font-size:var(--t-badge);font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.sev.p0{background:rgba(244,63,94,.15);color:#fb7185;border:1px solid rgba(244,63,94,.3)}
+.sev.p1{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.sev.p2{background:rgba(113,113,122,.15);color:var(--fg-mute);border:1px solid var(--line)}
+.ref{font-family:var(--mono);font-size:11px;color:var(--fg-faint)}
+
+/* callout */
+.note{border-left:3px solid var(--amber);background:rgba(234,179,8,.05);padding:13px 16px;
+  border-radius:0 var(--r-sm) var(--r-sm) 0;margin:16px 0;color:var(--fg-mute)}
+.note b{color:var(--fg)}
+.note.bad{border-left-color:var(--err);background:rgba(244,63,94,.05)}
+.note.good{border-left-color:var(--done);background:rgba(16,185,129,.05)}
+
+/* ============ MOCKUP: app shell ============ */
+.mock{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--sunken);
+  display:flex;flex-direction:column;height:620px;font-size:var(--t-label);position:relative}
+.mock.tall{height:660px}
+.m-title{height:34px;flex:0 0 34px;background:#0d0d10;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:14px;padding:0 12px}
+.m-brand{display:flex;align-items:center;gap:7px;font-weight:700;font-size:var(--t-label);color:var(--amber-hi)}
+.m-brand .dot{width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--amber-hi),#d97706)}
+.m-menu{display:flex;gap:1px}
+.m-menu span{padding:4px 9px;border-radius:var(--r-sm);color:var(--fg-mute);font-size:var(--t-label)}
+.m-menu span.hot{background:rgba(255,255,255,.06);color:var(--fg)}
+.m-title .right{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--fg-faint);font-size:var(--t-badge)}
+
+/* command bar */
+.m-cmd{height:48px;flex:0 0 48px;background:var(--panel);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;padding:0 12px}
+.pill{display:flex;align-items:center;gap:7px;height:30px;padding:0 11px;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:var(--raised);color:var(--fg-mute);font-size:var(--t-label);white-space:nowrap}
+.pill.primary{background:linear-gradient(135deg,var(--amber),#ca8a04);border-color:var(--amber);
+  color:#0a0a0c;font-weight:700}
+.pill .k{font-family:var(--mono);font-size:10px;opacity:.6;border:1px solid currentColor;
+  border-radius:3px;padding:0 3px;line-height:1.35}
+.m-cmd .sep{width:1px;height:20px;background:var(--line)}
+
+/* ---- STAGE RAIL (หัวใจของข้อเสนอ) ---- */
+.rail{display:flex;align-items:center;gap:0;flex:1;min-width:0}
+.stage{display:flex;align-items:center;gap:8px;padding:5px 13px 5px 10px;border:1px solid transparent;
+  border-radius:999px;color:var(--fg-faint);white-space:nowrap;position:relative}
+.stage .ico{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;border:1.5px solid currentColor;flex:0 0 19px}
+.stage .nm{font-size:var(--t-label);font-weight:600}
+.stage .ct{font-family:var(--mono);font-size:10px;opacity:.75}
+.stage.done{color:var(--done)}
+.stage.done .ico{background:rgba(16,185,129,.15)}
+.stage.run{color:var(--run);border-color:rgba(234,179,8,.4);background:rgba(234,179,8,.08)}
+.stage.run .ico{background:rgba(234,179,8,.15);animation:spin 1.1s linear infinite}
+.stage.stale{color:var(--stale)}
+.stage.stale .ico{background:rgba(245,158,11,.12)}
+.stage.wait{color:var(--wait)}
+.rail .link{width:16px;height:1.5px;background:var(--line);flex:0 0 16px}
+.rail .link.ok{background:rgba(16,185,129,.4)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* body columns */
+.m-body{flex:1;display:flex;min-height:0}
+.m-left{width:196px;flex:0 0 196px;background:var(--panel);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;min-height:0}
+.m-right{width:252px;flex:0 0 252px;background:var(--panel);border-left:1px solid var(--line);
+  display:flex;flex-direction:column;min-height:0}
+.m-center{flex:1;min-width:0;background:
+  radial-gradient(circle at 50% 0%,rgba(234,179,8,.05),transparent 55%),
+  linear-gradient(to right,rgba(255,255,255,.014) 1px,transparent 1px) 0 0/22px 22px,
+  linear-gradient(to bottom,rgba(255,255,255,.014) 1px,transparent 1px) 0 0/22px 22px,#07070a;
+  position:relative;display:flex;flex-direction:column}
+.col-hd{height:32px;flex:0 0 32px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 11px;border-bottom:1px solid var(--line);color:var(--fg-faint);
+  font-size:var(--t-badge);font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+
+/* page rows w/ stage dots */
+.pages{overflow:auto;padding:7px;display:flex;flex-direction:column;gap:5px}
+.prow{display:flex;gap:9px;padding:6px;border-radius:var(--r-sm);border:1px solid var(--line-soft);
+  background:var(--sunken);align-items:center}
+.prow.on{border-color:rgba(234,179,8,.5);background:rgba(234,179,8,.05);
+  box-shadow:inset 2px 0 0 var(--amber)}
+.thumb{width:34px;height:46px;border-radius:3px;background:linear-gradient(160deg,#2a2a30,#141418);
+  flex:0 0 34px;border:1px solid var(--line)}
+.pmeta{min-width:0;flex:1}
+.pmeta .t{font-size:var(--t-label);font-weight:650}
+.pmeta .s{font-size:var(--t-badge);color:var(--fg-faint);margin-top:1px}
+.dots{display:flex;gap:3px;margin-top:5px}
+.dots i{width:13px;height:4px;border-radius:2px;background:var(--wait);display:block}
+.dots i.d{background:var(--done)}
+.dots i.r{background:var(--run)}
+.dots i.s{background:var(--stale)}
+.dots i.e{background:var(--err)}
+
+/* canvas overlays */
+.cv-page{position:absolute;inset:34px 60px 40px 60px;background:#f4f4f2;border-radius:2px;
+  box-shadow:0 18px 60px rgba(0,0,0,.7);overflow:hidden}
+.cv-page .panel-art{position:absolute;border:1.5px solid #2a2a2a;background:#e6e6e2}
+.balloon{position:absolute;background:#fff;border:1.5px solid #1c1c1c;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  color:#111;font-size:9px;font-weight:700;padding:5px;line-height:1.25}
+.balloon.sel{outline:1.5px solid var(--amber);outline-offset:3px}
+.bhandle{position:absolute;width:6px;height:6px;background:var(--amber);border:1px solid #000;border-radius:1px}
+
+/* floating canvas toolbar — docked, single row */
+.cv-tools{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:var(--z-canvas-ui);
+  display:flex;align-items:center;gap:2px;background:rgba(18,18,21,.94);border:1px solid var(--line);
+  border-radius:999px;padding:4px 6px;backdrop-filter:blur(12px);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.cv-tools b{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--fg-faint);font-size:12px;font-weight:600}
+.cv-tools b.on{background:var(--amber);color:#0a0a0c}
+.cv-tools .vr{width:1px;height:16px;background:var(--line);margin:0 4px}
+.cv-zoom{position:absolute;bottom:8px;right:10px;z-index:var(--z-canvas-ui);display:flex;align-items:center;gap:2px;
+  background:rgba(18,18,21,.94);border:1px solid var(--line);border-radius:var(--r-sm);padding:3px 5px;
+  font-size:var(--t-badge);color:var(--fg-mute)}
+.cv-zoom b{width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:3px}
+.cv-mode{position:absolute;bottom:8px;left:10px;z-index:var(--z-canvas-ui);display:flex;gap:4px}
+.chip{display:flex;align-items:center;gap:5px;font-size:var(--t-badge);font-weight:650;padding:3px 9px;
+  border-radius:999px;border:1px solid var(--line);background:rgba(18,18,21,.94);color:var(--fg-mute)}
+.chip.live{border-color:rgba(16,185,129,.4);color:#34d399;background:rgba(16,185,129,.09)}
+.chip.warn{border-color:rgba(245,158,11,.4);color:#fbbf24;background:rgba(245,158,11,.09)}
+
+/* inspector */
+.insp{overflow:auto;flex:1;min-height:0}
+.acc{border-bottom:1px solid var(--line-soft)}
+.acc-hd{display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:var(--t-label);font-weight:650}
+.acc-hd .car{margin-left:auto;color:var(--fg-faint);font-size:10px}
+.acc-bd{padding:0 11px 13px;display:flex;flex-direction:column;gap:9px}
+.fld{display:flex;align-items:center;gap:8px}
+.fld label{font-size:var(--t-label);color:var(--fg-mute);width:64px;flex:0 0 64px}
+.inp{flex:1;height:27px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--sunken);
+  display:flex;align-items:center;padding:0 8px;font-size:var(--t-label);color:var(--fg);min-width:0}
+.inp .u{margin-left:auto;color:var(--fg-faint);font-size:var(--t-badge)}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;flex:1}
+.seg b{flex:1;text-align:center;padding:5px 0;font-size:var(--t-label);color:var(--fg-faint);font-weight:600}
+.seg b.on{background:var(--amber);color:#0a0a0c}
+.swatch{width:27px;height:27px;border-radius:var(--r-sm);border:1px solid var(--line);flex:0 0 27px}
+.tabs2{display:flex;padding:5px 7px;gap:3px;border-bottom:1px solid var(--line)}
+.tabs2 b{flex:1;text-align:center;font-size:var(--t-label);font-weight:650;padding:5px 0;border-radius:var(--r-sm);color:var(--fg-faint)}
+.tabs2 b.on{background:rgba(234,179,8,.14);color:var(--amber-hi)}
+
+/* status bar */
+.m-foot{height:26px;flex:0 0 26px;background:#0d0d10;border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:9px;padding:0 12px;font-size:var(--t-badge);color:var(--fg-faint)}
+.m-foot .right{margin-left:auto;display:flex;gap:12px;align-items:center}
+.led{width:6px;height:6px;border-radius:50%;background:var(--done)}
+.led.busy{background:var(--run)}
+
+/* misc mockup helpers */
+.banner{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:7px 12px;font-size:var(--t-label);
+  background:rgba(245,158,11,.09);border-bottom:1px solid rgba(245,158,11,.3);color:#fcd34d}
+.banner .x{margin-left:auto;color:var(--fg-faint)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:var(--t-label);color:var(--fg-mute)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:13px;height:5px;border-radius:2px;display:block}
+
+/* token swatch demo */
+.toks{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px}
+.tok{border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px;background:var(--sunken);min-width:118px}
+.tok .sw{height:26px;border-radius:3px;margin-bottom:7px}
+.tok .nm{font-family:var(--mono);font-size:11px;color:var(--fg)}
+.tok .use{font-size:var(--t-badge);color:var(--fg-faint);margin-top:2px}
+.scale-row{display:flex;align-items:baseline;gap:12px;padding:7px 0;border-bottom:1px solid var(--line-soft)}
+.scale-row .n{font-family:var(--mono);font-size:11px;color:var(--amber-hi);width:104px;flex:0 0 104px}
+ul.clean{list-style:none;display:flex;flex-direction:column;gap:8px}
+ul.clean li{padding-left:18px;position:relative;color:var(--fg-mute)}
+ul.clean li:before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;
+  background:var(--amber);opacity:.55}
+ul.clean li b{color:var(--fg)}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;
+  border-radius:4px;padding:1px 5px;background:var(--raised);color:var(--fg)}
+.phase{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--line-soft)}
+.phase .no{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:rgba(234,179,8,.12);
+  border:1px solid rgba(234,179,8,.32);color:var(--amber-hi);display:flex;align-items:center;
+  justify-content:center;font-weight:750;font-size:var(--t-label)}
+.phase .txt{min-width:0}
+.phase .txt h4{font-size:var(--t-title);font-weight:600;margin-bottom:3px}
+.phase .txt p{color:var(--fg-mute);font-size:var(--t-body)}
+.phase .txt .files{margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-head">
+  <h1>Houmi Studio — ข้อเสนอปรับปรุง UX/UI<span class="tag">Preview เท่านั้น</span></h1>
+  <p>
+    เอกสารนี้เป็น <b>ตัวอย่างเชิงภาพ (mockup)</b> ที่ยังไม่แตะโค้ดจริงเลย ทุกอย่างในไฟล์นี้เป็น HTML/CSS
+    แยกอิสระ เปิดดูได้โดยไม่ต้องรัน dev server ปัญหาทุกข้อที่ยกมาอ้างอิงจาก
+    <code>frontend/src</code> จริงพร้อมเลขบรรทัด และตัวเลขทุกตัวมาจากการนับในโค้ดจริง
+  </p>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true"  data-t="p1">1 · สรุปผู้บริหาร</button>
+  <button role="tab" aria-selected="false" data-t="p2">2 · ปัญหาที่พบ (มีหลักฐาน)</button>
+  <button role="tab" aria-selected="false" data-t="p3">3 · ก่อน / หลัง</button>
+  <button role="tab" aria-selected="false" data-t="p4">4 · Mockup ใหม่</button>
+  <button role="tab" aria-selected="false" data-t="p5">5 · Design System</button>
+  <button role="tab" aria-selected="false" data-t="p6">6 · แผนลงมือ</button>
+</nav>
+
+<!-- ============================================================
+     TAB 1 — EXECUTIVE SUMMARY
+     ============================================================ -->
+<section role="tabpanel" id="p1" class="on">
+  <h2 class="sec">ปัญหาหลัก 1 ข้อ ที่อธิบายอาการอื่นเกือบทั้งหมด</h2>
+  <p class="lede">
+    Houmi ทำงานเป็น <b>pipeline 8 ขั้น</b> (detect → sort → ocr → mask → inpaint → font_judge → typeset → render)
+    แต่ UI ไม่เคยแสดง "ตอนนี้หน้านี้อยู่ขั้นไหนแล้ว" ทำให้ผู้ใช้ต้องจำสถานะไว้ในหัวเอง
+    ทุกอย่างที่เหลือ (ปุ่มเยอะ, ตัวอักษรเล็ก, เมนูซ้ำ) เป็นผลตามมาจากการที่ UI ไม่มี "แกนสถานะ" ให้ยึด
+  </p>
+
+  <div class="note bad">
+    <b>หลักฐาน:</b> pipeline รับ 8 ค่า —
+    <code>runPipelineStep('detect'|'ocr'|'sort'|'mask'|'inpaint'|'font_judge'|'render'|'auto')</code>
+    ที่ <span class="ref">App.tsx:2481</span> แต่ sidebar แสดงสถานะเป็น badge เดียวแบบ 2 ค่า
+    <code>p.status === 'processed' ? 'badge-active' : 'badge-pending'</code>
+    ที่ <span class="ref">App.tsx:4295-4299</span> → ขั้นตอน 8 ขั้นถูกบีบเหลือ "เสร็จ / ไม่เสร็จ"
+  </div>
+
+  <h3 class="sub">ตัวเลขที่วัดได้จากโค้ดจริง</h3>
+  <table>
+    <thead><tr><th>ตัวชี้วัด</th><th>ค่าปัจจุบัน</th><th>เป้าหมาย</th><th>ทำไมสำคัญ</th></tr></thead>
+    <tbody>
+      <tr><td><code>App.tsx</code> ยาว</td><td class="num">9,109 บรรทัด</td><td class="num">&lt; 400</td><td>แก้ UI ทีเดียวกระทบทุกอย่าง ทดสอบแยกไม่ได้</td></tr>
+      <tr><td><code>useState</code> ใน App.tsx</td><td class="num">195 ตัว</td><td class="num">&lt; 20</td><td>state กระจุกในไฟล์เดียว หา bug ยาก</td></tr>
+      <tr><td>ปุ่มทั้งแอป / ใน App.tsx</td><td class="num">498 / 189</td><td>—</td><td>ความหนาแน่นของ UI</td></tr>
+      <tr><td>ขนาดฟอนต์ที่ใช้จริง</td><td class="num">17 ค่า</td><td class="num">6 ค่า</td><td>ไม่มีลำดับความสำคัญทางสายตา</td></tr>
+      <tr><td>ตัวอักษรเล็กกว่า 11px</td><td class="num">573 จุด</td><td class="num">0</td><td>อ่านยากบนจอ 1080p+scaling</td></tr>
+      <tr><td>ค่า z-index ต่างกัน</td><td class="num">14 ค่า</td><td class="num">6 ชั้นมีชื่อ</td><td>ชนกันเอง เช่น z-[100000]</td></tr>
+      <tr><td>ไฟล์ .tsx ที่ปน Thai/EN</td><td class="num">29 / 36</td><td>ระบบเดียว</td><td>ภาษาไม่คงเส้นคงวา</td></tr>
+      <tr><td><code>role="dialog"</code> ใน ~30 modal</td><td class="num">1</td><td class="num">ทุกตัว</td><td>screen reader / focus trap ไม่ทำงาน</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Bug ที่เจอระหว่างสำรวจ (ยืนยันแล้วในโค้ด ไม่ใช่เรื่องความสวยงาม)</h3>
+  <table>
+    <thead><tr><th>ระดับ</th><th>อาการ</th><th>หลักฐาน</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="sev p0">P0</span></td>
+        <td><b>โหมด typeset เข้าไม่ได้เลย</b> — UI ทั้งก้อน (inspector ปรับ font/สี/ระยะบรรทัด) ถูกเขียนไว้แล้วแต่ไม่มีทางไปถึง
+          เพราะ <code>setWorkspaceMode</code> ถูกเรียกที่เดียวและส่งค่า <code>'ocr'</code></td>
+        <td><span class="ref">App.tsx:659</span> ตั้งค่าเริ่ม <code>'ocr'</code>,
+            <span class="ref">App.tsx:3794</span> เป็น call site เดียว ส่ง <code>'ocr'</code> →
+            เงื่อนไข <code>workspaceMode==='typeset'</code> ที่
+            <span class="ref">App.tsx:4487, 4776, 4782</span> และ
+            <span class="ref">PipelineToolbar.tsx:255</span> เป็นจริงไม่ได้</td>
+      </tr>
+      <tr>
+        <td><span class="sev p0">P0</span></td>
+        <td><b>ปุ่ม <span class="kbd">?</span> เปิด 2 หน้าต่างทับกัน</b> — มี 2 handler ผูกปุ่มเดียวกัน
+          ทั้งคู่ toggle overlay ต่างตัวพร้อมกัน</td>
+        <td><span class="ref">App.tsx:1414</span> → <code>setShowHotkeyModal</code> และ
+            <span class="ref">App.tsx:2127</span> → <code>setShowShortcutsLegend</code>;
+            render ที่ <span class="ref">HotkeyModal.tsx:53</span> (z-50) กับ
+            <span class="ref">App.tsx:6433</span> (z-50)</td>
+      </tr>
+      <tr>
+        <td><span class="sev p0">P0</span></td>
+        <td><b>คีย์ลัดที่โฆษณาไว้ไม่มีจริง</b> — <code>HotkeyModal</code> บอกว่ามี
+          <span class="kbd">Shift+D</span> <span class="kbd">Shift+O</span> <span class="kbd">Shift+I</span>
+          <span class="kbd">Shift+T</span> สำหรับ detect/ocr/inpaint/typeset แต่ค้นทั้ง <code>src/</code> ไม่พบ binding เลย</td>
+        <td>ประกาศที่ <span class="ref">HotkeyModal.tsx:29-35</span>; ไม่พบ handler ใด ๆ
+            (grep <code>key==='d'|'o'|'i'|'t'</code> = 0 ผลลัพธ์)</td>
+      </tr>
+      <tr>
+        <td><span class="sev p0">P0</span></td>
+        <td><b>Legend โฆษณา <span class="kbd">A</span> สลับ Clean/ต้นฉบับ</b> แต่ไม่มี binding —
+          ต่างจาก <span class="kbd">V</span>/<span class="kbd">M</span>/<span class="kbd">B</span> ที่มีจริง</td>
+        <td>อ้างที่ <span class="ref">App.tsx:6460</span>; ของจริงมีแค่
+            <code>selectMode/drawBoxMode/brushMode</code> ที่
+            <span class="ref">Canvas.tsx:1451,1455,1459</span></td>
+      </tr>
+      <tr>
+        <td><span class="sev p1">P1</span></td>
+        <td><b>เวอร์ชันใน status bar ค้าง</b> — hardcode <code>v0.1.4</code> ทั้งที่มี
+          <code>HOUMI_VERSION_LABEL</code> ให้ใช้อยู่แล้ว (<code>package.json</code> = 1.0.1)</td>
+        <td><span class="ref">App.tsx:5689</span> vs <span class="ref">version.ts:6</span>;
+            <code>tauri.conf.json</code> ยังเป็น <code>0.1.2</code> → 3 แหล่งไม่ตรงกัน</td>
+      </tr>
+      <tr>
+        <td><span class="sev p1">P1</span></td>
+        <td><b>ย่อจอแล้ว sidebar หายถาวร</b> — พอ <code>innerWidth&lt;1280</code> สั่งปิด แต่ไม่มี logic เปิดคืน
+          เมื่อขยายจอกลับ ผู้ใช้ต้องกดเปิดเองทุกครั้ง</td>
+        <td><span class="ref">App.tsx:1388-1395</span> เรียกแต่ <code>false</code>;
+            ไม่มี call site ที่ตั้ง <code>true</code> ตอน resize</td>
+      </tr>
+      <tr>
+        <td><span class="sev p1">P1</span></td>
+        <td><b>แอป offline-first แต่โหลดฟอนต์จาก CDN</b> — เปิดเครื่องไม่มีเน็ต ตัวอักษรจะ fallback
+          ทั้ง UI; ยังโหลด <code>Silkscreen</code>+<code>VT323</code> ที่ไม่มีที่ไหนเรียกใช้เลย</td>
+        <td><span class="ref">index.css:1</span> <code>@import url(fonts.googleapis.com...)</code>;
+            ไม่มีไฟล์ฟอนต์ใน <code>public/</code>; ขัดกับ
+            <span class="ref">docs/architecture/adr-002-offline-first-desktop-client.md</span></td>
+      </tr>
+      <tr>
+        <td><span class="sev p2">P2</span></td>
+        <td><b>ชื่อ token หลอกตา</b> — <code>.pixel-btn-purple</code> เป็นสีเทา,
+          <code>.pixel-btn-magenta</code> เป็นสีเหลือง, <code>.pixel-btn-green</code> เป็นสีเทา,
+          <code>.font-pixel</code> ไม่ใช่ฟอนต์ pixel; <code>.input-glass</code> ประกาศซ้ำ 2 ครั้ง</td>
+        <td><span class="ref">index.css:258,287,315,235</span>;
+            ซ้ำที่ <span class="ref">index.css:125 และ 368</span> (ชุดหลังใช้ <code>!important</code> ทับ)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <b>ข้อสังเกต:</b> token ชื่อ <code>pixel-*</code> ถูกใช้จริงรวมกันแค่ 11 จุดจากปุ่มทั้งหมด 498 ปุ่ม
+    (purple 8, magenta 2, glow-btn 1) — แปลว่า design system มีอยู่แต่แทบไม่ถูกใช้
+    ปุ่มที่เหลือเขียน Tailwind ยาว ๆ ซ้ำกันเองในแต่ละที่
+  </div>
+</section>
+
+<!-- ============================================================
+     TAB 2 — DETAILED BUG FINDINGS WITH EVIDENCE
+     ============================================================ -->
+<section role="tabpanel" id="p2">
+  <h2 class="sec">ปัญหาทุกข้อ — จัดตาม Priority + หลักฐานจากโค้ดจริง</h2>
+  <p class="lede">
+    Bug ทุกข้อด้านล่างยืนยันด้วยเลขบรรทัดจริงจาก source code ไม่ใช่ข้อคิดเห็นส่วนตัว
+    แบ่งเป็น 3 กลุ่ม: ‹P0 = ฟังก์ชันที่พังจริง› ‹P1 = ใช้งานได้แต่ทำให้สับสน› ‹P2 = เรื่อง consistency›
+  </p>
+
+  <!-- P0 GROUP -->
+  <h3 class="sub" style="color:#fb7185">🔴 P0 — ฟังก์ชันพัง / เข้าไม่ถึง</h3>
+
+  <div class="card">
+    <h4 style="font-size:var(--t-title);font-weight:650;margin-bottom:6px">1. โหมด Typeset เป็น Dead Code</h4>
+    <p class="lede" style="margin-bottom:12px">
+      UI ทั้งก้อนสำหรับปรับ font, line-height, สี — ถูกเขียนเสร็จแต่เข้าไม่ได้เลย
+    </p>
+    <table>
+      <thead><tr><th>จุดที่พบ</th><th>โค้ด</th><th>ปัญหา</th></tr></thead>
+      <tbody>
+        <tr><td><span class="ref">App.tsx:659</span></td><td><code>useState&lt;WorkspaceMode&gt;('ocr')</code></td><td>ค่าเริ่มต้น = <code>'ocr'</code></td></tr>
+        <tr><td><span class="ref">App.tsx:3794</span></td><td><code>setWorkspaceMode('ocr')</code></td><td>Call site เดียว ส่ง <code>'ocr'</code> เท่านั้น</td></tr>
+        <tr><td><span class="ref">App.tsx:4487</span></td><td><code>workspaceMode === 'typeset'</code></td><td>เงื่อนไขนี้เป็น <code>false</code> เสมอ</td></tr>
+        <tr><td><span class="ref">PipelineToolbar.tsx:255</span></td><td><code>workspaceMode === 'typeset'</code></td><td>Sub-toolbar ไม่เคยแสดง</td></tr>
+      </tbody>
+    </table>
+    <div class="note bad">
+      <b>ผลกระทบ:</b> SidebarInspector (359 บรรทัด), FloatingLetteringBar (314 บรรทัด),
+      TypesettingRulesSettingsPanel (735 บรรทัด) — รวม 1,408 บรรทัดของ UI ที่ผู้ใช้ไม่มีวันเห็น
+    </div>
+  </div>
+
+  <div class="card">
+    <h4 style="font-size:var(--t-title);font-weight:650;margin-bottom:6px">2. ปุ่ม <span class="kbd">?</span> เปิด 2 Modal ทับกัน</h4>
+    <p class="lede" style="margin-bottom:12px">2 handler ผูกปุ่มเดียวกัน แต่ละตัว toggle overlay คนละตัว</p>
+    <div class="ba">
+      <div class="before"><div class="hd">HANDLER A</div><div class="bd"><code>App.tsx:1414</code> → <code>setShowHotkeyModal(prev => !prev)</code><br>Render: <span class="ref">HotkeyModal.tsx:53</span> (z-50, fixed)</div></div>
+      <div class="after" style="background:rgba(244,63,94,.05)"><div class="hd" style="background:rgba(244,63,94,.09);color:#fb7185">HANDLER B</div><div class="bd"><code>App.tsx:2127</code> → <code>setShowShortcutsLegend(prev => !prev)</code><br>Render: <span class="ref">App.tsx:6433</span> (z-50, fixed)</div></div>
+    </div>
+    <div class="note bad"><b>ผลลัพธ์:</b> ผู้ใช้กด <span class="kbd">?</span> ครั้งเดียว ได้หน้าต่าง 2 อันซ้อนกัน ต้องปิดทีละอัน</div>
+  </div>
+
+  <div class="card">
+    <h4 style="font-size:var(--t-title);font-weight:650;margin-bottom:6px">3. คีย์ลัด Ghost — โฆษณาแต่ไม่มีจริง</h4>
+    <table>
+      <thead><tr><th>คีย์ที่อ้าง</th><th>ฟังก์ชัน</th><th>ประกาศที่</th><th>Handler จริง</th></tr></thead>
+      <tbody>
+        <tr><td><span class="kbd">Shift+D</span></td><td>Detect</td><td><span class="ref">HotkeyModal.tsx:31</span></td><td class="num">❌ ไม่มี</td></tr>
+        <tr><td><span class="kbd">Shift+O</span></td><td>OCR</td><td><span class="ref">HotkeyModal.tsx:32</span></td><td class="num">❌ ไม่มี</td></tr>
+        <tr><td><span class="kbd">Shift+I</span></td><td>Inpaint</td><td><span class="ref">HotkeyModal.tsx:33</span></td><td class="num">❌ ไม่มี</td></tr>
+        <tr><td><span class="kbd">Shift+T</span></td><td>Typeset</td><td><span class="ref">HotkeyModal.tsx:34</span></td><td class="num">❌ ไม่มี</td></tr>
+        <tr><td><span class="kbd">A</span></td><td>สลับ Clean/ต้นฉบับ</td><td><span class="ref">App.tsx:6460</span></td><td class="num">❌ ไม่มี</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><b>คีย์ที่มีจริง (ยืนยันใน Canvas.tsx):</b> <span class="kbd">V</span> = selectMode, <span class="kbd">M</span> = maskBrush, <span class="kbd">B</span> = drawBox — ที่ <span class="ref">Canvas.tsx:1451-1459</span></div>
+  </div>
+
+  <!-- P1 GROUP -->
+  <h3 class="sub" style="color:#fbbf24">🟡 P1 — ใช้งานได้แต่สร้างความสับสน</h3>
+
+  <div class="grid2">
+    <div class="card">
+      <h4 style="font-weight:650;margin-bottom:6px">Version String 3 แหล่งไม่ตรงกัน</h4>
+      <table>
+        <tr><td>Status bar</td><td class="num">v0.1.4</td><td><span class="ref">App.tsx:5689</span></td></tr>
+        <tr><td>package.json</td><td class="num">1.0.1</td><td><span class="ref">package.json</span></td></tr>
+        <tr><td>tauri.conf.json</td><td class="num">0.1.2</td><td><span class="ref">src-tauri/tauri.conf.json</span></td></tr>
+      </table>
+      <p style="color:var(--fg-faint);font-size:var(--t-label);margin-top:6px">มี <code>HOUMI_VERSION_LABEL</code> ใน <span class="ref">version.ts:6</span> แต่ไม่ถูกใช้ตรงนี้</p>
+    </div>
+    <div class="card">
+      <h4 style="font-weight:650;margin-bottom:6px">Sidebar หายถาวรตอน Resize</h4>
+      <p style="color:var(--fg-mute)">เมื่อ <code>innerWidth &lt; 1280</code> → <code>setLeftSidebar(false)</code> ที่ <span class="ref">App.tsx:1388-1395</span> — แต่ไม่มี logic เปิดคืนตอนขยายจอ</p>
+    </div>
+    <div class="card">
+      <h4 style="font-weight:650;margin-bottom:6px">Offline App ที่โหลดฟอนต์จาก CDN</h4>
+      <p style="color:var(--fg-mute)"><span class="ref">index.css:1</span> — <code>@import url(fonts.googleapis.com...)</code> ขัดกับ <span class="ref">ADR-002 offline-first</span><br>
+      ยังโหลด <code>Silkscreen</code> + <code>VT323</code> ที่ไม่มี element ไหนใช้</p>
+    </div>
+    <div class="card">
+      <h4 style="font-weight:650;margin-bottom:6px">Pipeline 8 ขั้น → Badge 2 ค่า</h4>
+      <p style="color:var(--fg-mute)"><span class="ref">App.tsx:4295-4299</span> — Sidebar badge แสดงแค่ <code>processed/pending</code> ทั้ง ๆ ที่ backend รับ 8 ค่าผ่าน <code>runPipelineStep()</code></p>
+    </div>
+  </div>
+
+  <!-- P2 GROUP -->
+  <h3 class="sub" style="color:var(--fg-faint)">⚪ P2 — Consistency & Naming</h3>
+
+  <div class="card">
+    <h4 style="font-weight:650;margin-bottom:6px">CSS Token ชื่อหลอกตา</h4>
+    <table>
+      <thead><tr><th>ชื่อ Class</th><th>สีที่คาดหวัง</th><th>สีจริง</th><th>ที่มา</th></tr></thead>
+      <tbody>
+        <tr><td><code>.pixel-btn-purple</code></td><td>ม่วง</td><td>เทา</td><td><span class="ref">index.css:258</span></td></tr>
+        <tr><td><code>.pixel-btn-magenta</code></td><td>ชมพูเข้ม</td><td>เหลือง</td><td><span class="ref">index.css:287</span></td></tr>
+        <tr><td><code>.pixel-btn-green</code></td><td>เขียว</td><td>เทา</td><td><span class="ref">index.css:315</span></td></tr>
+        <tr><td><code>.font-pixel</code></td><td>Pixel font</td><td>System font</td><td><span class="ref">index.css:235</span></td></tr>
+        <tr><td><code>.input-glass</code></td><td>—</td><td>ประกาศซ้ำ 2 ครั้ง</td><td><span class="ref">index.css:125, 368</span></td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <b>สัดส่วน:</b> pixel-* classes ถูกใช้แค่ 11 จุด จากปุ่มทั้งหมด 498 ปุ่ม (2.2%)
+      — ปุ่มที่เหลือใช้ Tailwind inline ซ้ำกันคนละที่
+    </div>
+  </div>
+
+  <div class="card">
+    <h4 style="font-weight:650;margin-bottom:6px">z-index ไม่มีระบบ</h4>
+    <p class="lede" style="margin-bottom:8px">พบ 8 ค่า z-index แบบ arbitrary ใน Tailwind:</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <code style="padding:3px 8px;background:var(--sunken);border:1px solid var(--line);border-radius:4px">z-[60]</code>
+      <code style="padding:3px 8px;background:var(--sunken);border:1px solid var(--line);border-radius:4px">z-[90]</code>
+      <code style="padding:3px 8px;background:var(--sunken);border:1px solid var(--line);border-radius:4px">z-[100]</code>
+      <code style="padding:3px 8px;background:var(--sunken);border:1px solid var(--line);border-radius:4px">z-[9999]</code>
+      <code style="padding:3px 8px;background:var(--sunken);border:1px solid var(--line);border-radius:4px">z-[10000]</code>
+      <code style="padding:3px 8px;background:var(--sunken);border:1px solid var(--line);border-radius:4px">z-[20000]</code>
+      <code style="padding:3px 8px;background:var(--sunken);border:1px solid var(--line);border-radius:4px">z-[99999]</code>
+      <code style="padding:3px 8px;background:rgba(244,63,94,.15);border:1px solid rgba(244,63,94,.3);border-radius:4px;color:#fb7185">z-[100000]</code>
+    </div>
+    <p style="color:var(--fg-faint);font-size:var(--t-label);margin-top:8px">ข้อเสนอ: ใช้ 6 ชั้นมีชื่อ — <code>base(0) → canvas-ui(10) → panel(20) → overlay(30) → modal(40) → toast(50)</code></p>
+  </div>
+
+  <div class="card">
+    <h4 style="font-weight:650;margin-bottom:6px">Accessibility: 1 ใน ~30 Modal มี <code>role="dialog"</code></h4>
+    <p style="color:var(--fg-mute)">จาก 35 component files ที่มี modal/overlay pattern มีเพียง 1 ไฟล์ที่ใส่ <code>role="dialog"</code> ทำให้ screen reader จับไม่ได้ว่าเป็น dialog และ focus trap ไม่ทำงาน</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     TAB 3 — BEFORE / AFTER
+     ============================================================ -->
+<section role="tabpanel" id="p3">
+  <h2 class="sec">ก่อน / หลัง — เปรียบเทียบ UI ปัจจุบัน vs ข้อเสนอ</h2>
+  <p class="lede">แต่ละคู่แสดง layout ปัจจุบันเทียบกับ layout ที่เสนอ พร้อมเหตุผลว่าทำไมถึงเปลี่ยน</p>
+
+  <!-- BA 1: Page Sidebar -->
+  <h3 class="sub">1. Sidebar — Page List</h3>
+  <div class="ba">
+    <div class="before">
+      <div class="hd">ปัจจุบัน</div>
+      <div class="bd">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;gap:8px;align-items:center;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--sunken)">
+            <div style="width:30px;height:40px;background:#222;border-radius:2px;flex-shrink:0"></div>
+            <div><div style="font-size:11px;font-weight:700">Page 1</div><div style="font-size:9px;color:var(--fg-faint)">image_001.png</div><span style="font-size:9px;display:inline-block;padding:1px 6px;border-radius:3px;background:rgba(16,185,129,.15);color:#34d399;font-weight:700;margin-top:3px">processed</span></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--sunken)">
+            <div style="width:30px;height:40px;background:#222;border-radius:2px;flex-shrink:0"></div>
+            <div><div style="font-size:11px;font-weight:700">Page 2</div><div style="font-size:9px;color:var(--fg-faint)">image_002.png</div><span style="font-size:9px;display:inline-block;padding:1px 6px;border-radius:3px;background:var(--wait);color:var(--fg-faint);font-weight:700;margin-top:3px">pending</span></div>
+          </div>
+        </div>
+        <div class="note bad" style="margin-top:12px">
+          <b>ปัญหา:</b> badge แสดงแค่ "processed / pending" ทั้งที่จริง ๆ pipeline มี 8 ขั้น — ดูแล้วไม่รู้ว่า detect/ocr เสร็จแล้วแต่ inpaint ยังไม่รัน
+        </div>
+      </div>
+    </div>
+    <div class="after">
+      <div class="hd">ข้อเสนอ — Stage Dots</div>
+      <div class="bd">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="prow on">
+            <div class="thumb"></div>
+            <div class="pmeta">
+              <div class="t">Page 1</div>
+              <div class="s">image_001.png</div>
+              <div class="dots"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i></div>
+            </div>
+          </div>
+          <div class="prow">
+            <div class="thumb"></div>
+            <div class="pmeta">
+              <div class="t">Page 2</div>
+              <div class="s">image_002.png</div>
+              <div class="dots"><i class="d"></i><i class="d"></i><i class="r"></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="prow">
+            <div class="thumb"></div>
+            <div class="pmeta">
+              <div class="t">Page 3</div>
+              <div class="s">image_003.png</div>
+              <div class="dots"><i class="d"></i><i class="s"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i class="d" style="display:inline-block"></i> Done</span>
+          <span><i class="r" style="display:inline-block"></i> Running</span>
+          <span><i class="s" style="display:inline-block"></i> Stale</span>
+          <span><i style="display:inline-block;width:13px;height:4px;border-radius:2px;background:var(--wait)"></i> Waiting</span>
+          <span><i class="e" style="display:inline-block"></i> Error</span>
+        </div>
+        <div class="note good" style="margin-top:12px">
+          <b>ทำไม:</b> Dot 8 จุดแทน pipeline 8 ขั้น — ดูปราดเดียวรู้ว่าหน้าไหนค้างตรงไหน แก้ปัญหา "pipeline 8 ขั้น ถูกบีบเหลือ 2 ค่า"
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BA 2: Pipeline status -->
+  <h3 class="sub">2. Pipeline Status — Command Bar</h3>
+  <div class="ba">
+    <div class="before">
+      <div class="hd">ปัจจุบัน</div>
+      <div class="bd">
+        <p style="color:var(--fg-mute);margin-bottom:8px">ไม่มี visual indicator ว่าตอนนี้กำลังรันอะไร — ผู้ใช้รู้แค่จากปุ่ม "กำลังประมวลผล..." ที่หมุน</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill" style="opacity:.5">🔍 Detect</span>
+          <span class="pill" style="opacity:.5">📝 OCR</span>
+          <span class="pill" style="opacity:.5">🧹 Clean</span>
+          <span class="pill" style="opacity:.5">✨ Render</span>
+          <span class="pill primary" style="animation:spin 1.1s linear infinite;display:inline-flex">⏳ กำลังประมวลผล...</span>
+        </div>
+      </div>
+    </div>
+    <div class="after">
+      <div class="hd">ข้อเสนอ — Stage Rail</div>
+      <div class="bd">
+        <div class="rail" style="flex-wrap:wrap;gap:4px">
+          <div class="stage done"><div class="ico">✓</div><div class="nm">Detect</div><div class="ct">24</div></div>
+          <div class="link ok"></div>
+          <div class="stage done"><div class="ico">✓</div><div class="nm">Sort</div></div>
+          <div class="link ok"></div>
+          <div class="stage run"><div class="ico">◎</div><div class="nm">OCR</div><div class="ct">18/24</div></div>
+          <div class="link"></div>
+          <div class="stage wait"><div class="ico">·</div><div class="nm">Mask</div></div>
+          <div class="link"></div>
+          <div class="stage wait"><div class="ico">·</div><div class="nm">Inpaint</div></div>
+          <div class="link"></div>
+          <div class="stage wait"><div class="ico">·</div><div class="nm">Font</div></div>
+          <div class="link"></div>
+          <div class="stage wait"><div class="ico">·</div><div class="nm">Typeset</div></div>
+          <div class="link"></div>
+          <div class="stage wait"><div class="ico">·</div><div class="nm">Render</div></div>
+        </div>
+        <div class="note good" style="margin-top:12px">
+          <b>ทำไม:</b> Stage Rail แสดงทุกขั้นที่ backend รองรับจริง — ดูรู้ทันทีว่า "OCR ยังรันอยู่ 18/24 blocks" ไม่ต้องเดา
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BA 3: Font sizes -->
+  <h3 class="sub">3. Type Scale — 17 ขนาด → 6 ขั้นมีชื่อ</h3>
+  <div class="ba">
+    <div class="before">
+      <div class="hd">ปัจจุบัน — 17 ค่าต่างกัน</div>
+      <div class="bd">
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          <code style="font-size:7px;padding:2px 5px;background:var(--sunken);border:1px solid rgba(244,63,94,.3);border-radius:3px;color:#fb7185">7px</code>
+          <code style="font-size:8px;padding:2px 5px;background:var(--sunken);border:1px solid rgba(244,63,94,.3);border-radius:3px;color:#fb7185">8px</code>
+          <code style="font-size:9px;padding:2px 5px;background:var(--sunken);border:1px solid rgba(244,63,94,.3);border-radius:3px;color:#fb7185">9px</code>
+          <code style="font-size:10px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">10px</code>
+          <code style="font-size:10.5px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">10.5</code>
+          <code style="font-size:11px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">11px</code>
+          <code style="font-size:12px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">12px</code>
+          <code style="font-size:13px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">13px</code>
+          <code style="font-size:14px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">14px</code>
+          <code style="font-size:15px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">15px</code>
+          <code style="font-size:16px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">16px</code>
+          <code style="font-size:13px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">18px</code>
+          <code style="font-size:13px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">20px</code>
+          <code style="font-size:13px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">22px</code>
+          <code style="font-size:13px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">24px</code>
+          <code style="font-size:13px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">26px</code>
+          <code style="font-size:13px;padding:2px 5px;background:var(--sunken);border:1px solid var(--line);border-radius:3px">28px</code>
+        </div>
+        <div class="note bad" style="margin-top:10px"><b>573 จุด</b>ของ text ที่เล็กกว่า 11px — อ่านแทบไม่ออกบนจอ 1080p</div>
+      </div>
+    </div>
+    <div class="after">
+      <div class="hd">ข้อเสนอ — 6 ขั้นมีชื่อ</div>
+      <div class="bd">
+        <div class="scale-row"><div class="n">--t-badge: 11px</div><span style="font-size:11px">ค่าเล็กสุด — Badge, meta, timestamp</span></div>
+        <div class="scale-row"><div class="n">--t-label: 12px</div><span style="font-size:12px">Label, caption, field name</span></div>
+        <div class="scale-row"><div class="n">--t-body: 13px</div><span style="font-size:13px">Body text, paragraph, default</span></div>
+        <div class="scale-row"><div class="n">--t-title: 15px</div><span style="font-size:15px">Section title, card heading</span></div>
+        <div class="scale-row"><div class="n">--t-panel: 18px</div><span style="font-size:18px">Panel header, tab group</span></div>
+        <div class="scale-row"><div class="n">--t-page: 22px</div><span style="font-size:22px">Page-level heading</span></div>
+        <div class="note good" style="margin-top:10px"><b>กฎ:</b> ไม่มีอะไรเล็กกว่า 11px ทุกจุดใช้ token name แทนค่า magic number</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BA 4: z-index -->
+  <h3 class="sub">4. z-index — 8 ค่าสุ่ม → 6 ชั้นมีชื่อ</h3>
+  <div class="ba">
+    <div class="before">
+      <div class="hd">ปัจจุบัน — Arbitrary Values</div>
+      <div class="bd">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:90px;text-align:right;color:#fb7185">z-[100000]</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(244,63,94,.4),transparent);border-radius:2px"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:90px;text-align:right;color:#fbbf24">z-[99999]</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(245,158,11,.3),transparent);border-radius:2px"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:90px;text-align:right">z-[20000]</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.1),transparent);border-radius:2px"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:90px;text-align:right">z-[10000]</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.08),transparent);border-radius:2px"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:90px;text-align:right">z-[9999]</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.06),transparent);border-radius:2px"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:90px;text-align:right">z-[100]</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.04),transparent);border-radius:2px"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:90px;text-align:right">z-[90]</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.03),transparent);border-radius:2px"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:90px;text-align:right">z-[60]</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.02),transparent);border-radius:2px"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="after">
+      <div class="hd">ข้อเสนอ — Named Layers</div>
+      <div class="bd">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:120px;text-align:right;color:var(--amber-hi)">--z-toast: 50</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(234,179,8,.3),transparent);border-radius:2px"></div><span style="font-size:var(--t-badge);color:var(--fg-faint)">Notifications</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:120px;text-align:right;color:var(--amber-hi)">--z-modal: 40</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(234,179,8,.25),transparent);border-radius:2px"></div><span style="font-size:var(--t-badge);color:var(--fg-faint)">Dialogs & Modals</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:120px;text-align:right;color:var(--amber-hi)">--z-overlay: 30</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(234,179,8,.2),transparent);border-radius:2px"></div><span style="font-size:var(--t-badge);color:var(--fg-faint)">Dropdowns, Popovers</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:120px;text-align:right;color:var(--amber-hi)">--z-panel: 20</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(234,179,8,.15),transparent);border-radius:2px"></div><span style="font-size:var(--t-badge);color:var(--fg-faint)">Sidebar, Inspector</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:120px;text-align:right;color:var(--amber-hi)">--z-canvas-ui: 10</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(234,179,8,.1),transparent);border-radius:2px"></div><span style="font-size:var(--t-badge);color:var(--fg-faint)">Floating canvas tools</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><code style="width:120px;text-align:right;color:var(--amber-hi)">--z-base: 0</code><div style="flex:1;height:8px;background:linear-gradient(90deg,rgba(234,179,8,.05),transparent);border-radius:2px"></div><span style="font-size:var(--t-badge);color:var(--fg-faint)">Normal flow</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BA 5: Status bar -->
+  <h3 class="sub">5. Status Bar — ข้อมูลจริง vs Hardcode</h3>
+  <div class="ba">
+    <div class="before">
+      <div class="hd">ปัจจุบัน</div>
+      <div class="bd">
+        <div class="m-foot" style="position:relative;border-radius:var(--r)">
+          <span class="led"></span>
+          <span>Houmi Studio v0.1.4 (Online Mode)</span>
+          <div class="right">
+            <span>Diagnostics & Health</span>
+          </div>
+        </div>
+        <div class="note bad" style="margin-top:8px"><b>ปัญหา:</b> <code>v0.1.4</code> hardcode ที่ L5689 — ไม่ตรงกับ package.json (1.0.1) หรือ tauri.conf.json (0.1.2)</div>
+      </div>
+    </div>
+    <div class="after">
+      <div class="hd">ข้อเสนอ — Dynamic + Useful Info</div>
+      <div class="bd">
+        <div class="m-foot" style="position:relative;border-radius:var(--r)">
+          <span class="led"></span>
+          <span>Backend Connected · 42ms</span>
+          <div class="right">
+            <span>GPU: RTX 3060 · VRAM 2.1/12 GB</span>
+            <span style="color:var(--amber-hi)">v1.0.1</span>
+          </div>
+        </div>
+        <div class="note good" style="margin-top:8px"><b>ข้อเสนอ:</b> ใช้ <code>HOUMI_VERSION_LABEL</code> จาก version.ts · แสดง latency + GPU status จริง (backend มี endpoint อยู่แล้ว)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     TAB 4 — INTERACTIVE MOCKUP
+     ============================================================ -->
+<section role="tabpanel" id="p4">
+  <h2 class="sec">Mockup — ข้อเสนอ App Shell ใหม่</h2>
+  <p class="lede">
+    Mockup ด้านล่างเป็น HTML/CSS ล้วน แสดงแนวคิดหลัก: <b>Stage Rail</b> ที่ command bar,
+    <b>Page Dots</b> ที่ sidebar, <b>Inspector</b> ที่แถบขวา, และ <b>Floating Canvas Toolbar</b>
+  </p>
+
+  <div class="mock tall">
+    <!-- Title bar -->
+    <div class="m-title">
+      <div class="m-brand"><div class="dot">H</div>Houmi Studio</div>
+      <div class="m-menu"><span class="hot">File</span><span>Edit</span><span>View</span><span>Help</span></div>
+      <div class="right"><span style="color:var(--done)">● Backend</span><span>42ms</span></div>
+    </div>
+
+    <!-- Command bar with Stage Rail -->
+    <div class="m-cmd">
+      <span class="pill primary" title="Run full pipeline on current page">▶ Auto <span class="k">⇧A</span></span>
+      <span class="sep"></span>
+      <div class="rail">
+        <div class="stage done"><div class="ico">✓</div><div class="nm">Detect</div><div class="ct">24</div></div>
+        <div class="link ok"></div>
+        <div class="stage done"><div class="ico">✓</div><div class="nm">Sort</div></div>
+        <div class="link ok"></div>
+        <div class="stage run"><div class="ico">◎</div><div class="nm">OCR</div><div class="ct">18/24</div></div>
+        <div class="link"></div>
+        <div class="stage wait"><div class="ico">·</div><div class="nm">Mask</div></div>
+        <div class="link"></div>
+        <div class="stage wait"><div class="ico">·</div><div class="nm">Clean</div></div>
+        <div class="link"></div>
+        <div class="stage wait"><div class="ico">·</div><div class="nm">Font</div></div>
+        <div class="link"></div>
+        <div class="stage wait"><div class="ico">·</div><div class="nm">Typeset</div></div>
+        <div class="link"></div>
+        <div class="stage wait"><div class="ico">·</div><div class="nm">Render</div></div>
+      </div>
+      <span class="sep"></span>
+      <span class="pill">⚙ Settings <span class="k">⇧S</span></span>
+      <span class="pill">📤 Export <span class="k">⇧E</span></span>
+    </div>
+
+    <!-- Body -->
+    <div class="m-body">
+      <!-- Left: Page list -->
+      <div class="m-left">
+        <div class="col-hd"><span>PAGES</span><span>12</span></div>
+        <div class="pages">
+          <div class="prow on">
+            <div class="thumb"></div>
+            <div class="pmeta"><div class="t">Page 1</div><div class="s">001.png</div>
+              <div class="dots"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i></div>
+            </div>
+          </div>
+          <div class="prow">
+            <div class="thumb"></div>
+            <div class="pmeta"><div class="t">Page 2</div><div class="s">002.png</div>
+              <div class="dots"><i class="d"></i><i class="d"></i><i class="r"></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="prow">
+            <div class="thumb"></div>
+            <div class="pmeta"><div class="t">Page 3</div><div class="s">003.png</div>
+              <div class="dots"><i class="d"></i><i class="s"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="prow">
+            <div class="thumb"></div>
+            <div class="pmeta"><div class="t">Page 4</div><div class="s">004.png</div>
+              <div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="prow">
+            <div class="thumb"></div>
+            <div class="pmeta"><div class="t">Page 5</div><div class="s">005.png</div>
+              <div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="prow">
+            <div class="thumb"></div>
+            <div class="pmeta"><div class="t">Page 6</div><div class="s">006.png</div>
+              <div class="dots"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="e"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Canvas -->
+      <div class="m-center">
+        <!-- Floating canvas toolbar -->
+        <div class="cv-tools">
+          <b class="on" title="Select (V)">V</b>
+          <b title="Draw Box (B)">B</b>
+          <b title="Mask Brush (M)">M</b>
+          <div class="vr"></div>
+          <b title="Hand / Pan (H)">H</b>
+          <b title="Eraser (E)">E</b>
+          <div class="vr"></div>
+          <b title="Undo (Ctrl+Z)">↩</b>
+          <b title="Redo (Ctrl+Y)">↪</b>
+        </div>
+
+        <!-- Mock manga page -->
+        <div class="cv-page">
+          <div class="panel-art" style="top:0;left:0;right:50%;bottom:55%"></div>
+          <div class="panel-art" style="top:0;left:52%;right:0;bottom:55%"></div>
+          <div class="panel-art" style="top:47%;left:0;right:35%;bottom:0"></div>
+          <div class="panel-art" style="top:47%;left:67%;right:0;bottom:0"></div>
+          <!-- Selected balloon -->
+          <div class="balloon sel" style="top:10%;left:55%;width:80px;height:50px">ฉันรู้สึก<br>แปลกใจ</div>
+          <div class="bhandle" style="top:calc(10% - 3px);left:calc(55% + 37px)"></div>
+          <div class="bhandle" style="top:calc(10% + 47px);left:calc(55% + 37px)"></div>
+          <div class="bhandle" style="top:calc(10% + 22px);left:calc(55% - 3px)"></div>
+          <div class="bhandle" style="top:calc(10% + 22px);left:calc(55% + 77px)"></div>
+          <!-- Other balloons -->
+          <div class="balloon" style="top:5%;left:8%;width:70px;height:40px">เฮ้!</div>
+          <div class="balloon" style="top:55%;left:5%;width:100px;height:55px">ไม่เอาน่า<br>ไปกันเถอะ</div>
+          <div class="balloon" style="top:60%;left:72%;width:85px;height:45px">โอเค<br>พร้อมแล้ว</div>
+        </div>
+
+        <!-- Bottom-left: mode chips -->
+        <div class="cv-mode">
+          <div class="chip live">OCR: Manga-OCR</div>
+          <div class="chip">Inpaint: Cluster</div>
+        </div>
+
+        <!-- Bottom-right: zoom -->
+        <div class="cv-zoom">
+          <b>−</b>
+          <span style="margin:0 4px">100%</span>
+          <b>+</b>
+          <span style="margin:0 2px 0 6px;opacity:.5">Fit</span>
+        </div>
+      </div>
+
+      <!-- Right: Inspector -->
+      <div class="m-right">
+        <div class="tabs2">
+          <b class="on">Text</b>
+          <b>Style</b>
+          <b>Block</b>
+        </div>
+        <div class="insp">
+          <div class="acc">
+            <div class="acc-hd">📝 Source Text<span class="car">▾</span></div>
+            <div class="acc-bd">
+              <div style="background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;font-size:var(--t-label);color:var(--fg-mute);line-height:1.5">
+                驚いた<br><span style="font-size:var(--t-badge);color:var(--fg-faint)">OCR Confidence: 0.94</span>
+              </div>
+            </div>
+          </div>
+          <div class="acc">
+            <div class="acc-hd">🌏 Translation<span class="car">▾</span></div>
+            <div class="acc-bd">
+              <div style="background:var(--sunken);border:1px solid var(--amber);border-radius:var(--r-sm);padding:8px;font-size:var(--t-label);color:var(--fg);line-height:1.5">
+                ฉันรู้สึกแปลกใจ
+              </div>
+            </div>
+          </div>
+          <div class="acc">
+            <div class="acc-hd">🎨 Typography<span class="car">▾</span></div>
+            <div class="acc-bd">
+              <div class="fld"><label>Font</label><div class="inp">Leelawadee UI <span class="u">▾</span></div></div>
+              <div class="fld"><label>Size</label><div class="inp">14 <span class="u">px</span></div></div>
+              <div class="fld"><label>Weight</label>
+                <div class="seg"><b>L</b><b>R</b><b class="on">B</b><b>X</b></div>
+              </div>
+              <div class="fld"><label>Color</label><div class="swatch" style="background:#1c1c1c"></div><div class="inp">#1C1C1C</div></div>
+              <div class="fld"><label>Align</label>
+                <div class="seg"><b>←</b><b class="on">↔</b><b>→</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="acc">
+            <div class="acc-hd">📐 Balloon<span class="car">▾</span></div>
+            <div class="acc-bd">
+              <div class="fld"><label>Shape</label><div class="inp">SMOOTH_OVAL <span class="u">▾</span></div></div>
+              <div class="fld"><label>Padding</label><div class="inp">8 <span class="u">px</span></div></div>
+              <div class="fld"><label>Stroke</label><div class="inp">1.5 <span class="u">px</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="m-foot">
+      <span class="led"></span>
+      <span>Backend Connected · 42ms</span>
+      <div class="right">
+        <span>GPU: RTX 3060 · 2.1/12 GB</span>
+        <span>Page 1 / 12</span>
+        <span style="color:var(--amber-hi)">v1.0.1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:16px">
+    <b>หลักการออกแบบ:</b>
+    <ul class="clean" style="margin-top:8px">
+      <li><b>Stage Rail</b> — แสดงสถานะ pipeline 8 ขั้นแบบ live ที่ command bar → ไม่ต้องเดาว่ารันอะไรอยู่</li>
+      <li><b>Page Dots</b> — Dot 8 จุดต่อหน้า (1 dot = 1 stage) แทน badge "processed/pending"</li>
+      <li><b>Inspector Panel</b> — แถบขวาแสดง source text + translation + typography ของ block ที่เลือก (แทนที่โหมด typeset ที่เข้าไม่ถึง)</li>
+      <li><b>Floating Canvas Toolbar</b> — ปุ่มเครื่องมือลอยบน canvas แบบ docked pill ไม่กินพื้นที่ sidebar</li>
+      <li><b>Status Bar</b> — แสดงข้อมูลจริง: latency, GPU, version จาก <code>version.ts</code></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     TAB 5 — DESIGN SYSTEM
+     ============================================================ -->
+<section role="tabpanel" id="p5">
+  <h2 class="sec">Design System — Token & Spec</h2>
+  <p class="lede">ข้อเสนอระบบ token ที่จะใช้แทน magic values ที่กระจัดกระจาย — ทุกค่าด้านล่างประกาศใน <code>:root</code> ที่เดียว</p>
+
+  <!-- Colors -->
+  <h3 class="sub">สี (Semantic Tokens)</h3>
+  <div class="toks">
+    <div class="tok"><div class="sw" style="background:#0a0a0c"></div><div class="nm">--bg</div><div class="use">App background</div></div>
+    <div class="tok"><div class="sw" style="background:#121215"></div><div class="nm">--panel</div><div class="use">Sidebar, Inspector</div></div>
+    <div class="tok"><div class="sw" style="background:#18181b"></div><div class="nm">--raised</div><div class="use">Card, Button bg</div></div>
+    <div class="tok"><div class="sw" style="background:#08080a"></div><div class="nm">--sunken</div><div class="use">Input, Well</div></div>
+    <div class="tok"><div class="sw" style="background:#27272a"></div><div class="nm">--line</div><div class="use">Border, Divider</div></div>
+    <div class="tok"><div class="sw" style="background:#fafafa"></div><div class="nm">--fg</div><div class="use">Primary text</div></div>
+    <div class="tok"><div class="sw" style="background:#a1a1aa"></div><div class="nm">--fg-mute</div><div class="use">Secondary text</div></div>
+    <div class="tok"><div class="sw" style="background:#71717a"></div><div class="nm">--fg-faint</div><div class="use">Tertiary / hint</div></div>
+    <div class="tok"><div class="sw" style="background:#eab308"></div><div class="nm">--amber</div><div class="use">Accent / Brand</div></div>
+    <div class="tok"><div class="sw" style="background:#10b981"></div><div class="nm">--done</div><div class="use">Success / Done</div></div>
+    <div class="tok"><div class="sw" style="background:#f43f5e"></div><div class="nm">--err</div><div class="use">Error / Danger</div></div>
+    <div class="tok"><div class="sw" style="background:#22d3ee"></div><div class="nm">--ai</div><div class="use">AI / Auto badge</div></div>
+  </div>
+
+  <div class="note" style="margin-top:16px">
+    <b>เทียบกับปัจจุบัน:</b> ชื่อ class <code>.pixel-btn-purple</code> ที่เป็นสีเทา
+    จะถูกเปลี่ยนเป็น <code>.btn-raised</code> + <code>var(--raised)</code> — ชื่อบอกหน้าที่ไม่ใช่สี
+  </div>
+
+  <!-- Typography -->
+  <h3 class="sub">Typography Scale</h3>
+  <table>
+    <thead><tr><th>Token</th><th>Size</th><th>ใช้กับ</th><th>เทียบของเดิม</th></tr></thead>
+    <tbody>
+      <tr><td><code>--t-badge</code></td><td class="num">11px</td><td>Badge, timestamp, meta</td><td>แทน 7-10px ทั้งหมด</td></tr>
+      <tr><td><code>--t-label</code></td><td class="num">12px</td><td>Label, caption, field name</td><td>แทน text-[10.5px], text-[11px]</td></tr>
+      <tr><td><code>--t-body</code></td><td class="num">13px</td><td>Body, paragraph, default</td><td>แทน text-xs, text-[12px]</td></tr>
+      <tr><td><code>--t-title</code></td><td class="num">15px</td><td>Card heading, section title</td><td>แทน text-sm, text-[14px]</td></tr>
+      <tr><td><code>--t-panel</code></td><td class="num">18px</td><td>Panel header</td><td>แทน text-base, text-lg</td></tr>
+      <tr><td><code>--t-page</code></td><td class="num">22px</td><td>Page heading</td><td>แทน text-xl, text-2xl</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>กฎเหล็ก:</b> ห้ามใช้ขนาดฟอนต์ต่ำกว่า 11px — ข้อยกเว้นเดียวคือ <code>&lt;kbd&gt;</code> ที่ใช้ 10px ได้เพราะอยู่ในกล่อง</div>
+
+  <!-- Font Stack -->
+  <h3 class="sub">Font Stack (Offline-First)</h3>
+  <div class="card">
+    <h4 style="font-weight:650;margin-bottom:8px">Body</h4>
+    <code style="color:var(--amber-hi)">"Segoe UI", "Leelawadee UI", "Noto Sans Thai", system-ui, -apple-system, sans-serif</code>
+    <p style="color:var(--fg-faint);font-size:var(--t-label);margin-top:6px">ไม่ต้องโหลด CDN — ใช้ฟอนต์ที่ติดตั้งมากับ Windows/macOS/Linux ทั้งหมด</p>
+  </div>
+  <div class="card">
+    <h4 style="font-weight:650;margin-bottom:8px">Mono</h4>
+    <code style="color:var(--amber-hi)">"Cascadia Mono", "Consolas", ui-monospace, monospace</code>
+    <p style="color:var(--fg-faint);font-size:var(--t-label);margin-top:6px">สำหรับ code, badge, hotkey — ทั้งหมดมากับระบบปฏิบัติการอยู่แล้ว</p>
+  </div>
+  <div class="note good">
+    <b>ข้อดี:</b> ลบ <code>@import url(fonts.googleapis.com)</code> ออก → ไม่ต้องพึ่ง CDN เลย → สอดคล้อง ADR-002 offline-first<br>
+    ลบ <code>Silkscreen</code> + <code>VT323</code> ที่โหลดมาแต่ไม่ได้ใช้ → ลด request 2 รอบ
+  </div>
+
+  <!-- z-index -->
+  <h3 class="sub">z-index Scale</h3>
+  <table>
+    <thead><tr><th>Token</th><th>Value</th><th>ใช้กับ</th></tr></thead>
+    <tbody>
+      <tr><td><code>--z-base</code></td><td class="num">0</td><td>Normal flow</td></tr>
+      <tr><td><code>--z-canvas-ui</code></td><td class="num">10</td><td>Floating canvas toolbar, zoom controls</td></tr>
+      <tr><td><code>--z-panel</code></td><td class="num">20</td><td>Sidebar, Inspector</td></tr>
+      <tr><td><code>--z-overlay</code></td><td class="num">30</td><td>Dropdown, context menu, popover</td></tr>
+      <tr><td><code>--z-modal</code></td><td class="num">40</td><td>Modal, dialog</td></tr>
+      <tr><td><code>--z-toast</code></td><td class="num">50</td><td>Toast notification, alert</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>แทนที่:</b> z-[60], z-[90], z-[100], z-[9999], z-[10000], z-[20000], z-[99999], z-[100000] ทั้งหมด → ไม่มีค่า arbitrary อีก</div>
+
+  <!-- Spacing -->
+  <h3 class="sub">Spacing & Radius</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4 style="font-weight:650;margin-bottom:8px">Border Radius</h4>
+      <table>
+        <tr><td><code>--r</code></td><td class="num">8px</td><td>Card, Panel, Modal</td></tr>
+        <tr><td><code>--r-sm</code></td><td class="num">5px</td><td>Button, Input, Badge</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4 style="font-weight:650;margin-bottom:8px">Accessibility กฎ</h4>
+      <ul class="clean">
+        <li>ทุก Modal ต้องมี <code>role="dialog"</code></li>
+        <li>ทุก Modal ต้องมี <code>aria-labelledby</code></li>
+        <li>Focus trap ด้วย <code>tabIndex</code> management</li>
+        <li>ปุ่มปิดต้องมี <code>title</code> หรือ <code>aria-label</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Component count -->
+  <h3 class="sub">Component Inventory (ปัจจุบัน)</h3>
+  <p class="lede">รวม 35 ไฟล์ .tsx ใน <code>components/</code> — App.tsx (8,663 บรรทัด) ไม่รวม</p>
+  <table>
+    <thead><tr><th>File</th><th>Lines</th><th>หมายเหตุ</th></tr></thead>
+    <tbody>
+      <tr><td><code>Canvas.tsx</code></td><td class="num">4,636</td><td>ใหญ่สุดอันดับ 2 — ควรแยก tool logic</td></tr>
+      <tr><td><code>SettingsModal.tsx</code></td><td class="num">1,517</td><td>Settings เดียวที่มีทุกอย่าง</td></tr>
+      <tr><td><code>MaskEditorModal.tsx</code></td><td class="num">1,477</td><td>Mask editor standalone</td></tr>
+      <tr><td><code>TypesettingRules...Panel.tsx</code></td><td class="num">735</td><td>อยู่ในส่วน typeset ที่เข้าไม่ถึง</td></tr>
+      <tr><td><code>CustomWorkflowModal.tsx</code></td><td class="num">563</td><td>—</td></tr>
+      <tr><td><code>PipelineToolbar.tsx</code></td><td class="num">529</td><td>Props 39 ตัว</td></tr>
+      <tr><td><code>TaskQueueVisualizer.tsx</code></td><td class="num">514</td><td>—</td></tr>
+      <tr><td><code>SmartStitchModal.tsx</code></td><td class="num">466</td><td>—</td></tr>
+      <tr><td style="color:var(--fg-faint)">… อีก 27 ไฟล์</td><td class="num">3,600~</td><td>ขนาดเฉลี่ย 133 บรรทัด</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <b>เป้าหมาย:</b> App.tsx จาก 8,663 → แยกเป็น ~20 module ที่ไม่เกิน 400 บรรทัดต่อไฟล์<br>
+    195 useState → ย้ายไป Zustand store เฉพาะทาง (pipeline store, canvas store, ui store)
+  </div>
+</section>
+
+<!-- ============================================================
+     TAB 6 — IMPLEMENTATION PLAN
+     ============================================================ -->
+<section role="tabpanel" id="p6">
+  <h2 class="sec">แผนลงมือ — 6 เฟส</h2>
+  <p class="lede">
+    แบ่งงานเป็นเฟสที่ทำได้ทีละอัน ไม่พังของเดิม เรียงจาก <b>แก้ bug ก่อน → ปรับ visual → refactor โครงสร้าง</b>
+  </p>
+
+  <div class="phase">
+    <div class="no">1</div>
+    <div class="txt">
+      <h4>🔴 Bug Fix Sprint — แก้ P0 ทั้งหมด</h4>
+      <p>แก้ bug ที่ฟังก์ชันพังจริง ทำให้ feature ที่มีอยู่ใช้งานได้ครบ</p>
+      <div class="files" style="margin-top:8px">
+        <ul class="clean">
+          <li><b>Typeset mode:</b> เพิ่ม <code>setWorkspaceMode('typeset')</code> call site จริง — <span class="ref">App.tsx</span></li>
+          <li><b>? key:</b> รวม 2 handler เป็นอันเดียว ลบ <code>ShortcutsLegend</code> ซ้ำ — <span class="ref">App.tsx</span></li>
+          <li><b>Ghost hotkeys:</b> สร้าง binding จริงให้ <span class="kbd">Shift+D/O/I/T</span> และ <span class="kbd">A</span> — <span class="ref">App.tsx, Canvas.tsx</span></li>
+          <li><b>Version:</b> ใช้ <code>HOUMI_VERSION_LABEL</code> แทน hardcode — <span class="ref">App.tsx:5689</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="no">2</div>
+    <div class="txt">
+      <h4>🟡 Design Token Migration</h4>
+      <p>ประกาศ CSS custom properties ใน <code>:root</code> แล้วแทนที่ magic values ทั้งหมด</p>
+      <div class="files" style="margin-top:8px">
+        <ul class="clean">
+          <li>สร้าง <code>tokens.css</code> ที่ <code>frontend/src/styles/tokens.css</code> — ประกาศ color, type scale, z-index, radius</li>
+          <li>ลบ <code>@import url(fonts.googleapis.com...)</code> จาก <code>index.css</code></li>
+          <li>ลบ <code>Silkscreen</code>, <code>VT323</code> references</li>
+          <li>แก้ชื่อ class: <code>.pixel-btn-purple → .btn-secondary</code>, <code>.pixel-btn-magenta → .btn-accent</code></li>
+          <li>ลบ <code>.input-glass</code> ที่ประกาศซ้ำ — รวมเป็น 1</li>
+          <li>แทนที่ <code>z-[100000]</code> etc. → <code>var(--z-modal)</code></li>
+          <li>แทนที่ <code>text-[9px]</code>, <code>text-[10px]</code> → <code>var(--t-badge)</code> หรือ <code>var(--t-label)</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="no">3</div>
+    <div class="txt">
+      <h4>🟢 Stage Rail + Page Dots</h4>
+      <p>เพิ่ม visual pipeline tracking — หัวใจของข้อเสนอทั้งหมด</p>
+      <div class="files" style="margin-top:8px">
+        <ul class="clean">
+          <li>สร้าง <code>StageRail.tsx</code> — component แสดง 8 ขั้น pipeline ด้วย status live</li>
+          <li>สร้าง <code>PageDots.tsx</code> — 8 dot ต่อหน้า ใช้ใน page row</li>
+          <li>เพิ่ม <code>pipelineStore.ts</code> — Zustand store สำหรับ per-page stage status</li>
+          <li>แก้ <span class="ref">App.tsx:4295-4299</span> — แทน badge 2 ค่าด้วย <code>&lt;PageDots /&gt;</code></li>
+          <li>วาง <code>&lt;StageRail /&gt;</code> ใน command bar area</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="no">4</div>
+    <div class="txt">
+      <h4>🔵 Inspector Panel</h4>
+      <p>สร้างแถบขวาสำหรับ text/style/block — ปลด typeset mode ที่เข้าไม่ถึง</p>
+      <div class="files" style="margin-top:8px">
+        <ul class="clean">
+          <li>สร้าง <code>InspectorPanel.tsx</code> — แสดง source text, translation, typography ของ block ที่เลือก</li>
+          <li>ย้าย logic จาก <code>SidebarInspector.tsx</code> + <code>FloatingLetteringBar.tsx</code></li>
+          <li>ลบ guard <code>workspaceMode === 'typeset'</code> — inspector แสดงเสมอเมื่อ select block</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="no">5</div>
+    <div class="txt">
+      <h4>🟣 Accessibility + Sidebar Resilience</h4>
+      <p>แก้ a11y และ responsive bugs</p>
+      <div class="files" style="margin-top:8px">
+        <ul class="clean">
+          <li>ทุก Modal → เพิ่ม <code>role="dialog"</code> + <code>aria-labelledby</code> + focus trap</li>
+          <li><span class="ref">App.tsx:1388-1395</span> → เพิ่ม <code>setLeftSidebar(true)</code> เมื่อ <code>innerWidth ≥ 1280</code></li>
+          <li>Hotkey modal → รวมเป็น 1 ตัว รับ data จาก <code>HOTKEY_GROUPS</code> ที่อัพเดตแล้ว</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="no">6</div>
+    <div class="txt">
+      <h4>⚡ App.tsx Decomposition (ระยะยาว)</h4>
+      <p>แตก App.tsx 8,663 บรรทัดเป็น module ย่อย — ไม่เปลี่ยน behavior แค่ย้ายโค้ด</p>
+      <div class="files" style="margin-top:8px">
+        <ul class="clean">
+          <li>แยก state → <code>pipelineStore.ts</code>, <code>canvasStore.ts</code>, <code>uiStore.ts</code></li>
+          <li>แยก handlers → <code>hooks/usePipeline.ts</code>, <code>hooks/useCanvasEvents.ts</code></li>
+          <li>แยก sections → <code>AppHeader.tsx</code>, <code>AppSidebar.tsx</code>, <code>AppCanvas.tsx</code>, <code>AppStatusBar.tsx</code></li>
+          <li>เป้าหมาย: App.tsx เหลือ &lt; 400 บรรทัด ทำหน้าที่ compose เท่านั้น</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:24px">
+    <b>ลำดับความสำคัญ:</b> เฟส 1-3 แก้ปัญหาที่ผู้ใช้สัมผัสได้ทันที → เฟส 4-5 ปรับปรุง DX + accessibility → เฟส 6 เป็น refactor ระยะยาวที่ทำได้ทีละชิ้น
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<!-- ============================================================
+     TAB SWITCHING JS
+     ============================================================ -->
+<script>
+(function(){
+  const tabs = document.querySelectorAll('nav.tabs button[role=tab]');
+  const panels = document.querySelectorAll('section[role=tabpanel]');
+
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // deselect all
+      tabs.forEach(b => b.setAttribute('aria-selected','false'));
+      panels.forEach(p => p.classList.remove('on'));
+      // select clicked
+      btn.setAttribute('aria-selected','true');
+      const target = btn.getAttribute('data-t');
+      const panel = document.getElementById(target);
+      if(panel) panel.classList.add('on');
+    });
+  });
+
+  // Keyboard nav for tabs
+  const tabList = document.querySelector('nav.tabs');
+  tabList.addEventListener('keydown', e => {
+    const current = document.activeElement;
+    const tabArr = Array.from(tabs);
+    const idx = tabArr.indexOf(current);
+    if(idx < 0) return;
+    let next;
+    if(e.key === 'ArrowRight' || e.key === 'ArrowDown'){
+      next = tabArr[(idx+1) % tabArr.length];
+    } else if(e.key === 'ArrowLeft' || e.key === 'ArrowUp'){
+      next = tabArr[(idx - 1 + tabArr.length) % tabArr.length];
+    }
+    if(next){ e.preventDefault(); next.focus(); next.click(); }
+  });
+})();
+</script>
+</body>
+</html>

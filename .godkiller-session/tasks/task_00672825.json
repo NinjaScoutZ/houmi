@@ -1,0 +1,24 @@
+{
+  "handle": {
+    "task_id": "task_00672825",
+    "kind": "feature",
+    "goal": "Investigate why solid balloon fill mask (ถมขาวใน balloon) occurs instead of character text stroke mask or tightly bounded mask on complex/textured balloons",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "debug",
+      "require_self_ctf": true
+    },
+    "created_at": "2026-08-17T10:30:15.050173+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_d4c28078",
+    "kind": "feature",
+    "goal": "Investigate current PSD export system for gradient, stroke, glow, and visual effects support",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "ask"
+    },
+    "created_at": "2026-08-27T12:25:03.618834+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

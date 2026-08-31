@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Houmi Studio Pro — UX/UI Pro Max Design System & Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              gold: '#F59E0B',
+              amber: '#D97706',
+              dark: '#09090b',
+              surface: '#121215',
+              card: '#18181b',
+              border: 'rgba(255, 255, 255, 0.08)',
+              cyan: '#06B6D4',
+              emerald: '#10B981',
+              rose: '#F43F5E',
+              violet: '#8B5CF6',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            pixel: ['Space Grotesk', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    .glass-panel {
+      background: rgba(18, 18, 21, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+    .tab-btn.active {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      font-weight: 700;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .drag-header {
+      cursor: grab;
+    }
+    .drag-header:active {
+      cursor: grabbing;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
+
+  <!-- TOP HEADER / BANNER -->
+  <header class="w-full bg-zinc-950 border-b border-zinc-900 px-6 py-3 flex items-center justify-between z-50 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-bold text-zinc-950 shadow-lg shadow-amber-500/20">
+        H
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-sm font-extrabold text-slate-100 tracking-wide">HOUMI STUDIO PRO</h1>
+          <span class="text-[9px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded">UI/UX PRO MAX</span>
+          <span class="text-[9px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded">PREVIEW SPEC</span>
+        </div>
+        <p class="text-[11px] text-slate-400">การยกระดับ UX/UI ด้วยมาตรฐาน NextLevelBuilder Design Intelligence — แยกพรีวิวอิสระ ไม่แตะต้องโค้ดหลัก</p>
+      </div>
+    </div>
+
+    <!-- TAB NAVIGATION -->
+    <nav class="flex items-center gap-1.5 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80">
+      <button onclick="switchTab('workbench')" id="btn-tab-workbench" class="tab-btn active px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+        <i data-lucide="layout" class="w-3.5 h-3.5"></i>
+        <span>1. Interactive Workbench</span>
+      </button>
+      <button onclick="switchTab('tokens')" id="btn-tab-tokens" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+        <i data-lucide="palette" class="w-3.5 h-3.5"></i>
+        <span>2. Design Tokens & Palette</span>
+      </button>
+      <button onclick="switchTab('components')" id="btn-tab-components" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+        <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+        <span>3. Components Anatomy</span>
+      </button>
+      <button onclick="switchTab('accessibility')" id="btn-tab-accessibility" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+        <i data-lucide="keyboard" class="w-3.5 h-3.5"></i>
+        <span>4. Shortcuts & WCAG AAA</span>
+      </button>
+      <button onclick="switchTab('roadmap')" id="btn-tab-roadmap" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+        <i data-lucide="git-branch" class="w-3.5 h-3.5"></i>
+        <span>5. Phased Roadmap</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- TAB 1: WORKBENCH PROTOTYPE -->
+  <main id="tab-workbench" class="tab-content active flex-1 flex flex-col relative overflow-hidden">
+    
+    <!-- Top Nav Mock -->
+    <div class="h-8 bg-zinc-950 border-b border-zinc-900 px-4 flex items-center justify-between text-xs text-slate-300 select-none">
+      <div class="flex items-center gap-1">
+        <button class="px-2 py-0.5 hover:bg-zinc-900 rounded text-slate-300 text-xs">File</button>
+        <button class="px-2 py-0.5 hover:bg-zinc-900 rounded text-slate-300 text-xs">Edit</button>
+        <button class="px-2 py-0.5 hover:bg-zinc-900 bg-amber-500/10 text-amber-400 font-semibold rounded text-xs flex items-center gap-1">
+          <span>View</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+        </button>
+        <button class="px-2 py-0.5 hover:bg-zinc-900 rounded text-slate-300 text-xs">Navigation</button>
+        <button class="px-2 py-0.5 hover:bg-zinc-900 rounded text-slate-300 text-xs">Project</button>
+        <button class="px-2 py-0.5 hover:bg-zinc-900 rounded text-slate-300 text-xs">Tools</button>
+        <button class="px-2 py-0.5 hover:bg-zinc-900 rounded text-slate-300 text-xs">About</button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-[10px] font-mono text-slate-400">Active: <span class="text-amber-400 font-bold">Solo_Leveling_CH01</span></span>
+      </div>
+    </div>
+
+    <!-- Sub-Toolbar Mock -->
+    <div class="h-12 bg-zinc-950/70 backdrop-blur-md border-b border-zinc-900 px-4 flex items-center justify-between text-xs text-slate-400">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
+          <button class="px-2.5 py-1 text-[10px] font-bold rounded text-slate-400 hover:text-slate-200">
+            📝 OCR Pipeline
+          </button>
+          <button class="px-2.5 py-1 text-[10px] font-bold rounded bg-amber-400 text-zinc-950 shadow-sm flex items-center gap-1">
+            <span>🎨</span>
+            <span>Typesetting</span>
+          </button>
+        </div>
+
+        <div class="h-5 w-px bg-zinc-800"></div>
+
+        <label class="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-300 hover:text-amber-300">
+          <input type="checkbox" checked class="w-3.5 h-3.5 rounded bg-zinc-900 border-zinc-800 text-amber-500 accent-amber-500">
+          <span>Live Mask</span>
+        </label>
+
+        <div class="h-5 w-px bg-zinc-800"></div>
+
+        <div class="flex items-center gap-1.5">
+          <button class="px-2.5 py-1 text-[10px] font-mono font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 rounded-md flex items-center gap-1">
+            <span>⚡</span>
+            <span>STYLE JUDGE</span>
+          </button>
+          <button class="px-2.5 py-1 text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-slate-300 hover:text-white rounded-md">
+            RECOMPUTE LAYOUT
+          </button>
+          <button class="px-2.5 py-1 text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-amber-400 hover:bg-zinc-800 rounded-md">
+            REVIEW QUEUE (2)
+          </button>
+        </div>
+
+        <div class="h-5 w-px bg-zinc-800"></div>
+
+        <!-- FLOATING BAR TOGGLE BUTTON -->
+        <button id="toggle-floating-bar-btn" onclick="toggleFloatingBar()" class="px-2.5 py-1 text-[10px] font-mono font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 rounded-md flex items-center gap-1.5 transition-colors" title="Toggle Floating Lettering Toolbar On/Off">
+          <i data-lucide="sliders" class="w-3 h-3"></i>
+          <span id="floating-bar-label">Toolbar: ON</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 text-slate-400 text-xs">
+        <button class="p-1 hover:bg-zinc-900 rounded"><i data-lucide="zoom-out" class="w-3.5 h-3.5"></i></button>
+        <span class="font-mono text-[11px] text-slate-300">100%</span>
+        <button class="p-1 hover:bg-zinc-900 rounded"><i data-lucide="zoom-in" class="w-3.5 h-3.5"></i></button>
+        <button class="p-1 hover:bg-zinc-900 rounded" title="Fit to Screen"><i data-lucide="maximize-2" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+
+    <!-- Workbench Split Container -->
+    <div class="flex-1 flex overflow-hidden relative">
+      
+      <!-- Left Drawer -->
+      <aside class="w-48 bg-zinc-950/90 border-r border-zinc-900 flex flex-col shrink-0">
+        <div class="p-2.5 border-b border-zinc-900 flex items-center justify-between text-[11px] font-bold text-slate-400">
+          <span>PAGES (1/12)</span>
+          <i data-lucide="chevron-left" class="w-3.5 h-3.5 cursor-pointer"></i>
+        </div>
+        <div class="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+          <div class="p-1.5 rounded-lg border-2 border-amber-500 bg-zinc-900 shadow-md cursor-pointer">
+            <div class="aspect-[2/3] bg-zinc-800 rounded flex items-center justify-center relative overflow-hidden">
+              <span class="text-xs text-slate-400 font-bold">PAGE 01</span>
+              <span class="absolute top-1 right-1 px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[8px] font-bold border border-emerald-500/30">TYPESET</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[10px] text-slate-400">
+              <span>Page 1</span>
+              <span>3 blocks</span>
+            </div>
+          </div>
+          <div class="p-1.5 rounded-lg border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 cursor-pointer">
+            <div class="aspect-[2/3] bg-zinc-900 rounded flex items-center justify-center">
+              <span class="text-xs text-slate-500">PAGE 02</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500">
+              <span>Page 2</span>
+              <span>5 blocks</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Canvas -->
+      <div class="flex-1 bg-[#0c0c0e] relative overflow-hidden flex items-center justify-center p-8 select-none">
+        <div class="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:20px_20px] opacity-40"></div>
+
+        <!-- Manga Page -->
+        <div id="manga-page-mock" class="relative w-[520px] h-[740px] bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl overflow-hidden flex flex-col justify-between p-6">
+          <div class="h-44 border-2 border-zinc-950 bg-zinc-800/80 rounded flex items-center justify-center relative">
+            <span class="text-xs font-mono text-zinc-600 uppercase font-bold tracking-widest">[ PANEL 1 — ACTION SCENE ]</span>
+          </div>
+
+          <!-- SPEECH BALLOON 1 -->
+          <div id="block-1" onclick="selectBlock(1)" class="absolute top-[80px] left-[150px] w-[220px] h-[130px] border-2 border-amber-400 bg-amber-500/5 rounded-full flex flex-col items-center justify-center text-center p-4 cursor-pointer transition-all shadow-lg shadow-amber-500/10">
+            <span class="absolute -top-2.5 -left-2.5 w-5 h-5 bg-amber-500 text-zinc-950 text-[10px] font-extrabold rounded-full flex items-center justify-center shadow">1</span>
+            <div class="absolute inset-2 border border-dashed border-amber-500/40 rounded-full pointer-events-none"></div>
+            <p class="text-sm font-bold text-slate-100 leading-tight">
+              นี่มัน... พลังเวทระดับนี้เป็นไปไม่ได้แน่ๆ!
+            </p>
+            <span class="text-[9px] font-mono text-amber-400/80 mt-1">Font: 22px • Centered</span>
+          </div>
+
+          <div class="h-64 border-2 border-zinc-950 bg-zinc-800/80 rounded flex items-center justify-center relative">
+            <span class="text-xs font-mono text-zinc-600 uppercase font-bold tracking-widest">[ PANEL 2 — CLOSEUP SHOT ]</span>
+          </div>
+
+          <!-- SPEECH BALLOON 2 -->
+          <div id="block-2" onclick="selectBlock(2)" class="absolute bottom-[100px] right-[50px] w-[180px] h-[110px] border border-zinc-700 hover:border-amber-400/60 bg-zinc-950/80 rounded-full flex flex-col items-center justify-center text-center p-3 cursor-pointer transition-all">
+            <span class="absolute -top-2 -left-2 w-4 h-4 bg-zinc-800 text-slate-400 text-[9px] font-bold rounded-full flex items-center justify-center">2</span>
+            <p class="text-xs font-medium text-slate-300">
+              หนีเร็วเข้า! มอนสเตอร์ตื่นแล้ว!
+            </p>
+          </div>
+        </div>
+
+        <!-- FLOATING LETTERING BAR -->
+        <div id="floating-bar" class="absolute top-[32px] left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-3 py-1.5 bg-zinc-950/95 backdrop-blur-md border border-zinc-800/90 rounded-2xl shadow-2xl text-xs text-slate-200 animate-fade-in select-none">
+          <div class="flex items-center bg-zinc-900/90 rounded-lg p-0.5 border border-zinc-800/80">
+            <button class="p-1 hover:bg-zinc-800 rounded text-slate-300 hover:text-white transition-colors"><i data-lucide="minus" class="w-3 h-3"></i></button>
+            <span class="px-2 font-mono text-xs font-bold text-amber-400 min-w-[28px] text-center">22</span>
+            <button class="p-1 hover:bg-zinc-800 rounded text-slate-300 hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>
+          </div>
+          <div class="w-[1px] h-4 bg-zinc-800 mx-0.5"></div>
+          <div class="flex items-center gap-1">
+            <button class="w-6 h-6 rounded-lg border border-zinc-700 bg-white shadow-inner" title="Text Color"></button>
+            <button class="p-1.5 hover:bg-zinc-800 rounded-lg text-slate-400 hover:text-slate-200" title="Eyedropper"><i data-lucide="pipette" class="w-3 h-3"></i></button>
+          </div>
+          <div class="flex items-center bg-zinc-900/90 rounded-lg p-0.5 border border-zinc-800/80">
+            <span class="px-1.5 text-[10px] font-mono text-slate-400">Str: 3px</span>
+          </div>
+          <div class="w-[1px] h-4 bg-zinc-800 mx-0.5"></div>
+          <div class="flex items-center bg-zinc-900/90 rounded-lg p-0.5 border border-zinc-800/80">
+            <button class="p-1 hover:bg-zinc-800 rounded text-slate-400"><i data-lucide="align-left" class="w-3 h-3"></i></button>
+            <button class="p-1 bg-amber-500/20 text-amber-400 rounded"><i data-lucide="align-center" class="w-3 h-3"></i></button>
+            <button class="p-1 hover:bg-zinc-800 rounded text-slate-400"><i data-lucide="align-right" class="w-3 h-3"></i></button>
+          </div>
+          <button class="px-2 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-[10px] font-bold text-slate-300">↔ LTR</button>
+          <div class="w-[1px] h-4 bg-zinc-800 mx-0.5"></div>
+          <button class="p-1.5 bg-zinc-900/90 hover:bg-amber-500/20 border border-zinc-800 hover:border-amber-500/40 rounded-lg text-amber-400" title="Auto Extract Style"><i data-lucide="sparkles" class="w-3 h-3"></i></button>
+          <button class="p-1.5 bg-zinc-900/90 hover:bg-cyan-500/20 border border-zinc-800 hover:border-cyan-500/40 rounded-lg text-cyan-400" title="🎯 จัดกึ่งกลางบอลลูน (Center in Balloon)"><i data-lucide="crosshair" class="w-3 h-3"></i></button>
+          <button class="p-1.5 bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-amber-400" title="Auto-Fit Font Size"><i data-lucide="wand-2" class="w-3 h-3"></i></button>
+          <button class="p-1.5 hover:bg-zinc-800 rounded-lg text-slate-400" title="Duplicate"><i data-lucide="copy" class="w-3 h-3"></i></button>
+          <button class="p-1.5 hover:bg-rose-500/20 rounded-lg text-rose-400" title="Delete"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+          <div class="w-[1px] h-4 bg-zinc-800 mx-0.5"></div>
+          <button onclick="toggleFloatingBar()" class="p-1 hover:bg-zinc-800 rounded-lg text-slate-500 hover:text-rose-400 transition-colors" title="ซ่อนแถบเครื่องมือลอยนี้ (เปิดใหม่ได้ที่เมนู View)">
+            <i data-lucide="x" class="w-3 h-3"></i>
+          </button>
+        </div>
+
+        <!-- FORMATTING WIDGET -->
+        <div id="formatting-widget" class="absolute top-[80px] right-[320px] w-80 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800/90 rounded-2xl shadow-2xl z-30 overflow-hidden select-none">
+          <div class="drag-header px-4 py-2.5 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-slate-500"><i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i></span>
+              <span class="text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">Text & Formatting</span>
+            </div>
+            <div class="flex items-center gap-1 text-slate-400">
+              <button onclick="dockWidget('left')" class="p-1 hover:bg-zinc-800 rounded text-[10px]" title="Dock Left">⇱</button>
+              <button onclick="dockWidget('right')" class="p-1 hover:bg-zinc-800 rounded text-[10px]" title="Dock Right">⇲</button>
+              <button class="p-1 hover:bg-zinc-800 rounded text-[10px]" title="Minimize">➖</button>
+              <button class="p-1 hover:bg-zinc-800 rounded text-slate-400 hover:text-rose-400 text-[10px]" title="Close">✕</button>
+            </div>
+          </div>
+
+          <div class="p-4 space-y-4 max-h-[520px] overflow-y-auto custom-scrollbar text-xs">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-slate-400 font-semibold text-[11px]">
+                <span>🎨 STYLE PRESETS</span>
+                <span class="text-amber-400 text-[10px] cursor-pointer">▼ Fold</span>
+              </div>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-left flex items-center justify-between">
+                  <span>Dialogue (หลัก)</span>
+                  <i data-lucide="check" class="w-3 h-3"></i>
+                </button>
+                <button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-slate-300 text-left">
+                  Shout (ตะโกน)
+                </button>
+                <button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-slate-300 text-left">
+                  Whisper (กระซิบ)
+                </button>
+                <button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-slate-300 text-left">
+                  SFX Sound
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-3 pt-2 border-t border-zinc-900">
+              <div class="flex items-center justify-between text-slate-400 font-semibold text-[11px]">
+                <span>🔤 CUSTOM TYPOGRAPHY</span>
+                <span class="text-amber-400 text-[10px] cursor-pointer">▼ Fold</span>
+              </div>
+
+              <div>
+                <label class="text-[10px] text-slate-400">Font Family</label>
+                <select class="w-full mt-1 bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                  <option>TH Sarabun New</option>
+                  <option>Chakra Petch (Action)</option>
+                  <option>Mitr (Dialogue)</option>
+                  <option>Prompt (Modern)</option>
+                </select>
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-400">Font Size</span>
+                  <span class="font-mono text-amber-400 font-bold">22 px</span>
+                </div>
+                <input type="range" min="10" max="60" value="22" class="w-full accent-amber-500 bg-zinc-800 h-1.5 rounded-lg cursor-pointer">
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-400">Line Height</span>
+                  <span class="font-mono text-amber-400 font-bold">1.25x</span>
+                </div>
+                <input type="range" min="0.8" max="2.0" step="0.05" value="1.25" class="w-full accent-amber-500 bg-zinc-800 h-1.5 rounded-lg cursor-pointer">
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-between">
+              <div>
+                <div class="font-bold text-cyan-300 text-[11px] flex items-center gap-1">
+                  <span>🎯 Smart Inscribed Centering</span>
+                </div>
+                <div class="text-[9px] text-cyan-400/80">จัดกึ่งกลางวงรีอัตโนมัติ (ตัดหางบอลลูน)</div>
+              </div>
+              <button class="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded-lg text-[10px]">
+                Align Now
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Stacked Panel -->
+      <aside class="w-80 bg-zinc-950/90 border-l border-zinc-900 flex flex-col shrink-0">
+        <div class="p-3 border-b border-zinc-900 bg-zinc-950/95 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-200 font-mono flex items-center gap-1.5">
+              <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>PIPELINE MATRIX</span>
+            </span>
+            <span class="text-[9px] font-mono bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-bold border border-emerald-500/30">READY</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+            <button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center gap-2">
+              <span class="text-emerald-400">✓</span>
+              <span>1. Detect</span>
+            </button>
+            <button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center gap-2">
+              <span class="text-emerald-400">✓</span>
+              <span>2. OCR (GLM)</span>
+            </button>
+            <button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center gap-2">
+              <span class="text-emerald-400">✓</span>
+              <span>3. Translate</span>
+            </button>
+            <button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center gap-2">
+              <span class="text-emerald-400">✓</span>
+              <span>4. Inpaint (LaMa)</span>
+            </button>
+          </div>
+
+          <button class="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-extrabold rounded-lg shadow-lg shadow-amber-500/20 text-xs font-mono flex items-center justify-center gap-2">
+            <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+            <span>AUTO RUN FULL FLOW</span>
+          </button>
+        </div>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <div class="p-2.5 border-b border-zinc-900 flex items-center justify-between text-xs font-bold text-slate-300">
+            <span>LAYERS & TEXT BLOCKS (3)</span>
+            <div class="flex items-center gap-1">
+              <button class="px-1.5 py-0.5 rounded bg-zinc-900 text-amber-400 text-[10px]">All</button>
+              <button class="px-1.5 py-0.5 rounded bg-zinc-900 text-slate-400 text-[10px]">Review</button>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar text-xs">
+            <div class="p-2.5 rounded-xl border border-amber-500/40 bg-amber-500/5 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-amber-400 flex items-center gap-1">
+                  <span class="w-4 h-4 rounded-full bg-amber-400 text-zinc-950 text-[10px] flex items-center justify-center font-extrabold">1</span>
+                  <span>นี่มัน... พลังเวทระดับนี้</span>
+                </span>
+                <span class="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1 rounded">OK</span>
+              </div>
+              <textarea class="w-full bg-zinc-900 border border-zinc-800 rounded p-1.5 text-slate-200 text-[11px] focus:outline-none focus:border-amber-500" rows="2">นี่มัน... พลังเวทระดับนี้เป็นไปไม่ได้แน่ๆ!</textarea>
+            </div>
+
+            <div class="p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-medium text-slate-300 flex items-center gap-1">
+                  <span class="w-4 h-4 rounded-full bg-zinc-800 text-slate-400 text-[10px] flex items-center justify-center font-bold">2</span>
+                  <span>หนีเร็วเข้า! มอนสเตอร์...</span>
+                </span>
+                <span class="text-[9px] font-mono text-amber-400 bg-amber-500/10 px-1 rounded">REV</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- TAB 2: TOKENS -->
+  <main id="tab-tokens" class="tab-content flex-1 p-8 max-w-6xl mx-auto space-y-8 custom-scrollbar overflow-y-auto">
+    <div class="border-b border-zinc-800 pb-4">
+      <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
+        <i data-lucide="palette" class="text-amber-400"></i>
+        <span>HOUMI PRO MAX DESIGN TOKENS & COLOR MATRIX</span>
+      </h2>
+      <p class="text-sm text-slate-400 mt-1">คลังระบบดีไซน์แบบ Tokenized สำหรับ Pro Studio Tool ตามข้อกำหนด NextLevelBuilder UI/UX Pro Max</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
+        <div class="h-16 rounded-xl bg-[#09090b] border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-slate-400">
+          #09090B
+        </div>
+        <div>
+          <div class="font-bold text-slate-200 text-sm">OLED Base Background</div>
+          <div class="text-xs text-slate-500 font-mono">--color-bg-base</div>
+          <div class="text-[11px] text-slate-400 mt-1">ประหยัดพลังงานจอ OLED + ลดความล้าของสายตาเมื่อใช้งานแต่งภาพต่อเนื่อง</div>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
+        <div class="h-16 rounded-xl bg-amber-500 flex items-center justify-center text-xs font-mono font-bold text-zinc-950 shadow-lg shadow-amber-500/20">
+          #F59E0B
+        </div>
+        <div>
+          <div class="font-bold text-amber-400 text-sm">Studio Amber Accent</div>
+          <div class="text-xs text-slate-500 font-mono">--color-accent-amber</div>
+          <div class="text-[11px] text-slate-400 mt-1">สีแบรนด์หลัก ใช้สำหรับ Selected States, Active Tools, Primary CTA</div>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
+        <div class="h-16 rounded-xl bg-cyan-500 flex items-center justify-center text-xs font-mono font-bold text-zinc-950 shadow-lg shadow-cyan-500/20">
+          #06B6D4
+        </div>
+        <div>
+          <div class="font-bold text-cyan-400 text-sm">Precision Cyan</div>
+          <div class="text-xs text-slate-500 font-mono">--color-accent-cyan</div>
+          <div class="text-[11px] text-slate-400 mt-1">ใช้สำหรับ Smart Balloon, Inscribed Guides, Precision Centering</div>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
+        <div class="h-16 rounded-xl bg-emerald-500 flex items-center justify-center text-xs font-mono font-bold text-zinc-950 shadow-lg shadow-emerald-500/20">
+          #10B981
+        </div>
+        <div>
+          <div class="font-bold text-emerald-400 text-sm">Success Emerald</div>
+          <div class="text-xs text-slate-500 font-mono">--color-status-success</div>
+          <div class="text-[11px] text-slate-400 mt-1">สถานะ Completed, Auto-Applied, Cleaned Mask Ready</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- TAB 3: COMPONENTS -->
+  <main id="tab-components" class="tab-content flex-1 p-8 max-w-6xl mx-auto space-y-8 custom-scrollbar overflow-y-auto">
+    <div class="border-b border-zinc-800 pb-4">
+      <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
+        <i data-lucide="layers" class="text-amber-400"></i>
+        <span>COMPONENT ANATOMY & INTERACTION RULES</span>
+      </h2>
+      <p class="text-sm text-slate-400 mt-1">โครงสร้างและกฎการทำงานของส่วนประกอบหลักตามข้อกำหนด Pro Max</p>
+    </div>
+
+    <div class="p-6 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
+      <h3 class="font-bold text-amber-400 text-base">1. Floating Lettering Bar</h3>
+      <p class="text-xs text-slate-300">รักษาระยะห่าง 24px - 28px เหนือขอบบนของ BBox พร้อม Flip below อัตโนมัติเมื่อชิดขอบบน และปุ่มปิดถาวรพร้อมปุ่มเรียกคืน</p>
+    </div>
+  </main>
+
+  <!-- TAB 4: ACCESSIBILITY -->
+  <main id="tab-accessibility" class="tab-content flex-1 p-8 max-w-6xl mx-auto space-y-8 custom-scrollbar overflow-y-auto">
+    <div class="border-b border-zinc-800 pb-4">
+      <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
+        <i data-lucide="keyboard" class="text-amber-400"></i>
+        <span>KEYBOARD NAVIGATION & WCAG 2.2 AAA ERGONOMICS</span>
+      </h2>
+      <p class="text-sm text-slate-400 mt-1">ระบบคีย์บอร์ดลัดและการเข้าถึงตามมาตรฐาน Pro Max</p>
+    </div>
+
+    <div class="p-6 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
+      <h3 class="font-bold text-slate-200 text-base">Quick Hotkeys</h3>
+      <ul class="space-y-2 text-xs font-mono text-slate-300">
+        <li><span class="text-amber-400 font-bold">Ctrl + Shift + C:</span> จัดกึ่งกลางบอลลูน (Center Inscribed)</li>
+        <li><span class="text-amber-400 font-bold">Alt + T:</span> เปิด/ปิด แถบเครื่องมือลอย (Toggle Floating Bar)</li>
+        <li><span class="text-amber-400 font-bold">Ctrl + ] / [:</span> ปรับขนาดฟอนต์ +/- 1px</li>
+        <li><span class="text-amber-400 font-bold">PageDown / PageUp:</span> เปลี่ยนหน้าก่อนหน้า/ถัดไป</li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- TAB 5: ROADMAP -->
+  <main id="tab-roadmap" class="tab-content flex-1 p-8 max-w-6xl mx-auto space-y-8 custom-scrollbar overflow-y-auto">
+    <div class="border-b border-zinc-800 pb-4">
+      <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
+        <i data-lucide="git-branch" class="text-amber-400"></i>
+        <span>PHASED IMPLEMENTATION ROADMAP (ZERO RISK TO CORE CODE)</span>
+      </h2>
+      <p class="text-sm text-slate-400 mt-1">แผนการทยอยปรับปรุงโค้ดเป็นขั้นเป็นตอน เมื่อผู้ใช้พร้อมอนุมัติการเขียนโค้ด</p>
+    </div>
+
+    <div class="space-y-4 text-xs">
+      <div class="p-5 rounded-2xl bg-zinc-950 border border-emerald-500/30 space-y-1.5">
+        <div class="flex justify-between font-bold text-emerald-400 text-sm">
+          <span>Phase 1 — Smart Balloon Centering & Floating Bar Toggle</span>
+          <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-[9px]">COMPLETED ✅</span>
+        </div>
+        <p class="text-slate-400">แก้ปัญหาหางบอลลูนดึงศูนย์กลาง, Inscribed Distance Transform, ปุ่มกึ่งกลางบอลลูน, และปุ่มปิดถาวรพร้อมปุ่มเรียกคืน</p>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-1.5">
+        <div class="flex justify-between font-bold text-amber-400 text-sm">
+          <span>Phase 2 — Design Tokens & CSS Variables Consolidation</span>
+          <span class="px-2 py-0.5 rounded bg-amber-500/20 text-[9px]">READY TO CODE ⏳</span>
+        </div>
+        <p class="text-slate-400">รวบรวมตัวแปรสีใน index.css ให้อ้างอิง Design Tokens ชุดเดียวกัน</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      const targetContent = document.getElementById('tab-' + tabId);
+      const targetBtn = document.getElementById('btn-tab-' + tabId);
+      
+      if (targetContent) targetContent.classList.add('active');
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      lucide.createIcons();
+    }
+
+    let isFloatingBarVisible = true;
+    function toggleFloatingBar() {
+      isFloatingBarVisible = !isFloatingBarVisible;
+      const bar = document.getElementById('floating-bar');
+      const label = document.getElementById('floating-bar-label');
+      const btn = document.getElementById('toggle-floating-bar-btn');
+      
+      if (bar) {
+        bar.style.display = isFloatingBarVisible ? 'flex' : 'none';
+      }
+      if (label) {
+        label.innerText = isFloatingBarVisible ? 'Toolbar: ON' : 'Toolbar: OFF';
+      }
+      if (btn) {
+        if (isFloatingBarVisible) {
+          btn.className = 'px-2.5 py-1 text-[10px] font-mono font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 rounded-md flex items-center gap-1.5 transition-colors';
+        } else {
+          btn.className = 'px-2.5 py-1 text-[10px] font-mono font-bold bg-zinc-900 border border-zinc-800 text-slate-500 hover:text-slate-300 rounded-md flex items-center gap-1.5 transition-colors';
+        }
+      }
+    }
+
+    function selectBlock(id) {
+      const b1 = document.getElementById('block-1');
+      const b2 = document.getElementById('block-2');
+      if (id === 1) {
+        b1.className = 'absolute top-[80px] left-[150px] w-[220px] h-[130px] border-2 border-amber-400 bg-amber-500/5 rounded-full flex flex-col items-center justify-center text-center p-4 cursor-pointer transition-all shadow-lg shadow-amber-500/10';
+        b2.className = 'absolute bottom-[100px] right-[50px] w-[180px] h-[110px] border border-zinc-700 hover:border-amber-400/60 bg-zinc-950/80 rounded-full flex flex-col items-center justify-center text-center p-3 cursor-pointer transition-all';
+      } else {
+        b2.className = 'absolute bottom-[100px] right-[50px] w-[180px] h-[110px] border-2 border-amber-400 bg-amber-500/5 rounded-full flex flex-col items-center justify-center text-center p-3 cursor-pointer transition-all shadow-lg shadow-amber-500/10';
+        b1.className = 'absolute top-[80px] left-[150px] w-[220px] h-[130px] border border-zinc-700 hover:border-amber-400/60 bg-zinc-950/80 rounded-full flex flex-col items-center justify-center text-center p-4 cursor-pointer transition-all';
+      }
+    }
+
+    function dockWidget(side) {
+      const w = document.getElementById('formatting-widget');
+      if (!w) return;
+      if (side === 'left') {
+        w.style.left = '220px';
+        w.style.right = 'auto';
+      } else {
+        w.style.right = '340px';
+        w.style.left = 'auto';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

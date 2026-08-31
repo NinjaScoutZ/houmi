@@ -1,0 +1,147 @@
+==========================================================================
+  HOUMI STUDIO CRASH REPORT
+==========================================================================
+Timestamp: 2026-08-30 15:24:28
+Source: Thread (Thread-1)
+Error: OperationalError: (sqlite3.OperationalError) disk I/O error
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Memory: {"ram_used_mb": 31142.3, "ram_total_mb": 65289.7, "ram_percent": 47.7}
+--------------------------------------------------------------------------
+FULL STACK TRACEBACK:
+--------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 146, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3300, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 449, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 1263, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 179, in _do_get
+    with util.safe_reraise():
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 390, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 914, in __connect
+    )._exec_w_sync_on_first_run(self.dbapi_connection, self)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\event\attr.py", line 483, in _exec_w_sync_on_first_run
+    self(*args, **kw)
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\event\attr.py", line 497, in __call__
+    fn(*args, **kw)
+  File "E:\houmi\backend\app\database.py", line 28, in set_sqlite_pragma
+    cursor.execute("PRAGMA journal_mode=WAL")
+sqlite3.OperationalError: disk I/O error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\dansa\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\Lib\threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "E:\houmi\run_desktop.py", line 75, in run
+    self.server.run()
+  File "E:\houmi\backend\.venv\Lib\site-packages\uvicorn\server.py", line 65, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dansa\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\dansa\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dansa\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\uvicorn\server.py", line 69, in serve
+    await self._serve(sockets)
+  File "E:\houmi\backend\.venv\Lib\site-packages\uvicorn\server.py", line 76, in _serve
+    config.load()
+  File "E:\houmi\backend\.venv\Lib\site-packages\uvicorn\config.py", line 434, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\uvicorn\importer.py", line 19, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dansa\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\Lib\importlib\__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "E:\houmi\backend\app\main.py", line 38, in <module>
+    Base.metadata.create_all(bind=engine)
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\sql\schema.py", line 5857, in create_all
+    bind._run_ddl_visitor(
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3250, in _run_ddl_visitor
+    with self.begin() as conn:
+  File "C:\Users\dansa\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3240, in begin
+    with self.connect() as conn:
+         ^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3276, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 148, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2440, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 146, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3300, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 449, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 1263, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 179, in _do_get
+    with util.safe_reraise():
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 390, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 914, in __connect
+    )._exec_w_sync_on_first_run(self.dbapi_connection, self)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\event\attr.py", line 483, in _exec_w_sync_on_first_run
+    self(*args, **kw)
+  File "E:\houmi\backend\.venv\Lib\site-packages\sqlalchemy\event\attr.py", line 497, in __call__
+    fn(*args, **kw)
+  File "E:\houmi\backend\app\database.py", line 28, in set_sqlite_pragma
+    cursor.execute("PRAGMA journal_mode=WAL")
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) disk I/O error
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+==========================================================================

@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_2f82f346",
+    "kind": "feature",
+    "goal": "Adjust Balloon position centering logic to center text inside balloon only on Detect Balloon execution",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-27T17:08:30.094814+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

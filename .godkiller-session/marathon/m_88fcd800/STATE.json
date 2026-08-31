@@ -1,0 +1,30 @@
+{
+  "slug": "m_88fcd800",
+  "task_id": "task_88fcd800",
+  "kind": "feature",
+  "goal": "แก้ไข Performance และความเสถียร Phase 1",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-15T02:34:57.266120+00:00",
+  "updated_at": "2026-08-15T02:34:57.288170+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-15T02:34:57.285659+00:00",
+      "updated_at": "2026-08-15T02:34:57.285659+00:00"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+studio.example.com {
+    encode gzip
+
+    # The FastAPI process is private; Caddy owns TLS and the public origin.
+    reverse_proxy 127.0.0.1:4000 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}

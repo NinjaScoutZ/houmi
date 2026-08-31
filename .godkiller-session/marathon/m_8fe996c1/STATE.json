@@ -1,0 +1,30 @@
+{
+  "slug": "m_8fe996c1",
+  "task_id": "task_8fe996c1",
+  "kind": "feature",
+  "goal": "Phase 3: Benchmark GLM Comic Pipeline on Chapter40_Balloons dataset and collect disk evidence",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-28T10:40:05.323891+00:00",
+  "updated_at": "2026-08-28T10:40:05.336700+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-28T10:40:05.335193+00:00",
+      "updated_at": "2026-08-28T10:40:05.335193+00:00"
+    }
+  }
+}

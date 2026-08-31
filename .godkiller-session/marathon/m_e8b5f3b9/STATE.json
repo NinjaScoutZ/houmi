@@ -1,0 +1,30 @@
+{
+  "slug": "m_e8b5f3b9",
+  "task_id": "task_e8b5f3b9",
+  "kind": "feature",
+  "goal": "Phase 7: Capture stepwise screenshots (~8–10 visual_step)",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-29T13:22:29.756986+00:00",
+  "updated_at": "2026-08-29T13:22:29.773127+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-29T13:22:29.770129+00:00",
+      "updated_at": "2026-08-29T13:22:29.770129+00:00"
+    }
+  }
+}

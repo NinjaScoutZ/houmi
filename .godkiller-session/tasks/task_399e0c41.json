@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_399e0c41",
+    "kind": "feature",
+    "goal": "Verify completeness and quality of Thai Typography Rules v3.0 and manga_novel_slang.txt dictionary",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "ask"
+    },
+    "created_at": "2026-08-27T17:46:49.596677+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

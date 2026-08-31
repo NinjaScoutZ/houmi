@@ -1,0 +1,30 @@
+{
+  "slug": "m_18b66d7d",
+  "task_id": "task_18b66d7d",
+  "kind": "feature",
+  "goal": "Eliminate duplicate context menu collision and unify CanvasContextMenu",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-25T15:17:42.872337+00:00",
+  "updated_at": "2026-08-25T15:17:42.888910+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-25T15:17:42.885912+00:00",
+      "updated_at": "2026-08-25T15:17:42.885912+00:00"
+    }
+  }
+}

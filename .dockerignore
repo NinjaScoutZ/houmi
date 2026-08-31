@@ -1,0 +1,17 @@
+.venv/
+venv/
+backend/.venv/
+backend/ocr_server/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+build/
+*.exe
+*.zip
+data/

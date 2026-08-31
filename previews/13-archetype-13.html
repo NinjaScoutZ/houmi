@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Archetype 13 — Houmi Studio Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              gold: '#F59E0B',
+              amber: '#D97706',
+              dark: '#08080a',
+              surface: '#111114',
+              card: '#16161a',
+              border: 'rgba(255, 255, 255, 0.08)',
+              cyan: '#06B6D4',
+              emerald: '#10B981',
+              rose: '#F43F5E',
+              violet: '#8B5CF6',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            pixel: ['Space Grotesk', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Mitr:wght@400;600&family=Prompt:wght@400;600;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { background-color: #08080a; color: #f4f4f5; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+    .split-divider { position: absolute; top: 0; bottom: 0; width: 4px; background: #f59e0b; cursor: ew-resize; z-index: 30; box-shadow: 0 0 16px rgba(245, 158, 11, 0.7); }
+    .split-handle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; background: #f59e0b; color: #09090b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6); }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-[#08080a] text-slate-100 overflow-hidden">
+
+  <header class="h-12 bg-zinc-950 border-b border-zinc-900 px-4 flex items-center justify-between shrink-0 z-50">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="p-1.5 rounded-lg bg-zinc-900 hover:bg-amber-500 hover:text-black border border-zinc-800 text-slate-300 text-xs flex items-center gap-1 transition-colors" title="Back to All Archetypes">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+        <span>Launcher</span>
+      </a>
+      <div class="h-4 w-px bg-zinc-800"></div>
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-md bg-amber-500 text-zinc-950 font-bold flex items-center justify-center text-xs font-mono">13</span>
+        <h1 class="text-xs font-extrabold text-slate-100 tracking-wide font-pixel">Archetype 13</h1>
+        <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[9px] font-mono font-bold border border-amber-500/20">STANDALONE MODEL</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">STANDALONE PROTOTYPE</span>
+      <a href="index.html" class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-slate-300 text-[11px]">All 20 Models</a>
+    </div>
+  </header>
+
+    <main class="flex-1 flex flex-col items-center justify-center p-8 bg-[#09090c] text-center space-y-4">
+      <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl font-bold font-pixel">
+        13
+      </div>
+      <h2 class="text-lg font-bold text-white font-pixel">Houmi Standalone Studio Model #13</h2>
+      <p class="text-xs text-slate-400 max-w-md">โมเดลสถาปัตยกรรมที่ 13 สำหรับการแปลและจัดหน้ามังงะความเร็วสูง</p>
+      <a href="index.html" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-amber-400 rounded-xl text-xs font-mono">← กลับสู่หน้าหลัก Launcher</a>
+    </main>
+    <script>window.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
+    </body>
+    </html>
+    

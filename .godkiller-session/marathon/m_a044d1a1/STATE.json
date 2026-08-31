@@ -1,0 +1,30 @@
+{
+  "slug": "m_a044d1a1",
+  "task_id": "task_a044d1a1",
+  "kind": "feature",
+  "goal": "Phase 7: Write unit tests for fabricMultiEffect, fabricGradient, and CanvasAlignmentToolbar",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-27T16:42:44.685160+00:00",
+  "updated_at": "2026-08-27T16:42:44.694284+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-27T16:42:44.692281+00:00",
+      "updated_at": "2026-08-27T16:42:44.692281+00:00"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+torch
+torchvision
+bottle
+pillow
+numpy
+opencv-python-headless
+requests

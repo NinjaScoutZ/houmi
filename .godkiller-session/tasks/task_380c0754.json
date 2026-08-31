@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_380c0754",
+    "kind": "feature",
+    "goal": "Comprehensive Visual Effects Pipeline: DOBKLE AI Vision extraction → TypesettingSpec → Renderer → PSD Export with native Photoshop Layer Effects (Gradient, Drop Shadow, Outer Glow, Stroke, etc.)",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-27T12:39:43.626972+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

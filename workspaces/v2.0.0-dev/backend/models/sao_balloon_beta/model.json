@@ -1,0 +1,9 @@
+{
+	"width": 1024,
+	"height": 1024,
+	"model": "model.onnx",
+	"ratio": 1,
+	"width_overlap": "0",
+	"height_overlap": "45",
+	"classes": ["balloon"]
+}

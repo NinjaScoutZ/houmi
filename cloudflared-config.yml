@@ -1,0 +1,7 @@
+tunnel: 2d754bde-eac7-4995-ad66-2757249f4340
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: houmi.click
+    service: http://host-api:4000
+  - service: http_status:404

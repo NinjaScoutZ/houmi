@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_9d613c75",
+    "kind": "feature",
+    "goal": "Master implementation plan for all remaining optimizations, Smart Balloon overhaul, and MangaToolPlus killer features",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-27T17:51:59.856495+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

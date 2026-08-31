@@ -1,0 +1,30 @@
+{
+  "slug": "m_48ad4bb5",
+  "task_id": "task_48ad4bb5",
+  "kind": "feature",
+  "goal": "Phase 2: Integrate dedicated GLM Comic API endpoints and batch grid OCR into server.py and ocr_manager.py",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-28T10:38:39.781995+00:00",
+  "updated_at": "2026-08-28T10:38:39.810615+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-28T10:38:39.808615+00:00",
+      "updated_at": "2026-08-28T10:38:39.808615+00:00"
+    }
+  }
+}

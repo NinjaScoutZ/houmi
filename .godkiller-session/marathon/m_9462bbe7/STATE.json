@@ -1,0 +1,30 @@
+{
+  "slug": "m_9462bbe7",
+  "task_id": "task_9462bbe7",
+  "kind": "feature",
+  "goal": "Phase 1: Implement RapidOCR noise cleanup in backend/app/services/ocr.py",
+  "plan_path": null,
+  "current_plan_phase": 1,
+  "kernel_phase": "open",
+  "evidence_ids": [],
+  "search_queries": [],
+  "blockers": [],
+  "failure_streak": 0,
+  "session_count": 1,
+  "last_handoff": "Initialized marathon. Next: Phase 1 research/reproduce.",
+  "created_at": "2026-08-19T15:12:44.776091+00:00",
+  "updated_at": "2026-08-19T15:12:44.814846+00:00",
+  "closed": false,
+  "metadata": {
+    "ultradeep_file_gate": {
+      "enabled": true,
+      "queue": [],
+      "files": {},
+      "current": null,
+      "max_files_per_edit_call": 1,
+      "require_hypotheses": 3,
+      "created_at": "2026-08-19T15:12:44.810842+00:00",
+      "updated_at": "2026-08-19T15:12:44.810842+00:00"
+    }
+  }
+}

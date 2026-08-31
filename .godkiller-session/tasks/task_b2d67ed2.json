@@ -1,0 +1,35 @@
+{
+  "handle": {
+    "task_id": "task_b2d67ed2",
+    "kind": "feature",
+    "goal": "Phase 3: Frontend Warning & Configuration Modal for Oversize Webtoon Slicing",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "ultradeep_file_gate": {
+        "enabled": true,
+        "queue": [],
+        "files": {},
+        "current": null,
+        "max_files_per_edit_call": 1,
+        "require_hypotheses": 3,
+        "created_at": "2026-08-17T14:44:40.583540+00:00",
+        "updated_at": "2026-08-17T14:44:40.583540+00:00"
+      },
+      "mode": "ultradeep",
+      "marathon_slug": "m_b2d67ed2",
+      "require_swarm": true
+    },
+    "created_at": "2026-08-17T14:44:40.567944+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

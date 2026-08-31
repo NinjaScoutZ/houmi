@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_3c55059f",
+    "kind": "feature",
+    "goal": "Implementation Plan for Houmi Studio: SFX Detection & Workflow, QA Tools, Code Quality & Tech Debt, Export Formats, Reading Order & TM UI",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-26T15:13:16.653798+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

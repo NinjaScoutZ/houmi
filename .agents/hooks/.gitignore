@@ -1,0 +1,3 @@
+# Machine-local interpreter pin from godkiller-bootstrap — do not commit
+godkiller-write-guard.local.cmd
+godkiller-write-guard.local.sh

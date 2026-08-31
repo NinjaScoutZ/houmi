@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_7c81a89d",
+    "kind": "bugfix",
+    "goal": "Fix Mask Kernel for dark and spiky speech balloons with white-outlined text",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "bugfix_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-18T10:36:31.472253+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

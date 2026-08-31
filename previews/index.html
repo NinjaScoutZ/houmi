@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Houmi Studio — 20 Standalone UI/UX Prototypes Launcher</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { background-color: #08080a; color: #f4f4f5; font-family: 'Inter', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#08080a] text-slate-100 p-8 custom-scrollbar">
+  <header class="max-w-6xl mx-auto w-full mb-8 border-b border-zinc-800 pb-6 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-black text-zinc-950 text-xl shadow-xl shadow-amber-500/20 font-['Space_Grotesk']">
+        20
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-xl font-extrabold text-white font-['Space_Grotesk'] tracking-wide">HOUMI STUDIO PROTOTYPES LAUNCHER</h1>
+          <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-mono font-bold border border-amber-500/30">20 INDIVIDUAL HTML FILES</span>
+        </div>
+        <p class="text-sm text-slate-400 mt-1">คลิกเปิดดูตัวจำลองแต่ละแบบเป็นไฟล์แยกอิสระ (Full-Screen Standalone Prototype)</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    
+    <!-- Card 1 -->
+    <a href="01-zen-focus.html" class="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/60 hover:bg-zinc-900 transition-all group shadow-xl">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-mono font-bold border border-emerald-500/20">01. ZEN FOCUS</span>
+        <span class="text-xs text-slate-500 font-mono">Open HTML ↗</span>
+      </div>
+      <h3 class="font-extrabold text-slate-100 group-hover:text-amber-400 text-base font-['Space_Grotesk']">The "Zen Focus" Studio</h3>
+      <p class="text-xs text-slate-400 mt-2">Canvas เต็มจอ 100% ไร้แถบข้าง มี Radial Pie Menu บานออกใต้ปลายเมาส์เมื่อคลิกขวา</p>
+    </a>
+
+    <!-- Card 2 -->
+    <a href="02-webtoon-infinite-strip.html" class="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/60 hover:bg-zinc-900 transition-all group shadow-xl">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-mono font-bold border border-amber-500/20">02. WEBTOON STRIP</span>
+        <span class="text-xs text-slate-500 font-mono">Open HTML ↗</span>
+      </div>
+      <h3 class="font-extrabold text-slate-100 group-hover:text-amber-400 text-base font-['Space_Grotesk']">The "Webtoon Infinite Strip"</h3>
+      <p class="text-xs text-slate-400 mt-2">สตรีมภาพเว็บตูนยาว 20,000px+ ต่อเนื่อง พร้อม Minimap และเส้นเลเซอร์ Smart Slicer ตัดแบ่งท่อน</p>
+    </a>
+
+    <!-- Card 3 -->
+    <a href="03-dual-deck-dj-split.html" class="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/60 hover:bg-zinc-900 transition-all group shadow-xl">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 text-xs font-mono font-bold border border-cyan-500/20">03. DJ DUAL-DECK</span>
+        <span class="text-xs text-slate-500 font-mono">Open HTML ↗</span>
+      </div>
+      <h3 class="font-extrabold text-slate-100 group-hover:text-amber-400 text-base font-['Space_Grotesk']">The "Dual-Deck DJ Split"</h3>
+      <p class="text-xs text-slate-400 mt-2">แบ่งจอ 50/50 ซ้ายเป็นภาพ Raw ขวาเป็นภาพแปลไทย เลื่อนซูมซิงค์ตามกัน 1:1</p>
+    </a>
+
+    <!-- Card 4 -->
+    <a href="04-cyberpunk-speedrunner.html" class="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/60 hover:bg-zinc-900 transition-all group shadow-xl">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 text-xs font-mono font-bold border border-rose-500/20">04. SPEEDRUNNER</span>
+        <span class="text-xs text-slate-500 font-mono">Open HTML ↗</span>
+      </div>
+      <h3 class="font-extrabold text-slate-100 group-hover:text-amber-400 text-base font-['Space_Grotesk']">Cyberpunk Terminal Speedrunner</h3>
+      <p class="text-xs text-slate-400 mt-2">คีย์ลัดสไตล์ Vim 100% ไม่ต้องจับเมาส์ พร้อม Telemetry วัดความเร็ว Bubbles/Min</p>
+    </a>
+
+    <!-- Card 5 -->
+    <a href="05-node-based-compositor.html" class="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/60 hover:bg-zinc-900 transition-all group shadow-xl">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-2.5 py-1 rounded-lg bg-violet-500/10 text-violet-400 text-xs font-mono font-bold border border-violet-500/20">05. NODE GRAPH</span>
+        <span class="text-xs text-slate-500 font-mono">Open HTML ↗</span>
+      </div>
+      <h3 class="font-extrabold text-slate-100 group-hover:text-amber-400 text-base font-['Space_Grotesk']">Node-Based Visual Compositor</h3>
+      <p class="text-xs text-slate-400 mt-2">ควบคุมกระบวนการ AI ด้วย Visual Node Graph เชื่อมสายไฟสไตล์ Blender และ DaVinci Fusion</p>
+    </a>
+
+    <!-- Card 20 -->
+    <a href="20-houmi-ultimate-apex.html" class="p-5 rounded-2xl bg-zinc-950 border-2 border-amber-500/80 hover:bg-zinc-900 transition-all group shadow-2xl shadow-amber-500/10">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-zinc-950 text-xs font-mono font-black">20. APEX FUSION</span>
+        <span class="text-xs text-amber-400 font-mono font-bold">Open HTML ↗</span>
+      </div>
+      <h3 class="font-extrabold text-amber-400 text-base font-['Space_Grotesk']">The "Houmi Ultimate Modular Grid"</h3>
+      <p class="text-xs text-slate-300 mt-2">หลอมรวมสุดยอดฟีเจอร์: Floating Ribbon ระยะ 26px, Inscribed Centering, และ Pipeline Flow Matrix</p>
+    </a>
+
+  </main>
+</body>
+</html>

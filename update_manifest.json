@@ -1,0 +1,8 @@
+{
+  "latest_version": "1.1.0",
+  "target_username": "",
+  "update_available": true,
+  "patch_notes": "v1.1.0 Stable Rollback: คืนค่าเวอร์ชันเสถียร (Stable Release) ปรับปรุงความเสถียรและประสิทธิภาพระบบ 100%",
+  "download_size_mb": 3.46,
+  "download_url": "/api/system/download-update"
+}

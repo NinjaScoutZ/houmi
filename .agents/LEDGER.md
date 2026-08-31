@@ -1,0 +1,27 @@
+﻿# HOUMI AGENT LEDGER (FABLE5 DISCIPLINE)
+
+## COMPLETED CARDS
+
+### [x] BK-01: Patch Isolation & Safe Reversible Rollback Engine (backend/app/patches/)
+- Scope: backend/app/patches/ (patch_engine.py, manifest.py, rollback.py)
+- Evidence: 2/2 tests passed (pytest tests/test_patch_isolation.py)
+- Features: SHA-256 Checksum, Staging extraction, Zip Slip protection, 1-Click Rollback.
+
+### [x] BK-02: Stable Core Module Re-organization (backend/app/core/)
+- Scope: backend/app/core/ (config.py, database.py, events.py, security.py)
+- Evidence: 3/3 tests passed (pytest tests/test_core_architecture.py)
+- Features: Centralized configs, connection pooling, lifespan lifecycle, non-breaking re-exports.
+
+### [x] BK-03: Production Telemetry & GPU Memory Auto-GC (backend/app/telemetry/)
+- Scope: backend/app/telemetry/ (gpu_monitor.py, pipeline_queue.py, health.py)
+- Evidence: 5/5 tests passed (pytest tests/test_telemetry_gpu.py)
+- Features: VRAM tracker, Auto-GC on 85% threshold, Pipeline Queue throughput/latency metrics.
+
+### [x] BK-04: AI Key Pool Balancer & Corrupted Input Guard
+- Scope: backend/app/services/ai_key_pool.py, backend/app/services/image_guard.py
+- Evidence: 5/5 tests passed (pytest tests/test_ai_key_pool.py tests/test_image_guard.py)
+- Features: Multi-key round robin, 429/503 circuit breaker, 50MB / 6K downscaling sanity guard.
+
+### [x] BK-05: Adversarial Council 3-Way Debate & Final Production Verification
+- Scope: Full multi-layer stack grill + 3-Way Debate Council
+- Evidence: 26/26 tests passed in 3.24s across all backend core suites.

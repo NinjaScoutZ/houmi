@@ -1,0 +1,24 @@
+{
+  "handle": {
+    "task_id": "task_9d434790",
+    "kind": "bugfix",
+    "goal": "Diagnose and fix why Pipeline automatic mask generation reverts to initial default heuristics instead of AI text mask",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "bugfix_v1",
+    "metadata": {
+      "mode": "debug",
+      "require_self_ctf": true
+    },
+    "created_at": "2026-08-18T12:45:22.011266+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_c983bfbd",
+    "kind": "feature",
+    "goal": "Plan and verify Mask Kernel limits expansion to 56 and Magnetic Line/Block Mask (fill rectangle without gap between words) with toggle system",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-16T05:54:32.285089+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

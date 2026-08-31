@@ -1,0 +1,399 @@
+diff --git a/backend/app/services/detector.py b/backend/app/services/detector.py
+index dbf2dfb..f7dbba4 100644
+--- a/backend/app/services/detector.py
++++ b/backend/app/services/detector.py
+@@ -752,8 +752,19 @@ def compute_smart_balloon_bounds(image: np.ndarray, text_bbox: dict) -> dict:
+         # Non-white text box (gradient/dark background) — fall back to standard text bbox
+         return _smart_balloon_fallback(bx, by, bw, bh, "fallback_not_white")
+ 
+-    # Erode 9px inside to keep mask comfortably away from black border stroke
+-    erode_k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
++    # Pull the mask inside the black border stroke.  The inset scales with the
++    # balloon's inscribed radius: a fixed 15px kernel erases small balloons
++    # entirely while barely insetting large ones.
++    dist = cv2.distanceTransform(filled_balloon, cv2.DIST_L2, 5)
++    dist_max = float(dist.max())
++    if dist_max > 0.0:
++        inscribed = float(np.median(dist[dist > dist_max * 0.6]))
++    else:
++        inscribed = 0.0
++    erode_r = int(round(min(24.0, max(3.0, inscribed * 0.06))))
++    erode_k = cv2.getStructuringElement(
++        cv2.MORPH_ELLIPSE, (erode_r * 2 + 1, erode_r * 2 + 1)
++    )
+     final_mask = cv2.erode(filled_balloon, erode_k, iterations=1)
+     if cv2.countNonZero(final_mask) == 0:
+         final_mask = filled_balloon
+@@ -764,6 +775,30 @@ def compute_smart_balloon_bounds(image: np.ndarray, text_bbox: dict) -> dict:
+ 
+     mx, my, mw, mh = cv2.boundingRect(nz)
+ 
++    # ------------------------------------------------------------------
++    # Step 5: Sanity gate — reject a collapsed mask instead of returning it
++    # ------------------------------------------------------------------
++    # A seed landing on an isolated bright speck (highlight, screentone gap)
++    # produces a mask a few pixels across.  Eroding then leaves almost nothing,
++    # and the caller silently typesets against a degenerate region.  Verify the
++    # mask actually covers the text before trusting it.
++    mask_px = cv2.countNonZero(final_mask)
++    text_area = max(1.0, bw * bh)
++    coverage = mask_px / text_area
++    solidity = mask_px / max(1, mw * mh)
++    tx0 = max(0, int(local_bx))
++    ty0 = max(0, int(local_by))
++    tx1 = min(crop_w, int(local_bx + bw))
++    ty1 = min(crop_h, int(local_by + bh))
++    if tx1 > tx0 and ty1 > ty0:
++        inside = cv2.countNonZero(final_mask[ty0:ty1, tx0:tx1])
++        text_overlap = inside / text_area
++    else:
++        text_overlap = 0.0
++
++    if coverage < 0.35 or solidity < 0.45 or text_overlap < 0.60:
++        return _smart_balloon_fallback(bx, by, bw, bh, "mask_area_collapsed")
++
+     # Convert to page coordinates
+     abs_x = float(sx0 + mx)
+     abs_y = float(sy0 + my)
+diff --git a/backend/app/services/typesetting/contour_fitting.py b/backend/app/services/typesetting/contour_fitting.py
+index 1b76d97..f123912 100644
+--- a/backend/app/services/typesetting/contour_fitting.py
++++ b/backend/app/services/typesetting/contour_fitting.py
+@@ -31,6 +31,52 @@ def _longest_run_width(row: np.ndarray, preferred_x: int) -> int:
+     return int(selected[-1] - selected[0] + 1)
+ 
+ 
++# Rows narrower than ``_TAIL_CORE_RATIO`` of the widest row are treated as the
++# balloon tail (or a pointer/spike) rather than usable interior.
++_TAIL_CORE_RATIO = 0.55
++# Monotone re-growth threshold: once a contiguous core is found, rows adjacent to
++# it are re-admitted while the profile keeps widening toward the core.  This
++# preserves the balloon's rounded shoulders without letting the tail back in.
++_TAIL_REGROW_RATIO = 0.30
++
++
++def find_core_row_span(row_widths: tuple[int, ...] | list[int]) -> tuple[int, int]:
++    """Return the ``[y0, y1]`` row span of the balloon body, excluding the tail.
++
++    A speech balloon's tail is a narrow protrusion.  Because it is included in
++    the mask bounding box, both the vertical centre and the per-line width
++    budget get dragged toward it.  This isolates the widest *contiguous* run of
++    rows so a tail attached at either end is removed, then re-grows the span
++    while row widths increase monotonically toward the core.
++    """
++    widths = np.asarray(row_widths, dtype=np.int32)
++    if widths.size == 0:
++        return (0, 0)
++    peak = int(widths.max())
++    if peak <= 0:
++        return (0, int(widths.size) - 1)
++
++    core = widths >= peak * _TAIL_CORE_RATIO
++    indices = np.flatnonzero(core)
++    if indices.size == 0:
++        return (0, int(widths.size) - 1)
++
++    # Longest contiguous run of core rows.  Contiguity is what rejects a tail
++    # that happens to contain a few wide rows of its own.
++    split_at = np.flatnonzero(np.diff(indices) > 1) + 1
++    runs = np.split(indices, split_at)
++    best = max(runs, key=len)
++    y0, y1 = int(best[0]), int(best[-1])
++
++    regrow_floor = peak * _TAIL_REGROW_RATIO
++    while y0 > 0 and widths[y0 - 1] >= regrow_floor and widths[y0 - 1] <= widths[y0]:
++        y0 -= 1
++    last = int(widths.size) - 1
++    while y1 < last and widths[y1 + 1] >= regrow_floor and widths[y1 + 1] <= widths[y1]:
++        y1 += 1
++    return (y0, y1)
++
++
+ @dataclass(frozen=True)
+ class ContourWidthProfile:
+     """A normalized row-width profile for one balloon interior mask."""
+@@ -40,6 +86,36 @@ class ContourWidthProfile:
+     source_height: int
+     usable_row_ratio: float
+     area_ratio: float
++    core_y0: int = 0
++    core_y1: int = 0
++
++    @property
++    def core_height(self) -> int:
++        return max(1, self.core_y1 - self.core_y0 + 1)
++
++    @property
++    def has_tail(self) -> bool:
++        """True when the mask bbox extends meaningfully beyond the balloon body."""
++        return self.core_height < int(self.source_height * 0.92)
++
++    def core_region(
++        self, x: float, y: float, width: float, height: float
++    ) -> tuple[float, float, float, float]:
++        """Map a mask-aligned region onto the balloon body, dropping the tail.
++
++        The mask bounding box includes the tail, so centring text in it puts the
++        text off-centre in the balloon.  Shrinking the region to the body span
++        fixes the centre and the available height in one step.
++        """
++        if self.source_height <= 0 or height <= 0:
++            return (x, y, width, height)
++        scale = height / float(self.source_height)
++        return (
++            x,
++            y + self.core_y0 * scale,
++            width,
++            max(1.0, self.core_height * scale),
++        )
+ 
+     @property
+     def is_usable(self) -> bool:
+@@ -72,20 +148,31 @@ class ContourWidthProfile:
+         total_height = num_lines * line_height + max(0, num_lines - 1) * line_spacing
+         center_from_top = line_index * (line_height + line_spacing) + line_height / 2.0
+         center = block_h / 2.0 + center_from_top - total_height / 2.0
+-        scale_y = self.source_height / max(float(block_h), 1.0)
+-        center_y = center * scale_y
++        # ``block_h`` is the caller's region height, which corresponds to the
++        # balloon body (see ``core_region``) rather than the full mask.  Map it
++        # onto core rows so the sampled band tracks the text.
++        scale_y = self.core_height / max(float(block_h), 1.0)
++        center_y = self.core_y0 + center * scale_y
+         # Font ink generally occupies less than the full line box.  A 70% band
+         # is conservative for ascenders/diacritics while not punishing normal
+         # leading at the contour's first/last row.
+         half_band = max(0.5, line_height * scale_y * 0.25)
+         y0 = max(0, int(np.floor(center_y - half_band)))
+         y1 = min(self.source_height - 1, int(np.ceil(center_y + half_band)))
++        # Clamp the sampling band to the balloon body.  Tail rows are excluded
++        # so the width budget is no longer dragged down by the narrowest row of
++        # a protrusion the text never occupies.
++        y0 = max(y0, self.core_y0)
++        y1 = min(y1, self.core_y1)
++        if y1 < y0:
++            return 0.0
+         widths = self.row_widths[y0 : y1 + 1]
+         valid_widths = [w for w in widths if w > 0]
+         if not valid_widths:
+             return 0.0
+-        # Use conservative estimate from valid rows within the mask, ignoring outer background 0s
+-        effective_w = float(np.percentile(valid_widths, 15)) if len(valid_widths) >= 3 else float(min(valid_widths))
++        # With the tail removed, the true minimum over the band is both safe and
++        # accurate; a low percentile would keep biasing the budget downward.
++        effective_w = float(min(valid_widths))
+         scale_x = block_w / max(float(self.source_width), 1.0)
+         return max(0.0, min(block_w, effective_w * scale_x))
+ 
+@@ -109,6 +196,15 @@ def build_contour_width_profile(
+         return None
+ 
+     binary = np.where(mask > 0, 255, 0).astype(np.uint8)
++
++    # A collapsed mask (seed landed on a bright speck) carries no usable shape.
++    # Upscaling it to the target size would fabricate a plausible-looking
++    # profile, so reject it and let the caller fall back explicitly.
++    if target_width and target_height:
++        src_h, src_w = binary.shape[:2]
++        if src_w * 4 < float(target_width) or src_h * 4 < float(target_height):
++            return None
++
+     if target_width and target_height and (
+         int(round(target_width)) != binary.shape[1]
+         or int(round(target_height)) != binary.shape[0]
+@@ -131,12 +227,15 @@ def build_contour_width_profile(
+     row_widths = tuple(_longest_run_width(binary[y], preferred_x) for y in range(height))
+     usable_rows = sum(value > 0 for value in row_widths)
+     area_ratio = float(np.count_nonzero(binary)) / max(1, width * height)
++    core_y0, core_y1 = find_core_row_span(row_widths)
+     profile = ContourWidthProfile(
+         row_widths=row_widths,
+         source_width=width,
+         source_height=height,
+         usable_row_ratio=usable_rows / max(1, height),
+         area_ratio=area_ratio,
++        core_y0=core_y0,
++        core_y1=core_y1,
+     )
+     return profile if profile.is_usable else None
+ 
+diff --git a/backend/app/services/typesetting/fitting.py b/backend/app/services/typesetting/fitting.py
+index 99cf2f3..2c01d33 100644
+--- a/backend/app/services/typesetting/fitting.py
++++ b/backend/app/services/typesetting/fitting.py
+@@ -802,9 +802,8 @@ def compute_best_layout(
+     max_size = int(requested_font_size) if (requested_font_size is not None and requested_font_size > 0) else 100
+     if minimum_font_size is not None and minimum_font_size > 0:
+         pref_min = max(6, int(math.ceil(minimum_font_size)))
+-        # min_font_size is a preferred quality threshold in Auto mode. Search
+-        # down to the engine safety floor so fitting wins over text overflow.
+-        min_size = 6
++        # Respect user's minimum font size preference as a hard floor
++        min_size = pref_min
+         max_size = max(max_size, pref_min)
+     elif max_size < 10:
+         min_size = 6
+@@ -820,27 +819,32 @@ def compute_best_layout(
+         max_size = min(max_size, box_height_cap)
+         min_size = min(min_size, max_size)
+ 
+-    if lock_font_size:
+-        locked_size = max(6, int(round(requested_font_size)))
+-        candidate_sizes = [locked_size]
+-    else:
+-        span = max_size - min_size
+-        candidate_budget = max(12, min(96, int(candidate_budget)))
+-        step = max(1, math.ceil(span / candidate_budget))
+-        candidate_sizes = list(range(min_size, max_size + 1, step))
+-        if not candidate_sizes or candidate_sizes[-1] != max_size:
+-            candidate_sizes.append(max_size)
++    def _build_candidate_sizes(low: int, high: int) -> list[int]:
++        if lock_font_size:
++            return [max(6, int(round(requested_font_size)))]
++        span = high - low
++        budget = max(12, min(96, int(candidate_budget)))
++        step = max(1, math.ceil(span / budget))
++        sizes = list(range(low, high + 1, step))
++        if not sizes or sizes[-1] != high:
++            sizes.append(high)
+         # Ensure fine-grained coverage near the top of the range (last 30%)
+         # so the engine doesn't skip over valid sizes due to large step sizes
+-        fine_start = max(min_size, int(max_size * 0.7))
+-        for s in range(fine_start, max_size + 1, max(1, step // 2) if step > 2 else 2):
+-            if s not in candidate_sizes:
+-                candidate_sizes.append(s)
+-        candidate_sizes.sort()
++        fine_start = max(low, int(high * 0.7))
++        for s in range(fine_start, high + 1, max(1, step // 2) if step > 2 else 2):
++            if s not in sizes:
++                sizes.append(s)
++        sizes.sort()
++        return sizes
++
++    candidate_sizes = _build_candidate_sizes(min_size, max_size)
+ 
+     line_candidates_evaluated = 0
++    below_preferred_min = False
+ 
+-    for size in candidate_sizes:
++    def _search(sizes: list[int]) -> None:
++      nonlocal best_score, best_layout, line_candidates_evaluated
++      for size in sizes:
+         try:
+             font = _load_font(str(resolved_entry.file_path), int(size))
+         except Exception:
+@@ -905,6 +909,26 @@ def compute_best_layout(
+                 "line_count_excess": int(ranked.get("line_count_excess", 0)),
+             }
+ 
++    _search(candidate_sizes)
++
++    # Escape hatch: if nothing fits at or above the preferred minimum, allow a
++    # limited descent below it rather than overflowing, but flag it so callers
++    # can surface FONT_BELOW_PREFERRED_MIN instead of silently shrinking to 6pt.
++    if (
++        not lock_font_size
++        and min_size > 6
++        and (best_layout is None or best_layout["overflow"])
++    ):
++        relaxed_min = max(6, int(math.floor(min_size * 0.8)))
++        if relaxed_min < min_size:
++            fallback_sizes = [s for s in _build_candidate_sizes(relaxed_min, max_size) if s < min_size]
++            if fallback_sizes:
++                pre_layout = best_layout
++                _search(fallback_sizes)
++                if best_layout is not pre_layout and float(best_layout["font_size"]) < min_size:
++                    below_preferred_min = True
++                    candidate_sizes = candidate_sizes + fallback_sizes
++
+     if best_layout is None:
+         best_layout = {
+             "font_size": float(candidate_sizes[0] if candidate_sizes else 12),
+@@ -923,4 +947,6 @@ def compute_best_layout(
+ 
+     best_layout["candidate_count"] = len(candidate_sizes)
+     best_layout["line_candidates_evaluated"] = line_candidates_evaluated
++    best_layout["below_preferred_min"] = below_preferred_min
++    best_layout["preferred_min_font_size"] = float(min_size)
+     return best_layout
+diff --git a/backend/app/services/typesetting/service.py b/backend/app/services/typesetting/service.py
+index 1131a1c..5680406 100644
+--- a/backend/app/services/typesetting/service.py
++++ b/backend/app/services/typesetting/service.py
+@@ -514,6 +514,7 @@ def compute_block_typesetting(
+         meta.get("contour_layout", project_settings.get("enable_contour_layout", True if has_smart_balloon else False))
+     )
+     contour_profile = None
++    contour_offset_y = 0.0
+     if contour_layout_requested and balloon_type in {"bubble", "narrative"}:
+         try:
+             # When contour layout is active, the mask defines the actual text
+@@ -544,6 +545,20 @@ def compute_block_typesetting(
+                 # Expand the working area to the full balloon shape
+                 inner_w = contour_w
+                 inner_h = contour_h
++                # A balloon tail is part of the mask bbox but never holds text.
++                # Restrict the working area to the balloon body so the text is
++                # centred in the bubble instead of being pulled toward the tail.
++                if contour_profile.has_tail:
++                    _, _, _, core_h = contour_profile.core_region(
++                        0.0, 0.0, contour_w, contour_h
++                    )
++                    if core_h >= 12.0:
++                        contour_offset_y = (
++                            contour_profile.core_y0
++                            * (contour_h / max(1.0, float(contour_profile.source_height)))
++                            + (core_h - contour_h) / 2.0
++                        )
++                        inner_h = core_h
+         except (OSError, TypeError, ValueError):
+             logger.warning("Contour mask could not be loaded for block %s", getattr(block, "id", "?"))
+     performance_settings = resolve_performance_settings(project_settings)
+@@ -842,6 +857,23 @@ def compute_block_typesetting(
+                 details={"mask_path": layout_region.get("mask_path")},
+             )
+         )
++    if layout.get("below_preferred_min"):
++        warningsList.append(
++            StructuredWarning(
++                code="FONT_BELOW_PREFERRED_MIN",
++                severity="warning",
++                message=(
++                    f"Text did not fit at the preferred minimum font size "
++                    f"({layout.get('preferred_min_font_size')}); "
++                    f"{layout['font_size']} was used instead."
++                ),
++                block_id=block.id,
++                details={
++                    "preferred_min_font_size": layout.get("preferred_min_font_size"),
++                    "used_font_size": layout["font_size"],
++                },
++            )
++        )
+     # Merge style evidence codes (dedupe, style first for explainability)
+     merged_reasons: list[str] = []
+     for code in style_reason_codes + reason_codes:
+@@ -865,11 +897,21 @@ def compute_block_typesetting(
+         prev = meta["typesetting_spec"]
+         revision = int(prev.get("revision", 0) or 0) + 1
+ 
++    # Push the tail exclusion into the rendered region so the renderer's
++    # vertical centring lands on the balloon body, not on the mask bbox centre.
++    region_y = float(layout_region["y"])
++    region_h = float(layout_region["height"])
++    if contour_profile is not None and contour_offset_y:
++        shrink = max(0.0, contour_h - inner_h)
++        if shrink < region_h - 8.0:
++            region_y += contour_offset_y
++            region_h -= shrink
++
+     region_spec = LayoutRegionSpec(
+         x=layout_region["x"],
+-        y=layout_region["y"],
++        y=region_y,
+         width=layout_region["width"],
+-        height=layout_region["height"],
++        height=region_h,
+         shape=layout_region.get("shape", balloon_type),
+         confidence=layout_region.get("confidence", 0.0),
+         source=layout_region.get("source", "fallback_bbox"),

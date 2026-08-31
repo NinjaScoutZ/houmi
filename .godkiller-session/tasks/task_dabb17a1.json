@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_dabb17a1",
+    "kind": "bugfix",
+    "goal": "Fix RapidOCR stray noise punctuation AND add Layer Stroke Outline effect context menu in Layer & Text review",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "bugfix_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-19T15:11:45.902932+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

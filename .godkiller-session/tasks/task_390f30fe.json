@@ -1,0 +1,221 @@
+{
+  "handle": {
+    "task_id": "task_390f30fe",
+    "kind": "bugfix",
+    "goal": "Fix Thai word breaking/wrapping and font sizing consistency for small and large balloons",
+    "project_id": "default",
+    "phase": "claim_done",
+    "rubric_id": "bugfix_v1",
+    "metadata": {
+      "search_queries": [
+        "javascript Intl.Segmenter thai word breaking zero width space",
+        "fabricjs textbox thai word wrapping zero width space",
+        "fabric js custom line wrapping intl segmenter thai"
+      ],
+      "skills_loaded": [
+        "C:\\Users\\dansa\\.gemini\\config\\plugins\\superpowers\\skills\\verification-before-completion\\SKILL.md"
+      ],
+      "skill_catalog_query": "Fix Thai word breaking/wrapping and font sizing consistency for small and large balloons",
+      "skill_catalog_shortlist": [
+        "C:\\Users\\dansa\\.agents\\skills\\00-andruia-consultant\\SKILL.md",
+        "C:\\Users\\dansa\\.agents\\skills\\007\\SKILL.md",
+        "C:\\Users\\dansa\\.agents\\skills\\10-andruia-skill-smith\\SKILL.md",
+        "C:\\Users\\dansa\\.agents\\skills\\20-andruia-niche-intelligence\\SKILL.md"
+      ],
+      "skill_scan_at": "skill_catalog"
+    },
+    "created_at": "2026-08-15T03:20:35.934772+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [
+    {
+      "id": "ev_e8ecf810",
+      "task_id": "task_390f30fe",
+      "type": "other",
+      "summary": "Completed 3 web searches on Thai segmentation, Intl.Segmenter, and Fabric.js line breaking",
+      "description": "",
+      "payload": {
+        "queries": [
+          "javascript Intl.Segmenter thai word breaking zero width space",
+          "fabricjs textbox thai word wrapping zero width space",
+          "fabric js custom line wrapping intl segmenter thai"
+        ],
+        "source": "web_search",
+        "kind": "web_search"
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:23:49.763743+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_769e7366",
+      "task_id": "task_390f30fe",
+      "type": "other",
+      "summary": "skills_loaded n=1",
+      "description": "",
+      "payload": {
+        "source": "skills_loaded",
+        "kind": "skills_loaded",
+        "paths": [
+          "C:\\Users\\dansa\\.gemini\\config\\plugins\\superpowers\\skills\\verification-before-completion\\SKILL.md"
+        ],
+        "count": 1
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:23:53.260998+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_fa08ebd6",
+      "task_id": "task_390f30fe",
+      "type": "other",
+      "summary": "skill_catalog query='Fix Thai word breaking/wrapping and font sizing consistency for small and large balloons' n=20",
+      "description": "",
+      "payload": {
+        "source": "skill_catalog",
+        "kind": "skill_scan",
+        "query": "Fix Thai word breaking/wrapping and font sizing consistency for small and large balloons",
+        "shortlist_paths": [
+          "C:\\Users\\dansa\\.agents\\skills\\00-andruia-consultant\\SKILL.md",
+          "C:\\Users\\dansa\\.agents\\skills\\007\\SKILL.md",
+          "C:\\Users\\dansa\\.agents\\skills\\10-andruia-skill-smith\\SKILL.md",
+          "C:\\Users\\dansa\\.agents\\skills\\20-andruia-niche-intelligence\\SKILL.md"
+        ],
+        "returned": 20,
+        "anti_excuse": "training_memory_or_confidence_does_not_waive"
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:28:09.304854+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_b67eb4cf",
+      "task_id": "task_390f30fe",
+      "type": "hypothesis_support",
+      "summary": "Initial inspection confirmed splitByGrapheme chopped Thai syllables and short text was capped at 12px",
+      "description": "",
+      "payload": {
+        "claim": "Fabric splitByGrapheme true chopped Thai vowels across lines and static font bounds restricted short text to 12px"
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:28:13.093518+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_d39875e7",
+      "task_id": "task_390f30fe",
+      "type": "hypothesis_refute",
+      "summary": "Refuting static font size threshold for short text",
+      "description": "",
+      "payload": {
+        "claim": "A static font size threshold of 12px works for all balloons regardless of balloon height and word count",
+        "refutation": "Static 12px threshold creates tiny unreadable text in large balloons (150px height), proven by user screenshot and optical scale testing"
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:28:18.226006+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_4f4e0b4d",
+      "task_id": "task_390f30fe",
+      "type": "failing_test",
+      "summary": "Reproduced broken Thai syllable line breaking and short text sizing bugs",
+      "description": "",
+      "payload": {
+        "claim": "Reproduced initial bug where splitByGrapheme true broke 'ยังไง' into 'ยังไ' and 'ง' and short text stayed at 12-27px",
+        "reproduced": true
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:28:24.979870+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_0e933f91",
+      "task_id": "task_390f30fe",
+      "type": "blast_radius",
+      "summary": "Symbol: autoFitTextboxFontSize, Files: 0, Dependents: 0",
+      "description": "",
+      "payload": {
+        "symbol": "autoFitTextboxFontSize",
+        "files": [],
+        "dependents": [],
+        "engine": "ripgrep+ast",
+        "regex_fallback_used": false,
+        "warn": null,
+        "server_authored": true
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:28:48.784057+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_38b3e7df",
+      "task_id": "task_390f30fe",
+      "type": "blast_radius",
+      "summary": "Symbol: autoFitTextboxFontSize, Files: 0, Dependents: 0",
+      "description": "",
+      "payload": {
+        "symbol": "autoFitTextboxFontSize",
+        "files": [],
+        "dependents": [],
+        "engine": "ripgrep+ast",
+        "regex_fallback_used": false,
+        "warn": null,
+        "server_authored": true
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:29:11.048377+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_4d735230",
+      "task_id": "task_390f30fe",
+      "type": "exit_code",
+      "summary": "All frontend vitest and backend pytest Thai typesetting tests passed with exit code 0",
+      "description": "",
+      "payload": {
+        "command": "pytest backend/tests/test_thai_typesetting_scaling.py && npx vitest run src/tests/thaiWrapping.test.ts",
+        "exit_code": 0
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T03:29:28.041116+00:00",
+      "ref_ids": []
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "hyp_f889d089",
+      "statement": "Disabling splitByGrapheme for Thai with Intl.Segmenter word boundaries and optical fill bounds fixes broken Thai syllables and scales short text harmoniously.",
+      "support_refs": [
+        "ev_b67eb4cf"
+      ],
+      "refute_refs": [
+        "ev_d39875e7"
+      ],
+      "status": "proposed"
+    }
+  ],
+  "phase_history": [
+    "reproduce",
+    "hypothesize",
+    "hypothesize",
+    "localize",
+    "fix",
+    "verify",
+    "claim_done"
+  ],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

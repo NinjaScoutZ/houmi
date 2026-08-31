@@ -1,0 +1,30 @@
+# Automatic HTTPS and Reverse Proxy for Houmi Studio Host
+# Domain: houmi.sytes.net
+
+houmi.sytes.net {
+    # Automatic TLS Certificate via Let's Encrypt / ZeroSSL
+    
+    # Reverse proxy all HTTP & WebSocket traffic to host-api container on port 4000
+    reverse_proxy host-api:4000 {
+        # WebSocket support
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/houmi_access.log
+        format json
+    }
+}

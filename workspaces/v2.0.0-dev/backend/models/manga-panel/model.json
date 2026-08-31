@@ -1,0 +1,9 @@
+{
+  "width":640,
+  "height":640,
+  "use_onnxruntime":true,
+  "yolo_version":26,
+  "classes_to_use":[1],
+  "classes_to_use_for_panel":[0],
+  "model":"model.onnx"
+}

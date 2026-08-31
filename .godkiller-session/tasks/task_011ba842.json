@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_011ba842",
+    "kind": "feature",
+    "goal": "Autonomous End-to-End Discord Manga Pipeline and Multi-Series Catalog Engine",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-28T13:49:43.317152+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

@@ -1,0 +1,83 @@
+# Node/React dependencies and builds
+node_modules/
+dist/
+.eslintcache
+
+# Python environment and cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Rust builds
+target/
+**/*.rs.bk
+
+# ML Models and training runs
+*.onnx
+*.pth
+*.pt
+*.bin
+*.weights
+backend/models/
+backend/ocr_models/
+backend/runs/
+backend/houmi_training/
+datasets/
+_research/
+_codex_test_*/
+
+# Application Data & Databases
+data/
+*.db
+*.db-shm
+*.db-wal
+houmi.db
+houmi.db-shm
+houmi.db-wal
+houmi_test.db
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Scratch and temporary directories
+scratch/
+frontend/scratch/
+backend/ocr_server/uploaded/
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Temporary folders & test runs
+_tmp/
+_tmp_*/
+graft/
+
+# Archived & Release outputs
+archive/
+release/
+releases/**/patches/*.zip
+runtime/
+shared/models/
+shared/package-cache/
+*.log
+*.zip
+_build/
+build/
+
+# Private Credentials & Env
+.env
+.env.*
+google_credentials/
+*.pem
+*.key
+

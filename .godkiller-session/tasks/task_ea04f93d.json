@@ -1,0 +1,24 @@
+{
+  "handle": {
+    "task_id": "task_ea04f93d",
+    "kind": "bugfix",
+    "goal": "Full project debug and security audit for Discord Manga Scraper & Web Dashboard",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "bugfix_v1",
+    "metadata": {
+      "mode": "debug",
+      "require_self_ctf": true
+    },
+    "created_at": "2026-08-28T11:50:53.470309+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

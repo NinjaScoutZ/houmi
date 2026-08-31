@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_28bd477f",
+    "kind": "feature",
+    "goal": "Add Smart Stitch / Image Resize & Split mode to the File Toolbar menu",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-18T05:17:53.612076+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

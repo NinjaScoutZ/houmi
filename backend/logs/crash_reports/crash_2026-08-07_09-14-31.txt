@@ -1,0 +1,17 @@
+==========================================================================
+  HOUMI STUDIO CRASH REPORT
+==========================================================================
+Timestamp: 2026-08-07 09:14:31
+Source: Test Crash Handler Verification
+Error: ZeroDivisionError: division by zero
+Memory: {"ram_used_mb": 44721.4, "ram_total_mb": 65289.7, "ram_percent": 68.5}
+--------------------------------------------------------------------------
+FULL STACK TRACEBACK:
+--------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\dansa\.gemini\antigravity\brain\08af7a85-c785-46c0-a66c-46f2ab99958c\scratch\test_crash_system.py", line 13, in <module>
+    x = 1 / 0
+        ~~^~~
+ZeroDivisionError: division by zero
+
+==========================================================================

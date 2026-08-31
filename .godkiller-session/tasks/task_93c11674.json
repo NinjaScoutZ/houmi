@@ -1,0 +1,508 @@
+{
+  "handle": {
+    "task_id": "task_93c11674",
+    "kind": "refactor",
+    "goal": "Inspect font system, PSD export font mismatch, and Canvas font rendering issues. Design a unified font management architecture and implementation plan.",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "refactor_v1",
+    "metadata": {
+      "ultradeep_file_gate": {
+        "enabled": true,
+        "queue": [
+          "backend/app/services/font_registry.py",
+          "backend/app/routes/fonts.py",
+          "frontend/src/utils/fontLoader.ts",
+          "frontend/src/components/FontPickerModal.tsx",
+          "frontend/src/components/FontSelector.tsx",
+          "frontend/src/components/Canvas.tsx",
+          "backend/app/services/psd_export.py",
+          "backend/tests/test_font_registry.py"
+        ],
+        "files": {
+          "backend/app/services/font_registry.py": {
+            "stage": "done",
+            "think": "Rebuilding font_registry.py into a robust SFNT / OpenType font parser and registry. We need full typographic name extraction (Name IDs 1, 2, 4, 6, 16, 17), OS/2 weight class parsing (100 to 900), multi-weight font variant tracking per family, TrueType collection (.ttc) multi-font header unpacking, and support for project custom fonts directory as well as bundled app fonts. Backward compatibility with existing resolve_font and list_families methods will be strictly preserved.",
+            "plan": "1. Extend SFNT name reading to support TTC collections, OS/2 table usWeightClass (100-900), and typographic names (IDs 1, 2, 4, 6, 16, 17).\\n2. Create FontVariant dataclass with weight, style, postscript_name, full_name, file_path, fingerprint, is_fallback.\\n3. Create FontFamily dataclass grouping variants, categories, and default variant.\\n4. Add scan_directory method to scan project custom fonts and assets/fonts.\\n5. Keep full backward compatibility with resolve_font(requested_family, bold, italic) returning FontRegistryEntry / FontVariant.\\n6. Expose get_all_families_dict() for rich JSON export to frontend.",
+            "hypotheses": [
+              "H1: SFNT parser must read Name IDs 1, 2, 4, 6, 16, 17 and OS/2 usWeightClass to properly identify full typographic family, subfamily, and PostScript names.",
+              "H2: FontRegistry must index multi-font TrueType Collections (.ttc) by iterating over all font table offsets in the TTC header.",
+              "H3: FontRegistry must maintain a list of variant records (FontVariant) per FontFamily to support weights from 100 to 900 without key collisions, and support project custom fonts directory."
+            ],
+            "tools_used": [],
+            "updated_at": "2026-08-15T16:44:32.541299+00:00"
+          },
+          "backend/app/routes/fonts.py": {
+            "stage": "done",
+            "think": "We need to expand backend/app/routes/fonts.py to support the complete WebFont lifecycle. This includes GET /fonts/list (rich metadata with categories and variants), GET /fonts/css (dynamically generating @font-face declarations for all registered font files), GET /fonts/file/{variant_id} (serving font binary files with Cache-Control headers), and POST /fonts/upload (allowing translators to upload custom manga and Thai font files into the app).",
+            "plan": "1. Implement GET /fonts/list with rich family information, categories, and variants list.\\n2. Implement GET /fonts/css returning CSS @font-face rules with Content-Type: text/css.\\n3. Implement GET /fonts/file/{variant_id} streaming font files using FileResponse with proper media_type.\\n4. Implement POST /fonts/upload accepting UploadFile (.ttf, .otf, .woff2) saving to data/fonts and registering immediately into font_registry.",
+            "hypotheses": [
+              "H1: The fonts API must serve dynamic CSS @font-face rules via GET /fonts/css so the browser can load every registered font with proper weight and style.",
+              "H2: The fonts API must serve font binaries via GET /fonts/file/{variant_id} with appropriate MIME type (font/ttf, font/otf, font/woff2) and HTTP caching headers.",
+              "H3: The fonts API must support custom font uploads via POST /fonts/upload and return detailed family and variant metadata on GET /fonts/list."
+            ],
+            "tools_used": [],
+            "updated_at": "2026-08-15T16:45:12.070304+00:00"
+          },
+          "frontend/src/utils/fontLoader.ts": {
+            "stage": "done",
+            "think": "We need to create frontend/src/utils/fontLoader.ts. This utility will automatically inject the dynamic @font-face stylesheet from /api/fonts/css into document.head, provide ensureFontLoaded(family, weight, style, sampleText) to await FontFace loading before Fabric.js renders or recalculates dimensions, and provide helper functions to query font categories and variants from /api/fonts/list.",
+            "plan": "1. Create injectFontStylesheet() to insert <link rel='stylesheet' href='/api/fonts/css' id='houmi-dynamic-fonts'> into document.head.\\n2. Create ensureFontLoaded(family, weight, style, sampleText) using document.fonts.load().\\n3. Create loadAllCanvasFonts(fontDescriptors) for batch loading before canvas export or page render.\\n4. Export TypeScript interfaces for FontVariant, FontFamilyMetadata, and FontListResponse.",
+            "hypotheses": [
+              "H1: Dynamic stylesheet injection must attach /api/fonts/css to document.head to make all registered system and custom fonts available to CSS and Canvas.",
+              "H2: ensureFontLoaded(family, weight, style) must use document.fonts.load to explicitly await font rasterization before Fabric.js initializes textbox dimensions.",
+              "H3: A React hook useFontLoader should trigger CSS loading on app initialization and expose font readiness state to components."
+            ],
+            "tools_used": [],
+            "updated_at": "2026-08-15T16:45:36.364975+00:00"
+          },
+          "frontend/src/components/FontPickerModal.tsx": {
+            "stage": "done",
+            "think": "We need to build frontend/src/components/FontPickerModal.tsx. It provides a visual modal with dark UI aesthetic, live preview cards rendered in their respective font faces, category tabs (Manga SFX, Thai Dialogue, Custom Fonts, System Fonts), instant search filtering, sample text customization, and an integrated font uploader (+ Add Font) calling /api/fonts/upload.",
+            "plan": "1. Define FontPickerModalProps (isOpen, onClose, selectedFont, onSelectFont, availableFamilies, onFontUploaded).\\n2. Implement category tabs: 'all', 'thai', 'manga', 'custom', 'system'.\\n3. Render font cards with family name, category tag, styles count, and live preview string ('เสียงตะโกน SHOUT! 123').\\n4. Add search input and sample text changer.\\n5. Implement custom font file upload input connected to /api/fonts/upload with loading and toast status.",
+            "hypotheses": [
+              "H1: FontPickerModal must render live visual preview cards with the actual font face applied so users can see how each font looks with Thai and Latin characters.",
+              "H2: FontPickerModal must allow direct drag-and-drop or file upload for custom .ttf/.otf fonts via POST /api/fonts/upload and auto-refresh the registry.",
+              "H3: Category filtering (All, Manga/SFX, Thai Dialogue, Custom, System) and search bar will streamline font discovery for complex scanlation projects."
+            ],
+            "tools_used": [],
+            "updated_at": "2026-08-15T16:45:58.707246+00:00"
+          },
+          "frontend/src/components/FontSelector.tsx": {
+            "stage": "done",
+            "think": "We will update FontSelector.tsx to integrate both a sleek dropdown selector and an 'Aa' browse button that opens the rich FontPickerModal. Whenever a user changes the font, it immediately triggers ensureFontLoaded() to preload glyphs and avoid layout jumps on Canvas.",
+            "plan": "1. Add availableFamilies and onFontUploaded props to FontSelectorProps.\\n2. Add state for isPickerOpen.\\n3. Add an 'Aa' icon button next to select to trigger FontPickerModal.\\n4. Call ensureFontLoaded in handleChange.\\n5. Render FontPickerModal when isPickerOpen is true.",
+            "hypotheses": [
+              "H1: FontSelector should provide an integrated button to open FontPickerModal for rich visual preview alongside standard select dropdown.",
+              "H2: FontSelector should trigger ensureFontLoaded upon selection to guarantee FontFace is cached and ready before Fabric.js renders.",
+              "H3: FontSelector should accept rich family metadata (availableFamilies) and reload fonts when a new font file is uploaded."
+            ],
+            "tools_used": [],
+            "updated_at": "2026-08-15T16:46:16.380061+00:00"
+          },
+          "frontend/src/components/Canvas.tsx": {
+            "stage": "done",
+            "think": "In frontend/src/components/Canvas.tsx, we must integrate injectFontStylesheet on canvas initialization, ensureFontLoaded when syncing text blocks, and ensureMultipleFontsLoaded in captureRenderedOverlayBlob. This ensures that Fabric.js renders authentic font glyphs with exact Thai and Latin metrics, eliminating text jumping, clipping, and fallback font captures.",
+            "plan": "1. Import injectFontStylesheet, ensureFontLoaded, ensureMultipleFontsLoaded from ../utils/fontLoader.\\n2. Call injectFontStylesheet() in useEffect on mount.\\n3. In captureRenderedOverlayBlob, use ensureMultipleFontsLoaded for all textboxes.\\n4. In syncBlocksToCanvas, call ensureFontLoaded for each block's font family and weight, then refresh textbox dimensions.",
+            "hypotheses": [
+              "H1: Canvas must invoke injectFontStylesheet on mount to ensure all @font-face rules are present in the DOM for Fabric.js rendering.",
+              "H2: Fabric textboxes must await ensureFontLoaded before rendering or recalculating initDimensions to eliminate fallback metrics and FOUT.",
+              "H3: captureRenderedOverlayBlob must use ensureMultipleFontsLoaded to guarantee 100% font rasterization before capturing overlay canvas."
+            ],
+            "tools_used": [],
+            "updated_at": "2026-08-15T16:47:10.510260+00:00"
+          },
+          "backend/app/services/psd_export.py": {
+            "stage": "done",
+            "think": "In backend/app/services/psd_export.py, we must ensure strict parity for Photoshop text layers. We resolve the authentic SFNT Name ID 6 PostScriptName, accurately compute faux_bold (only True if the font lacks a native bold face with weight < 600), compute faux_italic (only True if the font lacks native italic), and pass rich font metadata into the manifest for Rust manga-psd-cli / houmi-psd-cli.",
+            "plan": "1. In preflight font check, use font_registry.resolve_font with bold/italic and allow valid registered custom fonts.\\n2. In text_blocks_data loop, resolve resolved_font from font_registry.\\n3. Compute faux_bold = bool(use_bold and 'bold' not in resolved_style and resolved_font.weight < 600).\\n4. Compute faux_italic = bool(use_italic and 'italic' not in resolved_style and resolved_font.css_style != 'italic').\\n5. Pass resolved_font.postscript_name and font_weight in the style object for the Rust CLI manifest.",
+            "hypotheses": [
+              "H1: psd_export.py must pass the exact SFNT Name ID 6 PostScript name in resolved_font_family to eliminate Photoshop Missing Font warnings.",
+              "H2: psd_export.py must prevent faux_bold from being true when the resolved font variant is already a bold face (weight >= 600 or 'bold' in style) to prevent double bolding.",
+              "H3: psd_export.py preflight check must recognize registered custom fonts and standard alias mappings without false-positive EXPORT_BLOCKED errors."
+            ],
+            "tools_used": [],
+            "updated_at": "2026-08-15T16:47:28.271861+00:00"
+          },
+          "backend/tests/test_font_registry.py": {
+            "stage": "done",
+            "think": "We will add comprehensive unit tests to backend/tests/test_font_registry.py to verify our enhanced FontRegistry capabilities: get_family_details metadata structure, get_variant_by_id streaming resolution, multi-face registration, and backward-compatible style fallback.",
+            "plan": "1. Add test_get_family_details verifying category, styles, and variants keys.\\n2. Add test_get_variant_by_id verifying stable_id and PostScript name resolution.\\n3. Add test_custom_font_registration verifying dynamic registration.\\n4. Keep all existing test cases passing.",
+            "hypotheses": [
+              "H1: Unit tests must verify that get_family_details() produces valid category, style list, and variant descriptors for frontend consumption.",
+              "H2: Unit tests must verify get_variant_by_id resolves entries by stable_id and postscript_name.",
+              "H3: Unit tests must ensure backward compatibility for all existing font resolution, alias mapping, and fallback logic."
+            ],
+            "tools_used": [],
+            "updated_at": "2026-08-15T16:47:43.207023+00:00"
+          }
+        },
+        "current": null,
+        "max_files_per_edit_call": 1,
+        "require_hypotheses": 3,
+        "created_at": "2026-08-15T16:43:22.155396+00:00",
+        "updated_at": "2026-08-15T16:47:43.207023+00:00"
+      },
+      "write_allow_paths": [],
+      "ultradeep_plan_refute": {
+        "ok": true,
+        "status": "HOLD",
+        "reason": "plan_refute HOLD — may proceed to per-file think→plan→edit",
+        "findings": [
+          "Finding 1: Browser Canvas cannot access local OS fonts directly without CSS @font-face and /api/fonts/file streaming.",
+          "Finding 2: Asynchronous font loading in Canvas causes Fabric textbox to measure with fallback fonts if not awaited.",
+          "Finding 3: Photoshop text engine matches fonts in EngineData FontSet strictly by SFNT Name ID 6 PostScriptName.",
+          "Finding 4: Faux bold and faux italic must only be applied when a font does not have a real bold/italic font variant.",
+          "Finding 5: FontRegistry dictionary keys must not collapse multi-weight fonts (Thin to Black 100-900) into a simple 4-style bucket.",
+          "Finding 6: TrueType Collections (.ttc) require reading table directory offsets to index all font faces inside the container.",
+          "Finding 7: User project fonts folder must be scanned and registered alongside Windows system fonts and bundled fonts.",
+          "Finding 8: FontPicker modal needs live visual preview with Thai diacritics and search/category filters to prevent selection errors."
+        ],
+        "search_queries": [
+          "photoshop psd text layer EngineData FontSet PostScriptName font matching",
+          "Photoshop EngineData FontSet Name FamilyName StyleName Synthetic Script FontType",
+          "Fabric js font loading document fonts ready @font-face dynamic font load",
+          "TrueType Collection TTC header offset table parsing sfnt names",
+          "Thai font diacritic shaping harfbuzz freetype line height metrics"
+        ],
+        "broken_steps": [],
+        "updated_at": "2026-08-15T16:43:37.465535+00:00",
+        "source": "ultradeep_plan_refute",
+        "server_authored": true,
+        "quality": {
+          "hollow_rejected": 0,
+          "dupes_dropped": 0
+        }
+      }
+    },
+    "created_at": "2026-08-15T16:24:44.085172+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [
+    {
+      "id": "ev_5e04707a",
+      "task_id": "task_93c11674",
+      "type": "log",
+      "summary": "ultradeep_plan_refute HOLD",
+      "description": "",
+      "payload": {
+        "ok": true,
+        "status": "HOLD",
+        "reason": "plan_refute HOLD — may proceed to per-file think→plan→edit",
+        "findings": [
+          "Finding 1: Browser Canvas cannot access local OS fonts directly without CSS @font-face and /api/fonts/file streaming.",
+          "Finding 2: Asynchronous font loading in Canvas causes Fabric textbox to measure with fallback fonts if not awaited.",
+          "Finding 3: Photoshop text engine matches fonts in EngineData FontSet strictly by SFNT Name ID 6 PostScriptName.",
+          "Finding 4: Faux bold and faux italic must only be applied when a font does not have a real bold/italic font variant.",
+          "Finding 5: FontRegistry dictionary keys must not collapse multi-weight fonts (Thin to Black 100-900) into a simple 4-style bucket.",
+          "Finding 6: TrueType Collections (.ttc) require reading table directory offsets to index all font faces inside the container.",
+          "Finding 7: User project fonts folder must be scanned and registered alongside Windows system fonts and bundled fonts.",
+          "Finding 8: FontPicker modal needs live visual preview with Thai diacritics and search/category filters to prevent selection errors."
+        ],
+        "search_queries": [
+          "photoshop psd text layer EngineData FontSet PostScriptName font matching",
+          "Photoshop EngineData FontSet Name FamilyName StyleName Synthetic Script FontType",
+          "Fabric js font loading document fonts ready @font-face dynamic font load",
+          "TrueType Collection TTC header offset table parsing sfnt names",
+          "Thai font diacritic shaping harfbuzz freetype line height metrics"
+        ],
+        "broken_steps": [],
+        "updated_at": "2026-08-15T16:43:37.465535+00:00",
+        "source": "ultradeep_plan_refute",
+        "server_authored": true,
+        "quality": {
+          "hollow_rejected": 0,
+          "dupes_dropped": 0
+        },
+        "evidence_seal": "aab2863b549c075da20581980a39d36eebb212715b266c2e8559aa1744927b1a"
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:43:37.471980+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_960402a1",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_think:backend/app/services/font_registry.py",
+      "description": "",
+      "payload": {
+        "path": "backend/app/services/font_registry.py",
+        "hypotheses": [
+          "H1: SFNT parser must read Name IDs 1, 2, 4, 6, 16, 17 and OS/2 usWeightClass to properly identify full typographic family, subfamily, and PostScript names.",
+          "H2: FontRegistry must index multi-font TrueType Collections (.ttc) by iterating over all font table offsets in the TTC header.",
+          "H3: FontRegistry must maintain a list of variant records (FontVariant) per FontFamily to support weights from 100 to 900 without key collisions, and support project custom fonts directory."
+        ],
+        "tools_used": [],
+        "think_len": 479
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:43:54.173219+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_69192ea4",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_plan:backend/app/services/font_registry.py",
+      "description": "",
+      "payload": {
+        "path": "backend/app/services/font_registry.py",
+        "plan_len": 617
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:44:00.332525+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_a094cbd1",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_think:backend/app/routes/fonts.py",
+      "description": "",
+      "payload": {
+        "path": "backend/app/routes/fonts.py",
+        "hypotheses": [
+          "H1: The fonts API must serve dynamic CSS @font-face rules via GET /fonts/css so the browser can load every registered font with proper weight and style.",
+          "H2: The fonts API must serve font binaries via GET /fonts/file/{variant_id} with appropriate MIME type (font/ttf, font/otf, font/woff2) and HTTP caching headers.",
+          "H3: The fonts API must support custom font uploads via POST /fonts/upload and return detailed family and variant metadata on GET /fonts/list."
+        ],
+        "tools_used": [],
+        "think_len": 447
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:44:40.875020+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_c197674f",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_plan:backend/app/routes/fonts.py",
+      "description": "",
+      "payload": {
+        "path": "backend/app/routes/fonts.py",
+        "plan_len": 429
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:44:54.101808+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_fc201d6b",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_think:frontend/src/utils/fontLoader.ts",
+      "description": "",
+      "payload": {
+        "path": "frontend/src/utils/fontLoader.ts",
+        "hypotheses": [
+          "H1: Dynamic stylesheet injection must attach /api/fonts/css to document.head to make all registered system and custom fonts available to CSS and Canvas.",
+          "H2: ensureFontLoaded(family, weight, style) must use document.fonts.load to explicitly await font rasterization before Fabric.js initializes textbox dimensions.",
+          "H3: A React hook useFontLoader should trigger CSS loading on app initialization and expose font readiness state to components."
+        ],
+        "tools_used": [],
+        "think_len": 392
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:45:18.510851+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_c9d9b16b",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_plan:frontend/src/utils/fontLoader.ts",
+      "description": "",
+      "payload": {
+        "path": "frontend/src/utils/fontLoader.ts",
+        "plan_len": 419
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:45:25.921520+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_9fc18354",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_think:frontend/src/components/FontPickerModal.tsx",
+      "description": "",
+      "payload": {
+        "path": "frontend/src/components/FontPickerModal.tsx",
+        "hypotheses": [
+          "H1: FontPickerModal must render live visual preview cards with the actual font face applied so users can see how each font looks with Thai and Latin characters.",
+          "H2: FontPickerModal must allow direct drag-and-drop or file upload for custom .ttf/.otf fonts via POST /api/fonts/upload and auto-refresh the registry.",
+          "H3: Category filtering (All, Manga/SFX, Thai Dialogue, Custom, System) and search bar will streamline font discovery for complex scanlation projects."
+        ],
+        "tools_used": [],
+        "think_len": 367
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:45:41.108414+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_75fafc1a",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_plan:frontend/src/components/FontPickerModal.tsx",
+      "description": "",
+      "payload": {
+        "path": "frontend/src/components/FontPickerModal.tsx",
+        "plan_len": 456
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:45:45.990740+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_58ef6a09",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_think:frontend/src/components/FontSelector.tsx",
+      "description": "",
+      "payload": {
+        "path": "frontend/src/components/FontSelector.tsx",
+        "hypotheses": [
+          "H1: FontSelector should provide an integrated button to open FontPickerModal for rich visual preview alongside standard select dropdown.",
+          "H2: FontSelector should trigger ensureFontLoaded upon selection to guarantee FontFace is cached and ready before Fabric.js renders.",
+          "H3: FontSelector should accept rich family metadata (availableFamilies) and reload fonts when a new font file is uploaded."
+        ],
+        "tools_used": [],
+        "think_len": 267
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:46:02.768214+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_af920545",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_plan:frontend/src/components/FontSelector.tsx",
+      "description": "",
+      "payload": {
+        "path": "frontend/src/components/FontSelector.tsx",
+        "plan_len": 271
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:46:05.431381+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_f2e7f2bd",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_think:frontend/src/components/Canvas.tsx",
+      "description": "",
+      "payload": {
+        "path": "frontend/src/components/Canvas.tsx",
+        "hypotheses": [
+          "H1: Canvas must invoke injectFontStylesheet on mount to ensure all @font-face rules are present in the DOM for Fabric.js rendering.",
+          "H2: Fabric textboxes must await ensureFontLoaded before rendering or recalculating initDimensions to eliminate fallback metrics and FOUT.",
+          "H3: captureRenderedOverlayBlob must use ensureMultipleFontsLoaded to guarantee 100% font rasterization before capturing overlay canvas."
+        ],
+        "tools_used": [],
+        "think_len": 364
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:46:20.007049+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_c504b79b",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_plan:frontend/src/components/Canvas.tsx",
+      "description": "",
+      "payload": {
+        "path": "frontend/src/components/Canvas.tsx",
+        "plan_len": 363
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:46:25.873414+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_a1614997",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_think:backend/app/services/psd_export.py",
+      "description": "",
+      "payload": {
+        "path": "backend/app/services/psd_export.py",
+        "hypotheses": [
+          "H1: psd_export.py must pass the exact SFNT Name ID 6 PostScript name in resolved_font_family to eliminate Photoshop Missing Font warnings.",
+          "H2: psd_export.py must prevent faux_bold from being true when the resolved font variant is already a bold face (weight >= 600 or 'bold' in style) to prevent double bolding.",
+          "H3: psd_export.py preflight check must recognize registered custom fonts and standard alias mappings without false-positive EXPORT_BLOCKED errors."
+        ],
+        "tools_used": [],
+        "think_len": 398
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:47:15.800347+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_40617377",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_plan:backend/app/services/psd_export.py",
+      "description": "",
+      "payload": {
+        "path": "backend/app/services/psd_export.py",
+        "plan_len": 513
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:47:18.399283+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_c852cf69",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_think:backend/tests/test_font_registry.py",
+      "description": "",
+      "payload": {
+        "path": "backend/tests/test_font_registry.py",
+        "hypotheses": [
+          "H1: Unit tests must verify that get_family_details() produces valid category, style list, and variant descriptors for frontend consumption.",
+          "H2: Unit tests must verify get_variant_by_id resolves entries by stable_id and postscript_name.",
+          "H3: Unit tests must ensure backward compatibility for all existing font resolution, alias mapping, and fallback logic."
+        ],
+        "tools_used": [],
+        "think_len": 269
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:47:34.006740+00:00",
+      "ref_ids": []
+    },
+    {
+      "id": "ev_2f98dfa8",
+      "task_id": "task_93c11674",
+      "type": "other",
+      "summary": "ultradeep_plan:backend/tests/test_font_registry.py",
+      "description": "",
+      "payload": {
+        "path": "backend/tests/test_font_registry.py",
+        "plan_len": 272
+      },
+      "uri": null,
+      "contradicts": [],
+      "timestamp": "2026-08-15T16:47:36.881171+00:00",
+      "ref_ids": []
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "hyp_1b3ab33c",
+      "statement": "H1: Font loading in Browser/Canvas is detached from Backend FontRegistry (no @font-face serving). H2: PSD Export produces mismatched fonts due to PostScript name and EngineData discrepancies. H3: FontRegistry has limited style/family models and no custom user font support.",
+      "support_refs": [],
+      "refute_refs": [],
+      "status": "proposed"
+    }
+  ],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

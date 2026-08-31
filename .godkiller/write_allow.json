@@ -1,0 +1,12 @@
+{
+  "workspace": "E:\\houmi",
+  "task_id": "task_61999242",
+  "paths": [
+    "frontend_rework/src/stores/projectStore.ts"
+  ],
+  "phase": "turn",
+  "turn_open": true,
+  "source": "set_paths",
+  "hmac": "a6bc9cbfa9d1cb224b1bfc2b578c5646a077a6af7fdf6ab98e812ae7349639a8",
+  "seal_alg": "hmac-sha256"
+}

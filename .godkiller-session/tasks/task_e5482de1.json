@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_e5482de1",
+    "kind": "feature",
+    "goal": "Create a complete, 100% redesigned next-gen UI/UX preview simulator for Houmi Manga Translation Studio, completely isolated from main project code",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "plan"
+    },
+    "created_at": "2026-08-28T18:29:01.825620+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}

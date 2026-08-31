@@ -1,0 +1,23 @@
+{
+  "handle": {
+    "task_id": "task_bedff560",
+    "kind": "feature",
+    "goal": "Deep study of BalloonsTranslator architecture, algorithms, typesetting, OCR, inpainting, and UI mechanics compared to Houmi",
+    "project_id": "default",
+    "phase": "open",
+    "rubric_id": "feature_v1",
+    "metadata": {
+      "mode": "view"
+    },
+    "created_at": "2026-08-25T07:33:32.294643+00:00"
+  },
+  "current_phase": "reproduce",
+  "closed": false,
+  "evidences": [],
+  "hypotheses": [],
+  "phase_history": [],
+  "metadata": {},
+  "last_policy_action": null,
+  "failure_streak": 0,
+  "claim_allowed": false
+}
