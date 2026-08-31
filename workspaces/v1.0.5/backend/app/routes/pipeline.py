@@ -807,21 +807,35 @@ def run_mask(
         )
 
 
+class InpaintPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+    block_id: Optional[str] = None
+
+
 @router.post("/pipeline/inpaint")
 def run_inpaint(
     payload: Optional[InpaintPipelineRequest] = Body(None),
     page_id: Optional[str] = Query(None),
+    block_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
     pid = (payload.page_id if payload and payload.page_id else None) or page_id
+    bid = (payload.block_id if payload and payload.block_id else None) or block_id
     if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
     try:
         page = db.query(Page).filter(Page.id == pid).first()
-        if page and len(page.text_blocks) == 0:
-            run_detect(page_id=pid, db=db)
-        clean_page_text(pid, db)
-        return {"status": "success", "message": "Inpaint clean completed"}
+        if not page:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
+        if bid:
+            from app.services.inpainter import reclean_page_block
+            reclean_page_block(pid, bid, db)
+            return {"status": "success", "message": f"Block {bid} inpaint clean completed"}
+        else:
+            if len(page.text_blocks) == 0:
+                run_detect(page_id=pid, db=db)
+            clean_page_text(pid, db)
+            return {"status": "success", "message": "Inpaint clean completed"}
     except Exception as e:
         logger.exception("Inpaint failed")
         raise HTTPException(
