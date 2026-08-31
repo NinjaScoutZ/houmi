@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "echo [LOCKED] Workspace v1.0.5 frontend build is locked to prevent accidental overwrite of authentic UI",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",

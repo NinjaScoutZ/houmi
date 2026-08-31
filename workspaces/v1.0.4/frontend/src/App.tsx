@@ -72,7 +72,7 @@ import {
   ChevronRight, ChevronLeft, UploadCloud,
   Sparkles, Cpu, Activity, Clock, Trash2, Paintbrush, RefreshCw, Palette, Type as TypeIcon, Copy,
   ChevronDown, Layers, Sliders, History, Settings, MoreHorizontal, AlignLeft, AlignCenter, AlignRight, X,
-  Pipette, Wand2, Minus, Plus, Clipboard, Scissors, ArrowUpDown, Crosshair, User
+  Pipette, Wand2, Minus, Plus, Clipboard, Scissors, ArrowUpDown, Crosshair, Bug
 } from 'lucide-react';
 
 import { AboutModal } from './components/AboutModal';
@@ -80,6 +80,9 @@ import { UpdateModal } from './components/UpdateModal';
 import { UpdateSuccessModal } from './components/UpdateSuccessModal';
 import { FontSelector } from './components/FontSelector';
 import { isFontAvailable, injectFontStylesheet } from './utils/fontLoader';
+import { DebugConsoleDrawer } from './components/DebugConsoleDrawer';
+import { useDebugStore } from './stores/debugStore';
+import { logAction } from './utils/actionLogger';
 
 interface TrainStatus {
   is_training: boolean;
@@ -413,6 +416,7 @@ export const App: React.FC = () => {
   const [showMenuProj, setShowMenuProj] = useState(false);
   const [showMenuTools, setShowMenuTools] = useState(false);
   const [showMenuAbout, setShowMenuAbout] = useState(false);
+  const [showMenuExport, setShowMenuExport] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const currentUser = { username: 'admin', role: 'admin', status: 'active' };
 
@@ -439,7 +443,6 @@ export const App: React.FC = () => {
       .then((data) => {
         if (data && data.update_available) {
           setUpdateManifest(data);
-          setIsUpdateModalOpen(true);
         }
       })
       .catch(() => {});
@@ -667,7 +670,7 @@ export const App: React.FC = () => {
     }
   });
   const [showMenuView, setShowMenuView] = useState(false);
-  const [isFormattingWidgetOpen, setIsFormattingWidgetOpen] = useState(false);
+  const [isFormattingWidgetOpen, setIsFormattingWidgetOpen] = useState(true);
   const [isFormattingWidgetMinimized, setIsFormattingWidgetMinimized] = useState(false);
   const [formattingWidgetPos, setFormattingWidgetPos] = useState<{ x: number; y: number }>(() => {
     try {
@@ -751,8 +754,11 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    // Only update version key, do not auto-popup blocking modal
-    localStorage.setItem('houmi_last_seen_changelog_version', HOUMI_VERSION);
+    const lastSeen = localStorage.getItem('houmi_last_seen_changelog_version');
+    if (lastSeen !== HOUMI_VERSION) {
+      setShowChangelogModal(true);
+      localStorage.setItem('houmi_last_seen_changelog_version', HOUMI_VERSION);
+    }
   }, []);
 
   const handleSetReviewPanelView = (view: 'review' | 'pipeline') => {
@@ -768,6 +774,7 @@ export const App: React.FC = () => {
     setShowMenuProj(false);
     setShowMenuTools(false);
     setShowMenuAbout(false);
+    setShowMenuExport(false);
   };
 
   const persistTemplates = async (templates: Record<string, TextTemplate>) => {
@@ -1475,6 +1482,14 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     const handleGlobalHotkey = (e: KeyboardEvent) => {
+      // Toggle Action Debug Console Matrix (Ctrl+Shift+D or F12)
+      if ((e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) || e.key === 'F12') {
+        e.preventDefault();
+        useDebugStore.getState().toggleDrawer();
+        logAction('HOTKEY', 'Toggle Action Debug Console', { key: e.key });
+        return;
+      }
+
       if (e.key === '?' && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const target = e.target as HTMLElement;
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
@@ -3726,6 +3741,17 @@ export const App: React.FC = () => {
                 >
                   🗑️ Delete selected block{selectedBlocks.length > 1 ? 's' : ''}
                 </button>
+                <div className="h-px bg-zinc-900 my-1" />
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowGlobalSettingsModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center justify-between cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">⚙️ Preferences & Settings...</span>
+                  <span className="text-[10px] text-slate-500 font-mono">Ctrl+,</span>
+                </button>
               </div>
             )}
           </div>
@@ -3858,22 +3884,45 @@ export const App: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
+                  type="button"
                   onClick={() => {
                     closeAllMenus();
                     setShowProjectPresetModal(true);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer"
+                  disabled={!activeProject}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-amber-400 rounded-md transition-all spring-transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer font-bold text-amber-400"
                 >
-                  🎨 Project Presets & Templates...
+                  👤 ตั้งค่าภาษา & โปรไฟล์ลูกค้า (Preset)...
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     closeAllMenus();
                     setShowGlobalSettingsModal(true);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer"
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer"
                 >
-                  ⚙️ Project & Global Settings...
+                  ⚙️ Settings (ตั้งค่าระบบ)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeAllMenus();
+                    showToast("Cloud Hub: เชื่อมต่อเซิร์ฟเวอร์เรียบร้อย (houmi.click)", "info");
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-sky-500/10 hover:text-sky-300 rounded-md transition-all spring-transition cursor-pointer flex items-center gap-2 text-sky-400 font-medium"
+                >
+                  <span>☁️ Cloud Hub (Sync & Backup)...</span>
+                </button>
+                <div className="h-px bg-zinc-900 my-1" />
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    openTemplateSettings();
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer"
+                >
+                  🎨 Manage Style Presets...
                 </button>
               </div>
             )}
@@ -3899,26 +3948,69 @@ export const App: React.FC = () => {
                 <button
                   onClick={() => {
                     closeAllMenus();
-                    setShowSmartStitchModal(true);
+                    runPipelineStep('auto');
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer"
+                  disabled={!activePage}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 >
-                  ✂️ Webtoon Smart Split & Stitch...
+                  ⚡ Run Pipeline (Auto Flow)
                 </button>
                 <button
                   onClick={() => {
                     closeAllMenus();
-                    setShowAIProviderSettingsModal(true);
+                    setWorkspaceMode('ocr');
+                    setReviewPanelView('pipeline');
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer"
+                  disabled={!activeProject}
+                  className={`w-full text-left px-3 py-2 rounded-md transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-between ${
+                    workspaceMode === 'ocr' ? 'bg-yellow-500/15 text-yellow-400 font-bold' : 'hover:bg-yellow-500/10 hover:text-yellow-400'
+                  }`}
                 >
-                  🤖 AI Provider & API Matrix...
+                  <span>🧰 Mode: OCR Pipeline</span>
+                  {workspaceMode === 'ocr' && <span className="text-[10px] text-yellow-400">✓</span>}
+                </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setWorkspaceMode('typeset');
+                  }}
+                  disabled={!activeProject}
+                  className={`w-full text-left px-3 py-2 rounded-md transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-between ${
+                    workspaceMode === 'typeset' ? 'bg-yellow-500/15 text-yellow-400 font-bold' : 'hover:bg-yellow-500/10 hover:text-yellow-400'
+                  }`}
+                >
+                  <span>🎨 Mode: Typesetting & Inspector</span>
+                  {workspaceMode === 'typeset' && <span className="text-[10px] text-yellow-400">✓</span>}
+                </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    handleStartTraining();
+                  }}
+                  disabled={!activeProject}
+                  className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-900 hover:text-yellow-400 rounded-sm transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                >
+                  🎯 Calibrate Balloon Detector
+                </button>
+                <div className="h-px bg-zinc-900 my-0.5" />
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    useDebugStore.getState().openDrawer();
+                    logAction('UI_INTERACTION', 'Open Action Debug Console from Tools Menu');
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer flex items-center justify-between text-yellow-400 font-bold"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Bug size={13} className="text-yellow-500" /> Action Debug Console
+                  </span>
+                  <span className="text-[9px] font-mono text-zinc-500">Ctrl+Shift+D</span>
                 </button>
               </div>
             )}
           </div>
 
-          {/* About Menu */}
+          {/* Help Menu */}
           <div className="relative">
             <button
               onClick={(e) => {
@@ -3928,13 +4020,33 @@ export const App: React.FC = () => {
               }}
               className={`px-3 py-1 hover:bg-zinc-900 hover:text-white rounded-md cursor-pointer transition-all spring-transition ${showMenuAbout ? 'bg-zinc-900 text-white' : ''}`}
             >
-              About
+              Help
             </button>
             {showMenuAbout && (
               <div 
-                className="absolute left-0 mt-1.5 w-56 glass-panel p-1.5 z-40 flex flex-col gap-1 animate-fade-in"
+                className="absolute left-0 mt-1.5 w-64 glass-panel p-1.5 z-40 flex flex-col gap-1 animate-fade-in"
                 onClick={(e) => e.stopPropagation()}
               >
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowAboutModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer flex items-center gap-2 font-bold text-yellow-400"
+                >
+                  ℹ️ About Houmi Studio & Patch...
+                </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowAboutModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-amber-500/10 hover:text-amber-300 rounded-md transition-all spring-transition cursor-pointer flex items-center justify-between font-bold text-amber-400"
+                >
+                  <span className="flex items-center gap-2">🔑 Register License Key...</span>
+                  <span className="text-[9px] font-mono text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">PRO</span>
+                </button>
+                <div className="h-px bg-zinc-900 my-0.5" />
                 <button
                   onClick={() => {
                     closeAllMenus();
@@ -3942,14 +4054,34 @@ export const App: React.FC = () => {
                   }}
                   className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer"
                 >
-                  🚀 Version Changelog
+                  🚀 Version Changelog & What's New
+                </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowHotkeyModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer flex items-center justify-between"
+                >
+                  <span>⌨️ Keyboard Shortcuts</span>
+                  <span className="text-[10px] text-slate-500 font-mono">?</span>
+                </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowDiagnostics(true);
+                    fetchDiagnostics();
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer flex items-center gap-2"
+                >
+                  🏥 System Diagnostics & Audits
                 </button>
                 <button
                   onClick={() => {
                     closeAllMenus();
                     setShowDevStudioModal(true);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer"
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer text-slate-400"
                 >
                   🗺️ Architecture & Node Map
                 </button>
@@ -3958,99 +4090,70 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Center: Workspace Badge */}
-        <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-[#09090b] px-3 py-1 shadow-inner">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] font-pixel font-bold uppercase tracking-wider text-amber-400">
-            HOUMI STUDIO WORKSPACE
-          </span>
-          {activeProject && (
-            <span className="text-[9.5px] text-zinc-500 font-mono">
-              • {activeProject.name} ({activeProject.pages?.length || 0})
+        {activeProject && (
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-md border border-zinc-800/80 bg-zinc-950/90 px-3 py-1 shadow-inner">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[9.5px] font-pixel font-bold uppercase tracking-wider text-amber-400">
+              HOUMI UNIFIED WORKSPACE
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Right side Action Buttons */}
-        <div className="flex items-center gap-2 pywebview-no-drag window-no-drag-region" style={{ WebkitAppRegion: 'no-drag' } as any}>
-          {/* Save Button */}
-          <button
-            type="button"
-            onClick={() => showToast("บันทึกโปรเจกต์สำเร็จ", "success")}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-slate-300 hover:text-amber-400 hover:border-amber-500/40 text-[10px] font-pixel font-bold transition-all cursor-pointer shadow-sm"
-            title="บันทึกข้อมูลโปรเจกต์ (Ctrl+S)"
-          >
-            <span>💾</span>
-            <span>Save</span>
-          </button>
+        {/* Right side Actions & Tools - Minimalist Desktop HIG Layout */}
+        <div className="flex items-center text-xs text-slate-300 gap-2 font-medium relative pywebview-no-drag window-no-drag-region" style={{ WebkitAppRegion: 'no-drag' } as any}>
+          <input 
+            type="file" 
+            multiple 
+            accept="image/*" 
+            ref={fileInputRef} 
+            onChange={handlePageUpload} 
+            className="hidden" 
+          />
+          <input 
+            type="file" 
+            accept=".txt,.tsv" 
+            ref={txtFileInputRef} 
+            onChange={handleImportTxt} 
+            className="hidden" 
+          />
+          <input 
+            type="file" 
+            accept=".psd" 
+            ref={psdFileInputRef} 
+            onChange={handleImportPsd} 
+            className="hidden" 
+          />
 
-          {/* Export PSD Button */}
-          <button
-            type="button"
-            onClick={() => setShowPsdExportModal(true)}
-            className="flex items-center gap-1 px-3 py-1 rounded-md bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[10px] font-pixel font-bold transition-all cursor-pointer shadow-sm"
-            title="ส่งออกไฟล์ Photoshop (.PSD) พร้อมเลเยอร์ตัวหนังสือ"
-          >
-            <span>⚡</span>
-            <span>Export PSD</span>
-          </button>
+          {/* Minimalist System Status Badge */}
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 shadow-inner">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[9.5px] font-mono font-bold uppercase text-emerald-400 tracking-wider">LOCAL</span>
+            <span className="text-zinc-700 text-[9px]">•</span>
+            <button
+              type="button"
+              onClick={() => setShowAboutModal(true)}
+              className="text-[9.5px] font-mono font-bold text-amber-400/90 hover:text-amber-300 transition-colors cursor-pointer"
+              title="License: PRO (4d) - Click to manage"
+            >
+              PRO (4d)
+            </button>
+          </div>
 
-          {/* Export Dropdown */}
-          <button
-            type="button"
-            onClick={() => setShowExportTxtModal(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-amber-400 text-[10px] font-pixel font-bold transition-all cursor-pointer shadow-sm"
-            title="ตัวเลือกการส่งออกไฟล์ทั้งหมด (CBZ, PDF, WebP)"
-          >
-            <span>📥 Export ▾</span>
-          </button>
-
-          {/* LOCAL Badge */}
-          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[9px] font-mono font-bold uppercase">
-            LOCAL
-          </span>
-
-          {/* PRO Badge */}
-          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[9px] font-mono font-bold uppercase">
-            PRO (4d)
-          </span>
-
-          {/* Cloud Hub */}
-          <button
-            type="button"
-            onClick={() => showToast("Cloud Hub กำลังเชื่อมต่อกับ Houmi Cloud Server", "info")}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-slate-300 hover:text-sky-300 hover:border-sky-500/40 text-[10px] font-pixel font-bold transition-all cursor-pointer shadow-sm"
-            title="Cloud Hub (คลังโปรเจกต์คลาวด์)"
-          >
-            <span>☁️</span>
-            <span>Cloud Hub</span>
-          </button>
-
-          {/* Settings Button */}
+          {/* Minimalist Quick Settings Icon */}
           <button
             type="button"
             onClick={() => setShowGlobalSettingsModal(true)}
-            className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer shadow-sm"
-            title="Global Settings (ตั้งค่าระบบ)"
+            className="p-1.5 rounded-md hover:bg-zinc-800/70 text-zinc-400 hover:text-amber-400 transition-all cursor-pointer"
+            title="Preferences & Settings (Ctrl+,)"
           >
-            <Settings size={13} className="hover:rotate-45 transition-transform duration-300" />
-          </button>
-
-          {/* Admin Button */}
-          <button
-            type="button"
-            onClick={() => window.open('/admin', '_blank')}
-            className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer shadow-sm"
-            title="Admin Console"
-          >
-            <User size={13} />
+            <Settings size={14} className="hover:rotate-45 transition-transform duration-300" />
           </button>
         </div>
       </nav>
 
       {/* 1.5 SUB-TOOLBAR */}
-      <div className="w-full bg-[#101014] border-b border-zinc-850 px-4 h-11 flex items-center justify-between text-xs text-slate-400 z-20 shrink-0 shadow-sm pywebview-no-drag">
-        <div className="flex items-center gap-3">
+      <div className="w-full bg-zinc-950/50 backdrop-blur-md border-b border-zinc-900/60 px-5 h-13 py-1 flex items-center justify-between text-xs text-slate-400 z-20 shrink-0 shadow-sm pywebview-no-drag">
+        <div className="flex items-center gap-3.5">
           {/* Mode Switcher */}
           <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded p-0.5 shrink-0 shadow-inner">
             <button
@@ -4058,11 +4161,12 @@ export const App: React.FC = () => {
               onClick={() => setWorkspaceMode('ocr')}
               className={`px-2.5 py-1 text-[9.5px] font-bold font-pixel rounded transition-all cursor-pointer flex items-center gap-1 ${
                 workspaceMode === 'ocr'
-                  ? 'bg-amber-500 text-black shadow-sm'
+                  ? 'bg-yellow-500 text-black shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
               title="สลับโหมด OCR & ทำความสะอาดพื้นหลัง"
             >
+              <span>📝</span>
               <span>OCR Pipeline</span>
             </button>
             <button
@@ -4075,46 +4179,50 @@ export const App: React.FC = () => {
               }`}
               title="สลับโหมด Typesetting & ปรับแต่งข้อความ"
             >
+              <span>🎨</span>
               <span>Typesetting</span>
             </button>
           </div>
 
-          <div className="h-5 w-px bg-zinc-800" />
+          <div className="h-6 w-px bg-zinc-850" />
 
+          {workspaceMode === 'ocr' && <>
           {/* OCR Engine selection */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider font-pixel">OCR:</span>
+          <div className="flex items-center gap-1 shrink-0" title="เลือกโปรแกรมสำหรับสแกนข้อความ">
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider font-pixel">OCR:</span>
             <select
               value={ocrEngine}
               onChange={(e) => handleToggleProjectSetting('ocr_engine', e.target.value)}
-              className="bg-zinc-900 border border-zinc-800 text-slate-200 text-[10px] rounded px-2 py-0.5 focus:outline-none cursor-pointer"
+              className="bg-zinc-950 border border-zinc-800 text-slate-300 text-[9px] rounded py-0.5 px-1 max-w-[130px] truncate focus:outline-none cursor-pointer"
             >
-              <option value="glm">🧠 GLM-OCR (VLM)</option>
               <option value="rapidocr">⚡ RapidOCR (GPU DirectML)</option>
               <option value="ppocrv5">⚡ RapidOCR (PP-OCRv5)</option>
               <option value="gemini">✨ DOBKLE OCR (Gemini)</option>
+              <option value="glm">🧠 GLM-OCR (VLM)</option>
               <option value="deepseek">🐋 DeepSeek-OCR (VLM)</option>
             </select>
-            <button
-              onClick={async () => {
-                try {
-                  const res = await fetch('/api/vlm-server/install', { method: 'POST' });
-                  const data = await res.json();
-                  alert(data.message || 'Launched VLM Server setup CMD terminal.');
-                } catch (err) {
-                  alert('Failed to launch VLM Server setup: ' + err);
-                }
-              }}
-              className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[9px] font-pixel font-bold px-2 py-0.5 rounded transition cursor-pointer flex items-center gap-1"
-              title="ตั้งค่าเซิร์ฟเวอร์ GLM & DeepSeek VLM"
-            >
-              <span>⚙️ VLM Setup</span>
-            </button>
+            {(ocrEngine === 'glm' || ocrEngine === 'deepseek') && !vlmInstalled && (
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/vlm-server/install', { method: 'POST' });
+                    const data = await res.json();
+                    alert(data.message || 'Launched VLM Server setup CMD terminal.');
+                  } catch (err) {
+                    alert('Failed to launch VLM Server setup: ' + err);
+                  }
+                }}
+                className="bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/40 text-[8px] px-1 py-0.5 rounded transition cursor-pointer"
+                title="ดาวน์โหลด/ติดตั้งเซิร์ฟเวอร์ GLM & DeepSeek VLM PyTorch แยกต่างหาก"
+              >
+                ⚙️ VLM Setup
+              </button>
+            )}
           </div>
 
           {/* OCR Source Language Selection */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider font-pixel">LANG:</span>
+          <div className="flex items-center gap-1 shrink-0" title="เลือกภาษาต้นฉบับสำหรับ OCR">
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider font-pixel">Lang:</span>
             <select
               value={activeProject?.source_lang || sourceLang || 'ko'}
               onChange={async (e) => {
@@ -4135,36 +4243,27 @@ export const App: React.FC = () => {
                   }
                 }
               }}
-              className="bg-zinc-900 border border-zinc-800 text-yellow-400 font-bold text-[10px] rounded px-2 py-0.5 focus:outline-none cursor-pointer"
+              className="bg-zinc-950 border border-zinc-800 text-yellow-400 font-bold text-[9px] rounded py-0.5 px-1 max-w-[95px] truncate focus:outline-none cursor-pointer"
             >
-              <option value="ko">KR เกาหลี (ko)</option>
-              <option value="zh">CN จีน (zh)</option>
-              <option value="ja">JP ญี่ปุ่น (ja)</option>
-              <option value="en">EN อังกฤษ (en)</option>
+              <option value="zh">🇨🇳 จีน (zh)</option>
+              <option value="ko">🇰🇷 เกาหลี (ko)</option>
+              <option value="en">🇬🇧 อังกฤษ (en)</option>
+              <option value="ja">🇯🇵 ญี่ปุ่น (ja)</option>
             </select>
           </div>
 
-          <label className="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white transition-colors text-[10.5px]">
+          <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-slate-200 transition-colors" title="ตรวจสะกดคำผิดปกติของ OCR ด้วยโมเดล AI">
             <input
               type="checkbox"
               checked={aiOcrCorrection}
               onChange={(e) => handleToggleProjectSetting('ai_ocr_correction', e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-zinc-700 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
+              className="w-3 h-3 rounded-sm border-zinc-800 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
             />
-            <span>AI OCR Fix</span>
+            <span>AI spellcheck</span>
           </label>
+          </>}
 
-          <label className="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white transition-colors text-[10.5px]">
-            <input
-              type="checkbox"
-              checked={workspaceMode === 'typeset'}
-              onChange={(e) => setWorkspaceMode(e.target.checked ? 'typeset' : 'ocr')}
-              className="w-3.5 h-3.5 rounded border-zinc-700 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
-            />
-            <span>Typeset</span>
-          </label>
-
-          <label className="flex items-center gap-1.5 cursor-pointer select-none text-amber-400 hover:text-amber-300 transition-colors text-[10.5px] font-bold">
+          <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-slate-200 transition-colors" title="แสดงแผ่นสีแดงโปร่งแสงคลุมทับจุดที่จะทำการลบข้อความ">
             <input
               type="checkbox"
               checked={liveMaskOverlay}
@@ -4173,18 +4272,101 @@ export const App: React.FC = () => {
                 setLiveMaskOverlay(val);
                 updateGlobalSetting('live_mask_overlay', val);
               }}
-              className="w-3.5 h-3.5 rounded border-zinc-700 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
+              className="w-3 h-3 rounded-sm border-zinc-800 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
             />
-            <span>Live Mask</span>
+            <span className="text-amber-400 font-bold">Live Mask</span>
           </label>
+
+          <div className="h-6 w-px bg-zinc-800" />
+
+          {/* Unified B+ Typesetting Actions */}
+          <div className="flex items-center gap-2 text-[10px] flex-wrap">
+            <span className="text-yellow-400 font-pixel font-bold uppercase tracking-wider">B+ Typeset</span>
+            {activePage && (() => {
+              const c = countDecisions(activePage.text_blocks || []);
+              if (!c.with_text) return null;
+              return (
+                <span className="flex items-center gap-1.5 text-[8px] font-pixel bg-zinc-900/80 px-2 py-0.5 rounded border border-zinc-800">
+                  <span className="text-emerald-400" title="AUTO_APPLIED">OK {c.AUTO_APPLIED || 0}</span>
+                  <span className="text-sky-400" title="DEFAULTED">DEF {c.DEFAULTED || 0}</span>
+                  <span className="text-amber-400" title="NEEDS_REVIEW">REV {c.NEEDS_REVIEW || 0}</span>
+                </span>
+              );
+            })()}
+            <button
+              type="button"
+              disabled={!activePage || isProcessing}
+              onClick={() => void runAutoStylePage(true)}
+              className="rounded border border-yellow-500/40 bg-yellow-500/15 px-2.5 py-1 text-[9px] font-bold text-yellow-300 hover:bg-yellow-500/25 font-pixel disabled:opacity-40 cursor-pointer transition-colors shadow-sm"
+              title="Style Judge ทั้งหน้า + recompute layout"
+            >
+              ⚡ STYLE JUDGE
+            </button>
+            {autoStyleSnapshot && autoStyleSnapshot.pageId === activePage?.id && (
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={() => void undoAutoStylePage()}
+                className="rounded border border-sky-500/40 bg-sky-500/10 px-2 py-1 text-[9px] font-bold text-sky-300 hover:bg-sky-500/20 font-pixel disabled:opacity-40 cursor-pointer transition-colors"
+                title="คืนค่า template/spec ก่อนรัน Auto Style ล่าสุดบนหน้านี้"
+              >
+                UNDO STYLE
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={!activePage || isProcessing}
+              onClick={() => void reorganizePageText()}
+              className="rounded border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[9px] font-bold text-slate-300 hover:border-emerald-500/40 hover:text-emerald-300 font-pixel disabled:opacity-40 cursor-pointer transition-colors"
+              title="Recompute TypesettingSpec ทั้งหน้า"
+            >
+              RECOMPUTE LAYOUT
+            </button>
+            <button
+              type="button"
+              disabled={!activePage}
+              onClick={() => setLayerDecisionFilter((f) => (f === 'NEEDS_REVIEW' ? 'all' : 'NEEDS_REVIEW'))}
+              className={`rounded border px-2.5 py-1 text-[9px] font-bold font-pixel cursor-pointer transition-colors ${
+                layerDecisionFilter === 'NEEDS_REVIEW'
+                  ? 'border-amber-500/50 bg-amber-500/20 text-amber-200'
+                  : 'border-zinc-700 bg-zinc-900 text-slate-300 hover:border-amber-500/40 hover:text-amber-300'
+              }`}
+              title="Review Queue — แสดงเฉพาะกล่อง NEEDS_REVIEW"
+            >
+              REVIEW QUEUE
+            </button>
+            <div className="h-4 w-px bg-zinc-800 ml-1" />
+            <button type="button" onClick={() => void clearTranslationData('layers')} className="rounded border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-[8px] font-bold text-rose-300 hover:bg-rose-500/15 font-pixel cursor-pointer" title="ลบข้อมูลคำแปลเฉพาะบล็อกที่เลือก">CLEAR SEL</button>
+            <button type="button" onClick={() => void clearTranslationData('page')} className="rounded border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-[8px] font-bold text-rose-300 hover:bg-rose-500/15 font-pixel cursor-pointer" title="ลบข้อมูลคำแปลทั้งหน้า">CLEAR PAGE</button>
+            <div className="h-4 w-px bg-zinc-800 ml-1" />
+            <button
+              type="button"
+              onClick={() => {
+                const next = !showFloatingLetteringBar;
+                setShowFloatingLetteringBar(next);
+                try { localStorage.setItem('houmi_show_floating_lettering_bar', String(next)); } catch {}
+                showToast(next ? 'เปิดแถบเครื่องมือลอยแล้ว (Floating Bar: ON)' : 'ซ่อนแถบเครื่องมือลอยแล้ว (Floating Bar: OFF)', 'info');
+              }}
+              className={`rounded border px-2 py-1 text-[9px] font-bold font-pixel cursor-pointer transition-colors flex items-center gap-1 ${
+                showFloatingLetteringBar
+                  ? 'border-amber-500/40 bg-amber-500/15 text-amber-300'
+                  : 'border-zinc-800 bg-zinc-900 text-slate-500 hover:text-slate-300'
+              }`}
+              title={showFloatingLetteringBar ? 'ซ่อนแถบเครื่องมือลอยเหนือบล็อก (Floating Lettering Bar: ON)' : 'เปิดแถบเครื่องมือลอยเหนือบล็อก (Floating Lettering Bar: OFF)'}
+            >
+              <span>🎛️</span>
+              <span>Toolbar: {showFloatingLetteringBar ? 'ON' : 'OFF'}</span>
+            </button>
+          </div>
+
         </div>
 
-        {/* Right GPU Hardware Badge */}
-        <div className="flex items-center gap-2 font-mono text-[10px]">
-          <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            NVIDIA GeForce RTX 4060 • DirectML
-          </span>
+        <div className="flex items-center gap-3">
+          {activePage && !leftSidebarOpen && (
+            <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-pixel">
+              Page {activePage.page_number} / {activeProject?.pages?.length || 0}
+            </span>
+          )}
         </div>
       </div>
 
@@ -4258,7 +4440,7 @@ export const App: React.FC = () => {
         {/* 2. LEFT SIDEBAR (Page List navigator) */}
         <aside 
           className={`transition-[width,opacity] duration-200 flex flex-col overflow-hidden border-r border-zinc-900/60 bg-zinc-950/95 animate-slide-up ${
-            leftSidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0 border-none'
+            activeProject && leftSidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0 border-none'
           } ${
             isDraggingOverPages 
               ? 'border-2 border-dashed border-yellow-500/60 shadow-[0_0_15px_rgba(234,179,8,0.15)] bg-yellow-500/[0.02]' 
@@ -4421,7 +4603,7 @@ export const App: React.FC = () => {
           <div className="cosmic-glow top-[10%] left-[10%]" />
           
           {!activeProject ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 z-10 font-sans max-w-4xl mx-auto w-full select-none overflow-y-auto relative">
+            <div className="flex-1 flex flex-col items-center justify-start text-slate-400 p-6 lg:p-10 z-10 font-sans max-w-5xl mx-auto w-full select-none overflow-y-auto relative custom-scrollbar">
               <button
                 type="button"
                 onClick={() => setShowGlobalSettingsModal(true)}
@@ -4430,95 +4612,176 @@ export const App: React.FC = () => {
               >
                 <Settings size={18} className="group-hover:rotate-45 transition-transform duration-500" />
               </button>
-              <div className="relative mb-6">
-                <div className="absolute inset-0 rounded-2xl bg-yellow-500/10 blur-xl animate-pulse" />
-                <div className="w-20 h-20 rounded-2xl bg-zinc-950 border-2 border-zinc-800/80 flex items-center justify-center relative z-10 shadow-2xl">
-                  <Sparkles size={40} className="text-yellow-500" />
-                </div>
-              </div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2 font-pixel uppercase">
-                Houmi <span className="text-yellow-400">Studio</span>
-              </h1>
-              <p className="text-sm text-slate-400 max-w-md font-sans leading-relaxed">
-                Premium AI-assisted typesetting & translation suite for manga translation, clean-ups, and OCR digitization.
-              </p>
 
-              <div className="flex flex-wrap items-center justify-center gap-4.5 mt-8 w-full">
-                {/* Browse folder */}
+              {/* Logo / Header */}
+              <div className="flex flex-col items-center text-center mt-2 mb-8 shrink-0">
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 rounded-2xl bg-amber-500/15 blur-xl animate-pulse" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#121218] border-2 border-amber-500/40 flex items-center justify-center relative z-10 shadow-2xl shadow-amber-500/20">
+                    <Sparkles size={28} className="text-amber-400" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-mono font-bold tracking-wider uppercase">
+                    ⚡ HOUMI TRANSLATION STUDIO
+                  </span>
+                </div>
+                <h1 className="text-xl lg:text-2xl font-black tracking-tight text-white mb-1.5">
+                  ยินดีต้อนรับสู่ <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-200">Houmi Studio</span>
+                </h1>
+                <p className="text-xs text-slate-400 max-w-lg leading-relaxed font-sans">
+                  ระบบ AI จัดหน้าและแปลภาษามังงะ/เว็บตูนระดับมืออาชีพ รองรับการคลีนภาพ ตรวจจับบอลลูน และฟอนต์อักษรครบวงจร
+                </p>
+              </div>
+
+              {/* 3 Action Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 w-full max-w-4xl mb-6 shrink-0">
+                {/* 1. Open Local Folder */}
                 <button
+                  type="button"
                   onClick={async () => {
                     try {
                       const defaultPath = defaultLoadProjectPath || localStorage.getItem('houmi_last_load_project_path') || '';
                       const newProj = await browseFolderProject(defaultPath);
                       if (newProj) {
-                        showToast(`Imported project "${newProj.name}"`, 'success');
+                        showToast(`นำเข้าโปรเจกต์ "${newProj.name}" สำเร็จ`, 'success');
+                        await selectProject(newProj.id);
                         if (newProj.settings?.local_folder) {
                           localStorage.setItem('houmi_last_load_project_path', newProj.settings.local_folder);
                         }
                       }
-                    } catch (err: any) {
-                      showToast(`Import failed: ${err.message}`, 'error');
+                    } catch (e: any) {
+                      showToast(`เปิดโฟลเดอร์ล้มเหลว: ${e.message}`, 'error');
                     }
                   }}
-                  className="flex flex-col items-center gap-3 p-6 w-64 rounded-xl border border-zinc-850 bg-zinc-950/45 hover:border-yellow-400/40 hover:bg-zinc-900/30 transition-all duration-300 shadow-xl cursor-pointer group text-center"
+                  className="flex flex-col items-center text-center p-5 rounded-2xl border border-[#242436] bg-[#12121a]/80 hover:bg-[#181824] hover:border-amber-500/60 transition-all duration-300 shadow-xl cursor-pointer group hover:scale-[1.02] active:scale-[0.99] relative overflow-hidden"
                 >
-                  <div className="p-3 rounded-lg bg-zinc-900/80 border border-zinc-850 group-hover:border-yellow-500/30 transition-colors">
-                    <FolderOpen size={24} className="text-yellow-500 group-hover:scale-110 transition-transform" />
+                  <div className="absolute top-0 right-0 px-2 py-0.5 bg-amber-500/10 border-b border-l border-amber-500/20 text-[8.5px] font-mono font-bold text-amber-400 rounded-bl-lg">
+                    LOCAL FOLDER
                   </div>
-                  <div>
-                    <h4 className="text-xs font-pixel font-bold text-slate-200 group-hover:text-amber-400 transition-colors uppercase tracking-wider">Browse Project Folder</h4>
-                    <p className="text-[10px] text-slate-500 font-sans mt-1">Open an existing manga project folder on your computer.</p>
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-300 mb-2.5 shadow-md shadow-amber-500/10">
+                    <FolderOpen size={24} className="text-amber-400" />
                   </div>
+                  <h3 className="text-xs font-bold text-slate-100 group-hover:text-amber-300 transition-colors">
+                    เปิดโฟลเดอร์โปรเจกต์
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-1 leading-relaxed font-sans">
+                    เลือกโฟลเดอร์รูปภาพมังงะในเครื่องเพื่อเริ่มต้นทำงาน
+                  </p>
+                  <span className="mt-3 text-[9.5px] font-bold text-amber-400 group-hover:underline flex items-center gap-1 font-mono">
+                    BROWSE FOLDER ➔
+                  </span>
                 </button>
 
-                {/* New project */}
+                {/* 2. Create Blank Project */}
                 <button
+                  type="button"
                   onClick={() => setShowNewProjModal(true)}
-                  className="flex flex-col items-center gap-3 p-6 w-64 rounded-xl border border-zinc-850 bg-zinc-950/45 hover:border-yellow-400/40 hover:bg-zinc-900/30 transition-all duration-300 shadow-xl cursor-pointer group text-center"
+                  className="flex flex-col items-center text-center p-5 rounded-2xl border border-[#242436] bg-[#12121a]/80 hover:bg-[#181824] hover:border-cyan-500/60 transition-all duration-300 shadow-xl cursor-pointer group hover:scale-[1.02] active:scale-[0.99] relative overflow-hidden"
                 >
-                  <div className="p-3 rounded-lg bg-zinc-900/80 border border-zinc-850 group-hover:border-yellow-500/30 transition-colors">
-                    <FolderPlus size={24} className="text-yellow-500 group-hover:scale-110 transition-transform" />
+                  <div className="absolute top-0 right-0 px-2 py-0.5 bg-cyan-500/10 border-b border-l border-cyan-500/20 text-[8.5px] font-mono font-bold text-cyan-400 rounded-bl-lg">
+                    BLANK PROJECT
                   </div>
-                  <div>
-                    <h4 className="text-xs font-pixel font-bold text-slate-200 group-hover:text-amber-400 transition-colors uppercase tracking-wider">Create New Project</h4>
-                    <p className="text-[10px] text-slate-500 font-sans mt-1">Initialize a blank workspace for a new translation project.</p>
+                  <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all duration-300 mb-2.5 shadow-md shadow-cyan-500/10">
+                    <FolderPlus size={24} className="text-cyan-400" />
                   </div>
+                  <h3 className="text-xs font-bold text-slate-100 group-hover:text-cyan-300 transition-colors">
+                    สร้างโปรเจกต์ใหม่
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-1 leading-relaxed font-sans">
+                    ตั้งค่าพื้นที่ทำงานว่าง กำหนดภาษาต้นทางและปลายทาง
+                  </p>
+                  <span className="mt-3 text-[9.5px] font-bold text-cyan-400 group-hover:underline flex items-center gap-1 font-mono">
+                    NEW WORKSPACE ➔
+                  </span>
+                </button>
+
+                {/* 3. Smart Stitch (Webtoon) */}
+                <button
+                  type="button"
+                  onClick={() => setShowSmartStitchModal(true)}
+                  className="flex flex-col items-center text-center p-5 rounded-2xl border border-[#242436] bg-[#12121a]/80 hover:bg-[#181824] hover:border-purple-500/60 transition-all duration-300 shadow-xl cursor-pointer group hover:scale-[1.02] active:scale-[0.99] relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 px-2 py-0.5 bg-purple-500/10 border-b border-l border-purple-500/20 text-[8.5px] font-mono font-bold text-purple-400 rounded-bl-lg">
+                    AI WEBTOON
+                  </div>
+                  <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all duration-300 mb-2.5 shadow-md shadow-purple-500/10">
+                    <Scissors size={24} className="text-purple-400" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-100 group-hover:text-purple-300 transition-colors">
+                    Smart Stitch (ตัดต่อเว็บตูน)
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-1 leading-relaxed font-sans">
+                    ตัดแบ่งภาพเว็บตูนขนาดยาว (Long-strip) ด้วย AI
+                  </p>
+                  <span className="mt-3 text-[9.5px] font-bold text-purple-400 group-hover:underline flex items-center gap-1 font-mono">
+                    OPEN SMART STITCH ➔
+                  </span>
                 </button>
               </div>
 
-              {projects && projects.length > 0 && (
-                <div className="w-full max-w-xl mt-10 flex flex-col gap-3.5 animate-slide-up">
-                  <h4 className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest font-pixel flex items-center gap-1.5 self-start">
-                    <History size={12} /> Recent Projects
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {projects.slice(0, 4).map((p) => (
-                      <div 
+              {/* Recent Projects Section */}
+              <div className="w-full max-w-4xl flex flex-col gap-2.5 pt-1 animate-slide-up shrink-0">
+                <div className="flex items-center justify-between border-b border-[#242436] pb-2">
+                  <div className="flex items-center gap-2">
+                    <Folder size={14} className="text-amber-400" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                      โปรเจกต์ล่าสุด (Recent Projects)
+                    </h4>
+                    <span className="text-[10px] font-mono font-bold bg-[#181824] text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/20">
+                      {projects?.length || 0}
+                    </span>
+                  </div>
+                  {projects && projects.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void fetchProjects()}
+                      className="text-[10px] text-slate-400 hover:text-amber-400 flex items-center gap-1 cursor-pointer font-mono"
+                    >
+                      <RefreshCw size={10} /> รีเฟรช
+                    </button>
+                  )}
+                </div>
+
+                {projects && projects.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pb-4">
+                    {projects.map((p) => (
+                      <div
                         key={p.id}
-                        onClick={() => selectProject(p.id)}
-                        className="flex items-center justify-between p-3.5 rounded-lg border border-zinc-850 bg-zinc-950/20 hover:border-yellow-400/40 hover:bg-zinc-900/20 transition-all cursor-pointer group"
+                        onClick={() => void selectProject(p.id)}
+                        className="p-3 rounded-xl border border-[#20202e] bg-[#121218] hover:border-amber-500/50 hover:bg-[#161622] transition-all cursor-pointer group flex flex-col justify-between gap-2 shadow-sm"
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="p-2 rounded-md bg-zinc-900 border border-zinc-800 group-hover:border-yellow-400/30 transition-colors">
-                            <Folder size={16} className="text-yellow-500/80 group-hover:text-yellow-400" />
+                        <div className="flex items-start gap-2.5">
+                          <div className="p-2 rounded-lg bg-[#181824] border border-[#262638] group-hover:border-amber-500/40 transition-colors shrink-0">
+                            <Folder size={16} className="text-amber-400" />
                           </div>
-                          <div className="text-left min-w-0">
-                            <h5 className="text-xs font-bold text-slate-200 truncate group-hover:text-yellow-400 transition-colors font-pixel">{p.name}</h5>
-                            <p className="text-[10px] text-slate-500 font-sans mt-0.5">
-                              {p.source_lang} → {p.target_lang} • {p.pages?.length || 0} pages
+                          <div className="min-w-0 flex-1">
+                            <h5 className="text-xs font-bold text-slate-100 group-hover:text-amber-300 truncate">
+                              {p.name}
+                            </h5>
+                            <p className="text-[10px] text-slate-500 truncate mt-0.5 font-mono">
+                              {p.settings?.local_folder || 'Local Project'}
                             </p>
                           </div>
                         </div>
-                        <button 
-                          className="text-[9px] font-bold text-yellow-500 hover:text-yellow-400 border border-zinc-800 hover:border-yellow-400/30 px-2.5 py-1 rounded bg-zinc-900/80 group-hover:bg-zinc-900 transition-all font-pixel cursor-pointer"
-                        >
-                          OPEN
-                        </button>
+                        <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[9px] font-mono text-slate-400">
+                          <span className="bg-[#1a1a24] px-1.5 py-0.5 rounded text-amber-400/90 font-semibold">
+                            {p.pages?.length || 0} หน้า (Pages)
+                          </span>
+                          <span className="text-slate-500">
+                            {p.source_lang?.toUpperCase() || 'JA'} ➔ {p.target_lang?.toUpperCase() || 'TH'}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="p-6 text-center rounded-xl border border-dashed border-[#242436] bg-[#101016]/50">
+                    <p className="text-xs text-slate-400">ยังไม่มีประวัติโปรเจกต์ในเครื่อง</p>
+                    <p className="text-[10px] text-slate-500 mt-1">เริ่มต้นด้วยการเปิดโฟลเดอร์หรือสร้างโปรเจกต์ใหม่ด้านบน</p>
+                  </div>
+                )}
+              </div>
             </div>
           ) : activePage ? (
             <Canvas 
@@ -4949,7 +5212,7 @@ export const App: React.FC = () => {
         </div>
 
   {/* ================= 1. HOUMI "TEXT & FORMATTING" FLYOUT PANEL ================= */}
-        {isFormattingWidgetOpen && (
+        {activeProject && isFormattingWidgetOpen && (
           <div
             style={{
               left: `${formattingWidgetPos.x}px`,
@@ -5590,7 +5853,7 @@ export const App: React.FC = () => {
         {/* 4. RIGHT PANEL (Stacked Dock Layout - Pipeline Controls on top, Layers & Text Review on bottom) */}
         <aside 
           className={`transition-all duration-300 flex flex-col overflow-hidden shadow-2xl border-l border-zinc-900/60 bg-zinc-950/40 backdrop-blur-md animate-slide-up shrink-0 ${
-            rightSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0 border-none'
+            activeProject && rightSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0 border-none'
           }`}
         >
           {/* Top Panel: Pipeline Controls (Direct 1-Click Action Matrix) */}
@@ -5676,18 +5939,8 @@ export const App: React.FC = () => {
               </div>
             )}
 
-            {/* Staging Tabs: CONVERSATION | STYLE MAP */}
-            <div className="flex items-center border-b border-zinc-800 bg-[#121216]">
-              <button className="flex-1 px-3 py-2 text-white font-bold text-[10.5px] font-pixel border-b-2 border-amber-500">
-                💬 CONVERSATION ({activePage?.text_blocks?.length || 0})
-              </button>
-              <button className="flex-1 px-3 py-2 text-zinc-500 font-semibold text-[10.5px] font-pixel hover:text-zinc-300">
-                🎨 STYLE MAP
-              </button>
-            </div>
-
-            {/* Layers List Cards (Staging Conversation Cards) */}
-            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5" id="lpanel-conv">
+            {/* Layers List Cards (Matching HTML Mockup layer-card style) */}
+            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
               {(!activePage?.text_blocks || activePage.text_blocks.length === 0) ? (
                 <div className="p-6 text-center text-xs text-slate-500 italic font-pixel">
                   ยังไม่มีข้อมูล Balloon Text Layer
@@ -5695,16 +5948,10 @@ export const App: React.FC = () => {
               ) : (
                 [...activePage.text_blocks].sort((a, b) => a.block_index - b.block_index).map((block) => {
                   const isSelected = selectedBlocks.some(b => b.id === block.id);
-                  const roleType = (block.balloon_type || 'dialogue').toLowerCase();
-                  const roleConfig = roleType === 'shout' || roleType === 'sfx'
-                    ? { border: isSelected ? 'border-rose-500 ring-1 ring-rose-500/50' : 'border-rose-500/30', bg: 'bg-rose-500/8', pin: 'bg-rose-500/90 text-white', labelColor: 'text-rose-300', badge: 'bg-rose-500/15 text-rose-300 border-rose-500/30' }
-                    : roleType === 'whisper'
-                    ? { border: isSelected ? 'border-emerald-500 ring-1 ring-emerald-500/50' : 'border-emerald-500/30', bg: 'bg-emerald-500/8', pin: 'bg-emerald-500/90 text-white', labelColor: 'text-emerald-300', badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' }
-                    : roleType === 'system'
-                    ? { border: isSelected ? 'border-amber-500 ring-1 ring-amber-500/50' : 'border-amber-500/30', bg: 'bg-amber-500/8', pin: 'bg-amber-500/90 text-white', labelColor: 'text-amber-300', badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30' }
-                    : roleType === 'magic'
-                    ? { border: isSelected ? 'border-purple-500 ring-1 ring-purple-500/50' : 'border-purple-500/30', bg: 'bg-purple-500/8', pin: 'bg-purple-500/90 text-white', labelColor: 'text-purple-300', badge: 'bg-purple-500/15 text-purple-300 border-purple-500/30' }
-                    : { border: isSelected ? 'border-sky-500 ring-1 ring-sky-500/50' : 'border-sky-500/30', bg: 'bg-sky-500/8', pin: 'bg-sky-500/90 text-black', labelColor: 'text-sky-300', badge: 'bg-sky-500/15 text-sky-300 border-sky-500/30' };
+                  const role = resolveBlockTemplateRole(block, stylePresets);
+                  const displayValue = (typeof block.translation === 'string' && block.translation.trim() !== '')
+                    ? block.translation
+                    : (block.source_text || '');
 
                   return (
                     <div
@@ -5724,31 +5971,22 @@ export const App: React.FC = () => {
                           blockId: block.id,
                         });
                       }}
-                      className={`p-2.5 rounded-xl border transition-all cursor-pointer font-pixel text-xs ${roleConfig.bg} ${roleConfig.border} shadow-md`}
+                      className={`p-2.5 rounded-lg border transition-all cursor-pointer font-pixel text-xs ${
+                        isSelected
+                          ? 'border-amber-500 bg-amber-500/12 shadow-sm shadow-amber-500/20'
+                          : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900'
+                      }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5">
-                          <span className={`w-4 h-4 rounded-full ${roleConfig.pin} font-mono font-bold text-[9.5px] flex items-center justify-center shadow-sm`}>
-                            {block.block_index + 1}
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-mono font-bold text-[10px] border border-amber-500/30">
+                            #{block.block_index + 1}
                           </span>
-                          <span className={`text-[10.5px] font-bold ${roleConfig.labelColor}`}>
-                            #{String(block.block_index + 1).padStart(2, '0')} {roleType === 'shout' ? 'ตะโกน / SFX' : roleType === 'whisper' ? 'คิดในใจ' : roleType === 'system' ? 'กล่องระบบ' : roleType === 'magic' ? 'เวทมนตร์' : 'ตัวละครพูด'}
+                          <span className="text-[10.5px] font-bold text-slate-300">
+                            {role.roleLabel}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <select
-                            value={block.balloon_type || 'dialogue'}
-                            onChange={(e) => void updateBlock(block.id, { balloon_type: e.target.value as any })}
-                            onClick={(e) => e.stopPropagation()}
-                            className={`rounded px-1.5 py-0.5 text-[9px] font-semibold cursor-pointer outline-none border ${roleConfig.badge}`}
-                          >
-                            <option value="dialogue" className="bg-zinc-950 text-white">💬 พูดทั่วไป</option>
-                            <option value="shout" className="bg-zinc-950 text-white">💥 ตะโกน / SFX</option>
-                            <option value="whisper" className="bg-zinc-950 text-white">💭 คิดในใจ</option>
-                            <option value="magic" className="bg-zinc-950 text-white">🔮 เวทมนตร์</option>
-                            <option value="system" className="bg-zinc-950 text-white">🏷️ กล่องระบบ</option>
-                          </select>
-
                           <button
                             type="button"
                             onClick={(e) => {
@@ -5802,9 +6040,22 @@ export const App: React.FC = () => {
                         <div>
                           <div className="flex items-center justify-between mb-0.5">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 font-sans">
-                              <span>🇨🇳</span> ต้นฉบับ (SOURCE OCR)
+                              <span>🔤</span> ต้นฉบับ (Source / OCR)
                             </span>
-                            <span className="text-[8px] font-mono text-zinc-500 bg-zinc-900/90 px-1 py-0.2 rounded">RAPID_OCR</span>
+                            {block.source_text && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(block.source_text);
+                                  showToast('คัดลอกข้อความต้นฉบับแล้ว! 📋', 'info');
+                                }}
+                                className="text-[9px] text-slate-500 hover:text-slate-300 font-sans cursor-pointer"
+                                title="คัดลอกข้อความต้นฉบับ"
+                              >
+                                copy
+                              </button>
+                            )}
                           </div>
                           <input
                             type="text"
@@ -5813,20 +6064,15 @@ export const App: React.FC = () => {
                               void updateBlock(block.id, { source_text: e.target.value });
                             }}
                             placeholder="ข้อความต้นฉบับ (OCR)..."
-                            className="w-full bg-zinc-950/80 border border-zinc-800/90 hover:border-zinc-700 focus:border-amber-500/70 rounded px-2.5 py-1 text-[11px] text-slate-300 font-sans focus:outline-none select-text"
+                            className="w-full bg-zinc-950/70 border border-zinc-800/80 hover:border-zinc-700 focus:border-amber-500/70 rounded px-2.5 py-1 text-[11px] text-slate-300 font-sans focus:outline-none select-text"
                           />
                         </div>
 
                         {/* Slot 2: Translation Text */}
                         <div>
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className={`text-[9px] font-bold ${roleConfig.labelColor} uppercase tracking-wider block font-sans flex items-center gap-1`}>
-                              <span>⭐</span> คำแปล (THAI TYPESET)
-                            </span>
-                            <span className={`text-[8.5px] font-mono font-bold ${roleConfig.labelColor} opacity-80`}>
-                              {block.font_family || 'Prompt'} · {block.font_size || 14}px
-                            </span>
-                          </div>
+                          <span className="text-[9px] font-bold text-amber-400/90 uppercase tracking-wider block mb-0.5 font-sans flex items-center gap-1">
+                            <span>🇹🇭</span> คำแปล (Translation)
+                          </span>
                           <textarea
                             rows={Math.max(1, Math.min(6, (block.translation || '').split('\n').length))}
                             value={block.translation || ''}
@@ -5845,7 +6091,7 @@ export const App: React.FC = () => {
                               });
                             }}
                             placeholder="พิมพ์คำแปลใหม่..."
-                            className="w-full bg-zinc-950/95 border border-zinc-800/90 hover:border-zinc-700 focus:border-amber-500 rounded-md px-2.5 py-1.5 text-xs text-slate-100 font-sans focus:outline-none resize-y min-h-[34px] leading-relaxed select-text"
+                            className="w-full bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 focus:border-amber-500 rounded-md px-2.5 py-1.5 text-xs text-slate-100 font-sans focus:outline-none resize-y min-h-[34px] leading-relaxed select-text"
                           />
                         </div>
                       </div>
@@ -9222,6 +9468,9 @@ export const App: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Action Debug Console Drawer (Matrix UI) */}
+      <DebugConsoleDrawer />
 
     </div>
   );

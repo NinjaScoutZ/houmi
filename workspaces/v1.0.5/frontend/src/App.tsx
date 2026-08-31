@@ -3741,6 +3741,17 @@ export const App: React.FC = () => {
                 >
                   🗑️ Delete selected block{selectedBlocks.length > 1 ? 's' : ''}
                 </button>
+                <div className="h-px bg-zinc-900 my-1" />
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowGlobalSettingsModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center justify-between cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">⚙️ Preferences & Settings...</span>
+                  <span className="text-[10px] text-slate-500 font-mono">Ctrl+,</span>
+                </button>
               </div>
             )}
           </div>
@@ -3894,6 +3905,17 @@ export const App: React.FC = () => {
                   ⚙️ Settings (ตั้งค่าระบบ)
                 </button>
                 <button
+                  type="button"
+                  onClick={() => {
+                    closeAllMenus();
+                    showToast("Cloud Hub: เชื่อมต่อเซิร์ฟเวอร์เรียบร้อย (houmi.click)", "info");
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-sky-500/10 hover:text-sky-300 rounded-md transition-all spring-transition cursor-pointer flex items-center gap-2 text-sky-400 font-medium"
+                >
+                  <span>☁️ Cloud Hub (Sync & Backup)...</span>
+                </button>
+                <div className="h-px bg-zinc-900 my-1" />
+                <button
                   onClick={() => {
                     closeAllMenus();
                     openTemplateSettings();
@@ -3988,7 +4010,7 @@ export const App: React.FC = () => {
             )}
           </div>
 
-          {/* About Menu */}
+          {/* Help Menu */}
           <div className="relative">
             <button
               onClick={(e) => {
@@ -3998,11 +4020,11 @@ export const App: React.FC = () => {
               }}
               className={`px-3 py-1 hover:bg-zinc-900 hover:text-white rounded-md cursor-pointer transition-all spring-transition ${showMenuAbout ? 'bg-zinc-900 text-white' : ''}`}
             >
-              About
+              Help
             </button>
             {showMenuAbout && (
               <div 
-                className="absolute left-0 mt-1.5 w-60 glass-panel p-1.5 z-40 flex flex-col gap-1 animate-fade-in"
+                className="absolute left-0 mt-1.5 w-64 glass-panel p-1.5 z-40 flex flex-col gap-1 animate-fade-in"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -4014,15 +4036,35 @@ export const App: React.FC = () => {
                 >
                   ℹ️ About Houmi Studio & Patch...
                 </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowAboutModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-amber-500/10 hover:text-amber-300 rounded-md transition-all spring-transition cursor-pointer flex items-center justify-between font-bold text-amber-400"
+                >
+                  <span className="flex items-center gap-2">🔑 Register License Key...</span>
+                  <span className="text-[9px] font-mono text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">PRO</span>
+                </button>
                 <div className="h-px bg-zinc-900 my-0.5" />
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowChangelogModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer"
+                >
+                  🚀 Version Changelog & What's New
+                </button>
                 <button
                   onClick={() => {
                     closeAllMenus();
                     setShowHotkeyModal(true);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer"
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer flex items-center justify-between"
                 >
-                  ⌨️ Keyboard Shortcuts (?)
+                  <span>⌨️ Keyboard Shortcuts</span>
+                  <span className="text-[10px] text-slate-500 font-mono">?</span>
                 </button>
                 <button
                   onClick={() => {
@@ -4030,9 +4072,18 @@ export const App: React.FC = () => {
                     setShowDiagnostics(true);
                     fetchDiagnostics();
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer"
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition cursor-pointer flex items-center gap-2"
                 >
-                  🏥 System Diagnostics
+                  🏥 System Diagnostics & Audits
+                </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setShowDevStudioModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition flex items-center gap-2 cursor-pointer text-slate-400"
+                >
+                  🗺️ Architecture & Node Map
                 </button>
               </div>
             )}
@@ -4048,8 +4099,8 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Right side Actions & Tools */}
-        <div className="flex items-center text-xs text-slate-300 gap-0.5 font-medium relative pywebview-no-drag window-no-drag-region" style={{ WebkitAppRegion: 'no-drag' } as any}>
+        {/* Right side Actions & Tools - Minimalist Desktop HIG Layout */}
+        <div className="flex items-center text-xs text-slate-300 gap-2 font-medium relative pywebview-no-drag window-no-drag-region" style={{ WebkitAppRegion: 'no-drag' } as any}>
           <input 
             type="file" 
             multiple 
@@ -4073,134 +4124,29 @@ export const App: React.FC = () => {
             className="hidden" 
           />
 
-          {/* 1. Save Button */}
-          <button
-            type="button"
-            onClick={() => {
-              showToast("บันทึกโปรเจกต์สำเร็จ (Saved)", "success");
-            }}
-            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-800/60 text-slate-300 hover:text-white transition-all cursor-pointer"
-            title="Save Project (Ctrl+S)"
-          >
-            <span className="text-sm leading-none">💾</span>
-            <span>Save</span>
-          </button>
-
-          {/* 2. Export PSD Button */}
-          <button
-            type="button"
-            onClick={() => setShowPsdExportModal(true)}
-            disabled={!activePage}
-            className="flex items-center gap-1 px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-            title="Generate & Export Editable PSD Files"
-          >
-            <span className="text-xs leading-none text-amber-400">⚡</span>
-            <span>Export PSD</span>
-          </button>
-
-          {/* 3. Export Dropdown */}
-          <div className="relative">
+          {/* Minimalist System Status Badge */}
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 shadow-inner">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[9.5px] font-mono font-bold uppercase text-emerald-400 tracking-wider">LOCAL</span>
+            <span className="text-zinc-700 text-[9px]">•</span>
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMenuExport(!showMenuExport);
-              }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold transition-all cursor-pointer"
-              title="Export Options (PNG, JPEG, PSD, TXT, YOLO)"
+              onClick={() => setShowAboutModal(true)}
+              className="text-[9.5px] font-mono font-bold text-amber-400/90 hover:text-amber-300 transition-colors cursor-pointer"
+              title="License: PRO (4d) - Click to manage"
             >
-              <span className="text-xs leading-none">📥</span>
-              <span>Export</span>
-              <ChevronDown size={11} className="opacity-70" />
+              PRO (4d)
             </button>
-            {showMenuExport && (
-              <div 
-                className="absolute right-0 mt-1.5 w-56 glass-panel p-1.5 z-50 flex flex-col gap-1 rounded-md shadow-2xl animate-fade-in bg-zinc-950/95 border border-zinc-800"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={() => { setShowMenuExport(false); handleExport('png'); }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all text-xs cursor-pointer"
-                >
-                  Export PNG (Finished Project)
-                </button>
-                <button
-                  onClick={() => { setShowMenuExport(false); handleExport('jpeg'); }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all text-xs cursor-pointer"
-                >
-                  Export JPEG (Finished Project)
-                </button>
-                <button
-                  onClick={() => { setShowMenuExport(false); setShowPsdExportModal(true); }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all text-xs cursor-pointer flex justify-between items-center text-amber-300 font-bold"
-                >
-                  <span>Export PSD (Photoshop)</span>
-                  <span className="text-[9px] font-mono bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">.psd</span>
-                </button>
-                <button
-                  onClick={() => { setShowMenuExport(false); setShowExportTxtModal(true); }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all text-xs cursor-pointer"
-                >
-                  TXT Exchange (OCR / Translated)
-                </button>
-                <button
-                  onClick={() => { setShowMenuExport(false); handleExport('txt', 'ocr'); }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all text-xs cursor-pointer flex justify-between items-center text-slate-300"
-                >
-                  <span>Export OCR (TXT)</span>
-                  <span className="text-[8px] text-slate-500 font-mono">Ctrl+Shift+S</span>
-                </button>
-                <button
-                  onClick={() => { setShowMenuExport(false); setShowExportYoloModal(true); }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all text-xs cursor-pointer"
-                >
-                  Export YOLO Dataset
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* 4. Local Mode Badge */}
-          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span>LOCAL</span>
-          </span>
-
-          {/* 5. Register Key Button */}
-          <button
-            type="button"
-            onClick={() => {
-              setShowAboutModal(true);
-            }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded bg-amber-600/15 hover:bg-amber-600/25 border border-amber-500/40 text-amber-300 font-bold transition-all cursor-pointer"
-            title="Register License Key / Product Activation"
-          >
-            <span>🔑</span>
-            <span>Register Key</span>
-          </button>
-
-          {/* 6. Cloud Hub Button */}
-          <button
-            type="button"
-            onClick={() => {
-              showToast("Cloud Hub: เชื่อมต่อเซิร์ฟเวอร์เรียบร้อย (houmi.click)", "info");
-            }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded hover:bg-zinc-800/60 text-slate-300 hover:text-white transition-all cursor-pointer"
-            title="Houmi Cloud Hub & Sync"
-          >
-            <span>☁️</span>
-            <span>Cloud Hub</span>
-          </button>
-
-          {/* 7. Settings Button */}
+          {/* Minimalist Quick Settings Icon */}
           <button
             type="button"
             onClick={() => setShowGlobalSettingsModal(true)}
-            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-800/60 text-slate-300 hover:text-white transition-all cursor-pointer"
-            title="Global Settings (ตั้งค่าระบบ)"
+            className="p-1.5 rounded-md hover:bg-zinc-800/70 text-zinc-400 hover:text-amber-400 transition-all cursor-pointer"
+            title="Preferences & Settings (Ctrl+,)"
           >
-            <Settings size={13} className="text-amber-400 hover:rotate-45 transition-transform duration-300" />
-            <span>Settings</span>
+            <Settings size={14} className="hover:rotate-45 transition-transform duration-300" />
           </button>
         </div>
       </nav>
