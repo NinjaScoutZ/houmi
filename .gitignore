@@ -66,8 +66,8 @@ previews/
 test_outputs/
 backups/
 logs/
-app/
-manga-psd-cli/
+/app/
+/manga-psd-cli/
 
 # Agent Session & Internal Storage
 .godkiller/
