@@ -9,8 +9,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>
-      window.__HOUMI_API_URL__ = window.__HOUMI_API_URL__ || "http://127.0.0.1:4000";
-      window.__HOUMI_WS_URL__ = window.__HOUMI_WS_URL__ || "ws://127.0.0.1:4000";
+      window.__HOUMI_RUNTIME_CONFIG__ = {
+        localApiBaseUrl: "http://127.0.0.1:4000",
+        apiBaseUrl: "http://127.0.0.1:4000",
+        wsBaseUrl: "ws://127.0.0.1:4000",
+        port: 4000
+      };
+      window.__HOUMI_API_URL__ = "http://127.0.0.1:4000";
+      window.__HOUMI_WS_URL__ = "ws://127.0.0.1:4000";
       window.__HOUMI_BACKEND_PORT__ = 4000;
     </script>
     <script src="./runtime-config.js"></script>
