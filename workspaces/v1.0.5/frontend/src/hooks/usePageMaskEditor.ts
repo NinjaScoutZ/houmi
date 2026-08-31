@@ -31,11 +31,12 @@ function trimMaskHistory(history: MaskHistoryEntry[]): void {
 interface PageMaskEditorOptions {
   pageId?: string;
   imageDimensions: { width: number; height: number };
+  liveMaskOverlay?: boolean;
   onStatus: (message: string, isLoading: boolean) => void;
   onSaved?: () => void | Promise<void>;
 }
 
-export function usePageMaskEditor({ pageId, imageDimensions, onStatus, onSaved }: PageMaskEditorOptions) {
+export function usePageMaskEditor({ pageId, imageDimensions, liveMaskOverlay = false, onStatus, onSaved }: PageMaskEditorOptions) {
   const [isActive, setIsActive] = useState(false);
   const [tool, setTool] = useState<PageMaskTool>('brush');
   const [brushSize, setBrushSize] = useState(24);
@@ -119,16 +120,17 @@ export function usePageMaskEditor({ pageId, imageDimensions, onStatus, onSaved }
   }, [appendCurrentHistory, resetHistory]);
 
   useEffect(() => {
-    if (!isActive || !pageId) return;
+    const shouldLoad = (isActive || liveMaskOverlay) && !!pageId;
+    if (!shouldLoad) return;
     const controller = new AbortController();
     const requestVersion = ++requestVersionRef.current;
-    onStatus('Loading page mask...', true);
+    if (isActive) onStatus('Loading page mask...', true);
     void loadEffectivePageMask(pageId, controller.signal)
       .then(async data => {
         if (requestVersion !== requestVersionRef.current) return;
         if (!data.mask_data_url) throw new Error('Page mask response did not include an overlay');
         await applyResponseMask(data.mask_data_url, data.width, data.height, true);
-        if (requestVersion === requestVersionRef.current) onStatus('Page Mask Mode ready', false);
+        if (requestVersion === requestVersionRef.current && isActive) onStatus('Page Mask Mode ready', false);
       })
       .catch(error => {
         if (controller.signal.aborted) return;
@@ -137,13 +139,13 @@ export function usePageMaskEditor({ pageId, imageDimensions, onStatus, onSaved }
           initializeEmptyMaskCanvas(canvas, imageDimensions.width, imageDimensions.height);
           resetHistory();
         }
-        onStatus(error instanceof Error ? error.message : 'Failed to load the page mask', false);
+        if (isActive) onStatus(error instanceof Error ? error.message : 'Failed to load the page mask', false);
       });
     return () => {
       controller.abort();
       if (requestVersionRef.current === requestVersion) requestVersionRef.current += 1;
     };
-  }, [applyResponseMask, imageDimensions.height, imageDimensions.width, isActive, onStatus, pageId, resetHistory]);
+  }, [applyResponseMask, imageDimensions.height, imageDimensions.width, isActive, liveMaskOverlay, onStatus, pageId, resetHistory]);
 
   useEffect(() => {
     if (!isActive) return;

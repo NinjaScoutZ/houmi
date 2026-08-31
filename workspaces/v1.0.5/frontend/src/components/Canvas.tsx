@@ -540,6 +540,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
   } = usePageMaskEditor({
     pageId: activePage?.id,
     imageDimensions: imgDimensions,
+    liveMaskOverlay: maskVisible,
     onStatus: setStatus,
     onSaved: async () => {
       setCleanImageVersion(Date.now());
@@ -3941,12 +3942,12 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
         />
       )}
 
-      {/* Top Toolbar: Dynamic Single Contextual Toolbar (Zero duplicate pills, Zero stacking) */}
-      <div className="flex items-center justify-between px-3 h-9 bg-[#0c0c12] border-b border-[#1c1c28] z-20 shrink-0">
+      {/* Top Toolbar: Single Unified Pro Control Panel (h-9 #0c0c12) */}
+      <div className="h-9 w-full bg-[#0c0c12] border-b border-[#1c1c28] px-3 flex items-center justify-between z-30 select-none font-sans text-xs shrink-0">
+        {/* Zone 1: Contextual Actions (เครื่องมือทำงาน) */}
         <div className="flex items-center gap-1.5 min-w-0">
-          {/* Dynamic Contextual Toolbar: Page Mode vs Box Inspector Mode */}
           {selectedBlock || selectedBlocks.length > 0 ? (
-            /* Mode B: Box Inspector Mode (Single unified pill bar) */
+            /* Box Inspector Controls */
             <div className="flex items-center gap-1.5 bg-[#14141e] border border-amber-500/30 rounded-lg px-2 py-0.5 shadow-sm">
               <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1 pr-1 border-r border-amber-500/20">
                 <span className="text-amber-400">📍</span>
@@ -3959,8 +3960,8 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
                   const targetId = selectedBlock?.id || selectedBlocks[0]?.id;
                   if (targetId && onOpenMaskEditor) onOpenMaskEditor(targetId);
                 }}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 transition-colors cursor-pointer"
-                title="แก้ไข Mask (B)"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 transition-colors cursor-pointer"
+                title="แก้ไข Mask กล่องนี้ (B)"
               >
                 <span>🎭</span>
                 <span>แก้ไข Mask</span>
@@ -3974,7 +3975,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
                     onRunOCR(targetIds);
                   }
                 }}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 transition-colors cursor-pointer"
                 title="สแกน OCR กล่องนี้"
               >
                 <span>🔍</span>
@@ -3986,7 +3987,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
                 onClick={() => {
                   if (onRunInpaintPreview) onRunInpaintPreview();
                 }}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 transition-colors cursor-pointer"
                 title="Inpaint กล่องนี้"
               >
                 <span>✨</span>
@@ -3996,7 +3997,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
               <button
                 type="button"
                 onClick={handleDeleteBox}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-red-500/10 hover:bg-red-500/20 text-red-300 transition-colors cursor-pointer ml-1"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-red-500/15 hover:bg-red-500/25 text-red-300 transition-colors cursor-pointer ml-0.5"
                 title="ลบกล่องนี้ (Del)"
               >
                 <Trash2 size={12} />
@@ -4018,7 +4019,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
               </button>
             </div>
           ) : (
-            /* Mode A: Page Mode (Single unified pipeline action bar) */
+            /* Page Pipeline Actions */
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
@@ -4061,11 +4062,15 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
               <button
                 type="button"
                 onClick={() => setIsMaskMode(true)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161622] hover:bg-[#1e1e2e] text-zinc-300 hover:text-fuchsia-400 border border-[#262638] transition-all cursor-pointer"
-                title="เปิดเครื่องมือแก้ไข Mask ทั้งหน้า (B)"
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                  isMaskMode
+                    ? 'bg-fuchsia-500/25 border-fuchsia-500/60 text-fuchsia-300 shadow-md shadow-fuchsia-500/20'
+                    : 'bg-[#161622] hover:bg-[#1e1e2e] text-zinc-300 hover:text-fuchsia-400 border-[#262638]'
+                }`}
+                title="เปิดแถบเครื่องมือพู่กัน/ยางลบระบาย Mask ทั้งหน้า (B)"
               >
-                <span>🎭</span>
-                <span>แก้ไข Mask</span>
+                <span>🖌️</span>
+                <span>ระบาย Mask</span>
               </button>
 
               <button
@@ -4083,9 +4088,9 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
           )}
         </div>
 
-        {/* Middle: Dedicated View Mode Switcher & Layer Controls */}
-        <div className="flex items-center gap-2">
-          {/* View Mode: Original Source vs Clean Inpainted Background */}
+        {/* Zone 2: View Modes & Layer Controls with generous spacing */}
+        <div className="flex items-center gap-2.5">
+          {/* Segmented View Mode: Original Source vs Clean Inpainted Background */}
           <div className="flex items-center bg-[#14141e] border border-[#262638] rounded-lg p-0.5 shadow-inner">
             <button
               type="button"
@@ -4095,7 +4100,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
                   ? 'bg-amber-500 text-black shadow-sm font-bold'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
-              title="ดูภาพต้นฉบับ (กด A เพื่อสลับ)"
+              title="ดูภาพต้นฉบับภาษาเดิม (กด A เพื่อสลับ)"
             >
               <span>🖼️</span>
               <span>ต้นฉบับ</span>
@@ -4147,45 +4152,61 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
               <span>🎭</span>
               <span>Live Mask</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const cur = localStorage.getItem('houmi_show_balloon_hud') === 'true';
+                localStorage.setItem('houmi_show_balloon_hud', cur ? 'false' : 'true');
+                window.dispatchEvent(new CustomEvent('hud-toggled'));
+              }}
+              className="px-2 py-0.5 text-xs text-zinc-400 hover:text-amber-300 rounded transition-colors cursor-pointer flex items-center gap-1"
+              title="เปิด/ปิด แถบข้อมูลพิกัดบอลลูน (HUD)"
+            >
+              <span>ℹ️</span>
+              <span>HUD</span>
+            </button>
           </div>
         </div>
-        
-        {/* Zoom & Shortcuts details */}
-        <div className="flex items-center gap-2.5 bg-zinc-950/45 px-3 py-1.5 rounded-md border border-zinc-900/60 shadow-inner">
-          <button 
-            onClick={() => setShowShortcutsModal(true)} 
-            className="p-1 rounded-md bg-zinc-900/40 text-slate-400 hover:bg-zinc-850 hover:text-amber-400 transition-all border border-zinc-850/20 cursor-pointer flex items-center justify-center"
-            title="Keyboard Shortcuts Guide"
-          >
-            <Keyboard size={14} />
-          </button>
-          <div className="h-4 w-[1px] bg-zinc-800" />
-          <button 
-            onClick={() => handleZoom('out')} 
-            className="p-1 rounded-md bg-zinc-900/40 text-slate-400 hover:bg-zinc-850 hover:text-amber-400 transition-all duration-150 border border-zinc-850/20 cursor-pointer"
-            title="Zoom Out"
-          >
-            <ZoomOut size={14} />
-          </button>
-          <span className="text-xs font-extrabold text-slate-300 min-w-12 text-center tabular-nums">{Math.round(zoomLevel * 100)}%</span>
-          <button 
-            onClick={() => handleZoom('in')} 
-            className="p-1 rounded-md bg-zinc-900/40 text-slate-400 hover:bg-zinc-850 hover:text-amber-400 transition-all duration-150 border border-zinc-850/20 cursor-pointer"
-            title="Zoom In"
-          >
-            <ZoomIn size={14} />
-          </button>
-          <button 
-            onClick={() => handleZoom('reset')} 
-            className={`text-xs font-bold transition-all duration-150 px-1.5 py-0.5 rounded font-pixel text-[8px] cursor-pointer border ${
-              isZoomAutoFit 
-                ? 'text-green-400 border-green-500/20 bg-green-500/5 hover:text-green-300' 
-                : 'text-slate-400 border-zinc-800 hover:text-amber-400 hover:border-yellow-400/20 bg-zinc-900/40'
-            }`}
-            title={isZoomAutoFit ? "กำลังเปิดใช้อยู่ (คลิกเพื่อคำนวณใหม่)" : "คลิกเพื่อปรับขนาดให้พอดีอัตโนมัติ"}
-          >
-            {isZoomAutoFit ? '🟢 Auto-Fit' : '⚪ Fit Screen'}
-          </button>
+
+        {/* Zone 3: Zoom & Canvas Utilities */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-zinc-950/45 px-2.5 py-1 rounded-md border border-zinc-900/60 shadow-inner">
+            <button 
+              onClick={() => setShowShortcutsModal(true)} 
+              className="p-1 rounded-md bg-zinc-900/40 text-slate-400 hover:bg-zinc-850 hover:text-amber-400 transition-all border border-zinc-850/20 cursor-pointer flex items-center justify-center"
+              title="Keyboard Shortcuts Guide"
+            >
+              <Keyboard size={13} />
+            </button>
+            <div className="h-3.5 w-[1px] bg-zinc-800" />
+            <button 
+              onClick={() => handleZoom('out')} 
+              className="p-1 rounded-md bg-zinc-900/40 text-slate-400 hover:bg-zinc-850 hover:text-amber-400 transition-all duration-150 border border-zinc-850/20 cursor-pointer"
+              title="Zoom Out"
+            >
+              <ZoomOut size={13} />
+            </button>
+            <span className="text-xs font-bold text-slate-300 min-w-10 text-center tabular-nums font-mono">{Math.round(zoomLevel * 100)}%</span>
+            <button 
+              onClick={() => handleZoom('in')} 
+              className="p-1 rounded-md bg-zinc-900/40 text-slate-400 hover:bg-zinc-850 hover:text-amber-400 transition-all duration-150 border border-zinc-850/20 cursor-pointer"
+              title="Zoom In"
+            >
+              <ZoomIn size={13} />
+            </button>
+            <button 
+              onClick={() => handleZoom('reset')} 
+              className={`text-xs font-bold transition-all duration-150 px-1.5 py-0.5 rounded font-pixel text-[8px] cursor-pointer border ${
+                isZoomAutoFit 
+                  ? 'text-green-400 border-green-500/20 bg-green-500/5 hover:text-green-300' 
+                  : 'text-slate-400 border-zinc-800 hover:text-amber-400 hover:border-yellow-400/20 bg-zinc-900/40'
+              }`}
+              title={isZoomAutoFit ? "กำลังเปิดใช้อยู่ (คลิกเพื่อคำนวณใหม่)" : "คลิกเพื่อปรับขนาดให้พอดีอัตโนมัติ"}
+            >
+              {isZoomAutoFit ? '🟢 พอดีจอ' : '⚪ Fit'}
+            </button>
+          </div>
         </div>
       </div>
  
@@ -4329,9 +4350,9 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
             style={{
               width: `${imgDimensions.width * zoomLevel}px`,
               height: `${imgDimensions.height * zoomLevel}px`,
-              opacity: isMaskMode ? pageMaskOpacity : 0,
+              opacity: (isMaskMode || maskVisible) ? pageMaskOpacity : 0,
               pointerEvents: isMaskMode ? 'auto' : 'none',
-              zIndex: isMaskMode ? 40 : -1,
+              zIndex: isMaskMode ? 40 : (maskVisible ? 25 : -1),
               cursor: isMaskMode ? (maskTool === 'box' ? 'crosshair' : 'none') : 'default',
               touchAction: 'none',
             }}
