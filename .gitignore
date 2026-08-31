@@ -61,6 +61,18 @@ backend/ocr_server/uploaded/
 _tmp/
 _tmp_*/
 graft/
+research/
+previews/
+test_outputs/
+backups/
+logs/
+app/
+manga-psd-cli/
+
+# Agent Session & Internal Storage
+.godkiller/
+.godkiller-session/
+.superpowers/
 
 # Archived & Release outputs
 archive/

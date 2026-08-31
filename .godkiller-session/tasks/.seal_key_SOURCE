@@ -1,3 +1,0 @@
-source=GODKILLER_SEAL_KEY (env)
-workspace .seal_key is ignored while env is set
-see docs/SEAL_KEY.md

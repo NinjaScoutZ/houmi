@@ -1,9 +1,0 @@
-#06 p2 dom=255 smart=635x622 (x1.38 wider, x1.66 taller) fill=0.77 body=36-608(573px) center_shift=+11px
-#09 p2 dom=255 smart=621x570 (x1.21 wider, x1.79 taller) fill=0.75 body=9-512(504px) center_shift=-25px
-#10 p2 dom=255 smart=550x575 (x1.31 wider, x2.86 taller) fill=0.77 body=47-564(518px) center_shift=+18px
-#14 p3 dom=255 smart=694x533 (x1.24 wider, x1.87 taller) fill=0.82 body=7-513(507px) center_shift=-6px
-#15 p3 dom=255 smart=448x320 (x1.38 wider, x2.08 taller) fill=0.80 body=33-314(282px) center_shift=+13px
-#18 p4 dom=255 smart=527x457 (x1.36 wider, x2.89 taller) fill=0.69 body=64-415(352px) center_shift=+11px
-#19 p4 dom=255 smart=473x433 (x1.23 wider, x2.00 taller) fill=0.75 body=41-392(352px) center_shift=+0px
-#26 p5 dom=255 smart=615x727 (x1.44 wider, x3.04 taller) fill=0.59 body=73-608(536px) center_shift=-23px
-#28 p6 dom=255 smart=540x583 (x1.35 wider, x3.39 taller) fill=0.61 body=76-554(479px) center_shift=+24px
