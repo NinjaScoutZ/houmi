@@ -305,9 +305,24 @@ class DeepSeekBackend(BaseBackend):
                 "rms_norm_eps": 1e-6,
                 "num_key_value_heads": 1,
                 "is_causal": True,
+                "moe_layer_freq": 1,
+                "first_k_dense_replace": 0,
+                "routed_scaling_factor": 1.0,
+                "norm_topk_prob": False,
+                "scoring_func": "softmax",
+                "topk_method": "gready",
+                "n_group": None,
+                "topk_group": None,
+                "num_experts_per_tok": None,
+                "n_routed_experts": None,
+                "moe_intermediate_size": None,
+                "aux_loss_alpha": 0.0,
+                "seq_aux": True,
             }
             if item == "pad_token_id":
                 return obj.__dict__.get("pad_token_id") or obj.__dict__.get("eos_token_id") or 0
+            if hasattr(obj, "text_config") and hasattr(obj.text_config, item):
+                return getattr(obj.text_config, item)
             if item in defaults:
                 return defaults[item]
             raise AttributeError(f"'{type(obj).__name__}' object has no attribute '{item}'")
