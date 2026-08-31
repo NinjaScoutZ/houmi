@@ -536,8 +536,13 @@ def _should_use_solid_fill(
     settings = settings or {}
     if has_custom_mask:
         return False
-    # If user explicitly disabled solid fill, respect the setting
-    if settings.get("disable_solid_fill", False):
+    # If user explicitly disabled solid fill or forced neural inpainting, respect the setting
+    if settings.get("disable_solid_fill", False) or settings.get("force_lama_inpaint", False):
+        return False
+    if settings.get("default_image_inpaint_method") in ("LamaInpaint", "LaMa", "lama", "mat", "manga_cleaner"):
+        return False
+    engine = str(settings.get("inpaint_engine", "")).lower()
+    if engine in ("lamainpaint", "lama", "lama_manga", "mat", "manga_cleaner"):
         return False
     return bool(process_by_text_areas)
 
@@ -628,23 +633,21 @@ def _clip_auto_mask_to_balloon(
         num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask_roi, connectivity=8)
         if num_labels > 1:
             filtered_roi = np.zeros_like(mask_roi)
+            core_margin = max(6, eff_margin)
             for l in range(1, num_labels):
                 lx = stats[l, cv2.CC_STAT_LEFT] + tx0
                 ly = stats[l, cv2.CC_STAT_TOP] + ty0
                 lw = stats[l, cv2.CC_STAT_WIDTH]
                 lh = stats[l, cv2.CC_STAT_HEIGHT]
 
-                dist_x = max(0, max(bx - (lx + lw), lx - (bx + bw)))
-                dist_y = max(0, max(by - (ly + lh), ly - (by + bh)))
-                is_isolated_outlier = (dist_x > 18 or dist_y > 18)
-
-                is_outside_core_box = (lx + lw <= bx or lx >= bx + bw or ly + lh <= by or ly >= by + bh)
-                is_outer_border_stroke = (
-                    is_outside_core_box
-                    and (lw >= bw * 0.30 or lh >= bh * 0.30 or min(lw, lh) <= 12)
+                # Component must overlap or be adjacent to the core text box (bx, by, bw, bh)
+                overlaps_core = not (
+                    lx + lw < bx - core_margin
+                    or lx > bx + bw + core_margin
+                    or ly + lh < by - core_margin
+                    or ly > by + bh + core_margin
                 )
-
-                if not is_isolated_outlier and not is_outer_border_stroke:
+                if overlaps_core:
                     filtered_roi[labels == l] = 255
             mask[ty0:ty1, tx0:tx1] = filtered_roi
 
@@ -1700,7 +1703,14 @@ def get_automatic_block_mask(
         or "hybrid"
     ).lower()
     
-    if method == "imagetrans":
+    if method in ("unet", "manga_unet"):
+        from app.services.text_mask import generate_manga_unet_text_mask
+        crop = img[py0:py1, px0:px1]
+        local_mask = generate_manga_unet_text_mask(crop, dilation_kernel=requested_kernel)
+        mask = np.zeros((height, width), dtype=np.uint8)
+        if local_mask is not None and local_mask.shape[:2] == crop.shape[:2]:
+            mask[py0:py1, px0:px1] = local_mask
+    elif method == "imagetrans":
         from app.services.text_mask import generate_imagetrans_text_mask
         crop = img[py0:py1, px0:px1]
         local_mask = generate_imagetrans_text_mask(crop, dilation_kernel=requested_kernel)
@@ -2622,30 +2632,14 @@ def _clean_page_text_impl(page_id: str, db: Session, *, engine_override: str | N
     context_padding = max(0, min(512, int(project_settings.get("inpaint_context_padding", 96))))
     page_mask_override = _load_page_mask_override(page, w, h)
 
-    # Check for existing canonical page mask
-    source_p = Path(page.source_image_path)
+    # Check for authoritative page-level mask override (drawn manually by user on canvas)
     has_existing_page_mask = False
     if page_mask_override is not None:
         mask = page_mask_override
         effective_mask = mask.copy()
         has_existing_page_mask = True
-    else:
-        for c_path in [
-            source_p.parent / "masks" / f"{source_p.stem}_mask.png",
-            page_asset_dir(page, "masks") / f"{source_p.stem}_mask.png",
-            source_p.parent / "masks" / "full_mask.png",
-            page_asset_dir(page, "masks") / "full_mask.png",
-        ]:
-            if c_path.exists():
-                existing_mask = cv2_imread_unicode(str(c_path), cv2.IMREAD_GRAYSCALE)
-                if existing_mask is not None and existing_mask.shape[:2] == (h, w) and np.count_nonzero(existing_mask) > 0:
-                    logger.info("⚡ [Direct Mask Cache] Using pre-computed page mask: %s (bypassing UNet++ model loading)", c_path.name)
-                    mask = existing_mask
-                    effective_mask = mask.copy()
-                    has_existing_page_mask = True
-                    break
 
-    # 3. Draw text regions on mask if no pre-computed page mask was found
+    # 3. Draw text regions on mask from blocks, custom block masks, and current dilation kernel
     if not has_existing_page_mask:
         for block in page.text_blocks:
             x0 = int(block.x)

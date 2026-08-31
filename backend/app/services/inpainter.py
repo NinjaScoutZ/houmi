@@ -1703,7 +1703,14 @@ def get_automatic_block_mask(
         or "hybrid"
     ).lower()
     
-    if method == "imagetrans":
+    if method in ("unet", "manga_unet"):
+        from app.services.text_mask import generate_manga_unet_text_mask
+        crop = img[py0:py1, px0:px1]
+        local_mask = generate_manga_unet_text_mask(crop, dilation_kernel=requested_kernel)
+        mask = np.zeros((height, width), dtype=np.uint8)
+        if local_mask is not None and local_mask.shape[:2] == crop.shape[:2]:
+            mask[py0:py1, px0:px1] = local_mask
+    elif method == "imagetrans":
         from app.services.text_mask import generate_imagetrans_text_mask
         crop = img[py0:py1, px0:px1]
         local_mask = generate_imagetrans_text_mask(crop, dilation_kernel=requested_kernel)
