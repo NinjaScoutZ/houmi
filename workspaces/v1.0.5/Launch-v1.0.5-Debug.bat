@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 title HOUMI STUDIO v1.0.5 (Tauri v2 - Interactive Debug Mode)
 color 0E
@@ -11,7 +11,7 @@ echo.
 cd /d "%~dp0"
 
 echo [*] Freeing ports 4000, 4001, 5173 and clearing WebView2 cache...
-powershell -Command "Get-NetTCPConnection -LocalPort 4000, 4001, 5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Remove-Item \"$HOME\.houmi\webview_profile\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"$HOME\.houmi\webview_session_*\" -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+powershell -Command "Get-NetTCPConnection -LocalPort 4000, 4001, 5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Remove-Item \"$HOME\.houmi\webview_*\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"$env:LOCALAPPDATA\com.houmi.studio\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"$env:LOCALAPPDATA\EBWebView\" -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
 
 set "HOUMI_APP_DIR=%~dp0"
 set "HOUMI_WORKSPACE_DIR=%~dp0"
