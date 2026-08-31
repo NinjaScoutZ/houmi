@@ -265,8 +265,8 @@ def apply_patch():
     """Download latest patch zip from Central Server and apply automatically."""
     logger.info("Patch application triggered by client.")
 
-    if RUNTIME_MODE == "host":
-        return {"status": "info", "message": "Central Host Server does not apply client patches."}
+    if RUNTIME_MODE == "host" or os.environ.get("HOUMI_DISABLE_AUTO_PATCH") == "1":
+        return {"status": "info", "message": "Workspace Isolated: Remote patch auto-application is permanently disabled."}
 
     try:
         patch_url = f"{CENTRAL_HOST}/api/system/download-update"

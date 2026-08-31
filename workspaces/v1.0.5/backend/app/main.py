@@ -96,19 +96,7 @@ async def lifespan(app: FastAPI):
     # Host/Admin must remain a lightweight API process. GPU/OCR services are
     # owned by the desktop process or app.worker_runtime so a web restart
     # cannot duplicate them.
-    if RUNTIME_MODE == "local" and os.environ.get("HOUMI_DISABLE_AUTO_PATCH") != "1":
-        # 0. Auto-Check & Apply Delta Patch from Central Server on startup
-        def _auto_apply_patch_on_startup():
-            try:
-                from app.routes.updater import apply_patch
-                logger.info("Checking for startup delta patches from Central Server...")
-                res = apply_patch()
-                logger.info("Startup delta patch result: %s", res)
-            except Exception as e_ap:
-                logger.warning("Startup delta patch check skipped: %s", e_ap)
-
-        threading.Thread(target=_auto_apply_patch_on_startup, daemon=True).start()
-
+    if RUNTIME_MODE == "local":
         # 1. Start OCR Managed Subprocess
         logger.info("Launching DeepSeek OCR Subprocess...")
         ocr_manager.start_server()

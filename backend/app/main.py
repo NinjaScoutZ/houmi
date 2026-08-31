@@ -472,36 +472,27 @@ import sys
 from fastapi.responses import FileResponse
 from pathlib import Path
 
+from app.config import DATA_DIR
+
 def get_frontend_dist_dir() -> Path:
-    # 1. Primary Authority: Explicit environment variable set by launcher/runtime
-    env_dist = os.environ.get("HOUMI_FRONTEND_DIST")
-    if env_dist:
-        p = Path(env_dist).resolve()
-        if p.exists() and (p / "index.html").exists():
-            return p
-        logger.warning(f"HOUMI_FRONTEND_DIST set to '{env_dist}' but index.html was not found.")
+    repo_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+    if not getattr(sys, "frozen", False) and repo_dist.exists() and (repo_dist / "index.html").exists():
+        return repo_dist
 
-    # 2. Local workspace / worktree dist adjacent to backend
-    worktree_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
-    if worktree_dist.exists() and (worktree_dist / "index.html").exists():
-        return worktree_dist
-
-    # 3. PyInstaller frozen bundled assets
-    if getattr(sys, "frozen", False):
-        frozen_internal = Path(sys.executable).parent / "_internal" / "frontend" / "dist"
-        if frozen_internal.exists() and (frozen_internal / "index.html").exists():
-            return frozen_internal
-        frozen_direct = Path(sys.executable).parent / "frontend" / "dist"
-        if frozen_direct.exists() and (frozen_direct / "index.html").exists():
-            return frozen_direct
-
-    # 4. Fallback in data/patches/current ONLY if auto patch is explicitly allowed
-    if os.environ.get("HOUMI_DISABLE_AUTO_PATCH") != "1":
-        patch_dist = DATA_DIR / "patches" / "current" / "frontend" / "dist"
-        if patch_dist.exists() and (patch_dist / "index.html").exists():
-            return patch_dist
-
-    return worktree_dist
+    candidates = [
+        DATA_DIR / "patches" / "current" / "frontend" / "dist",
+        Path(sys.executable).parent / "_internal" / "frontend" / "dist",
+        Path(sys.executable).parent / "frontend" / "dist",
+        Path(__file__).resolve().parent.parent / "frontend" / "dist",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "HoumiStudio" / "_internal" / "frontend" / "dist",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "HoumiStudio" / "frontend" / "dist",
+        repo_dist,
+    ]
+    valid = [c for c in candidates if c.exists() and (c / "index.html").exists()]
+    if valid:
+        valid.sort(key=lambda p: (p / "index.html").stat().st_mtime, reverse=True)
+        return valid[0]
+    return repo_dist
 
 FRONTEND_DIST_DIR = get_frontend_dist_dir()
 
