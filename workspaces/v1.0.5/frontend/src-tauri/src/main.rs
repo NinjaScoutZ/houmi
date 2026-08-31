@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tauri::{AppHandle, RunEvent};
+use tauri::{AppHandle, Manager, RunEvent};
 use tauri_plugin_dialog::DialogExt;
 
 struct SidecarState {
@@ -104,6 +104,11 @@ fn main() {
                     }
                 }
             });
+
+            // Open DevTools in Debug Mode
+            if let Some(window) = _app.get_webview_window("main") {
+                let _ = window.open_devtools();
+            }
 
             Ok(())
         })
