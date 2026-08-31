@@ -151,6 +151,7 @@ import {
   resolveCanvasPixelBudget,
   resolveCanvasZoomRetinaScale,
 } from '../utils/canvasPerformance';
+import { applyMinimalBalloonControls } from '../utils/minimalBalloonControls';
 import { CanvasAlignmentToolbar } from './CanvasAlignmentToolbar';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { FloatingLetteringBar } from './FloatingLetteringBar';
@@ -3332,10 +3333,11 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
 
             (existingTb as any).initDimensions?.();
             existingTb.setCoords();
-            existingTb.setControlsVisibility((textEditingOnly || isLocked)
-              ? { tl: false, tr: false, bl: false, br: false, mt: false, mb: false, ml: false, mr: false, mtr: false }
-              : { tl: true, tr: true, bl: true, br: true, mt: true, mb: true, ml: true, mr: true, mtr: true });
-            if (existingTb.controls?.mtr) existingTb.controls.mtr.render = renderRotateIcon;
+            if (textEditingOnly || isLocked) {
+              existingTb.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, mt: false, mb: false, ml: false, mr: false, mtr: false });
+            } else {
+              applyMinimalBalloonControls(existingTb, statusColor);
+            }
 
             (existingTb as any).data = {
               blockId: block.id,
@@ -3444,10 +3446,11 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
           });
           (existingTb as any).mangaEffects = editingMangaEffects;
           applyMultiEffectTextRenderer(existingTb);
-          existingTb.setControlsVisibility((textEditingOnly || isLocked)
-            ? { tl: false, tr: false, bl: false, br: false, mt: false, mb: false, ml: false, mr: false, mtr: false }
-            : { tl: true, tr: true, bl: true, br: true, mt: true, mb: true, ml: true, mr: true, mtr: true });
-          if (existingTb.controls?.mtr) existingTb.controls.mtr.render = renderRotateIcon;
+          if (textEditingOnly || isLocked) {
+            existingTb.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, mt: false, mb: false, ml: false, mr: false, mtr: false });
+          } else {
+            applyMinimalBalloonControls(existingTb, '#f97316');
+          }
           existingTb.initDimensions();
           existingTb.setCoords();
           // Keep the active caret/range stable while sidebar controls update

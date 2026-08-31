@@ -66,17 +66,24 @@ export function createPolygonControls(
     ctx.closePath();
     ctx.stroke();
 
-    // Draw corner handles at convex hull points (simplified for performance)
-    const hullIndices = _computeConvexHullIndices(sbContour);
-    hullIndices.slice(0, 8).forEach((idx: number) => {
-      const [x, y] = sbContour[idx];
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = this.cornerStrokeColor || '#ff6b35';
-      ctx.lineWidth = 2 / (this.canvas?.getZoom() || 1);
-
-      const size = (this.cornerSize || 10) / (this.canvas?.getZoom() || 1);
-      ctx.fillRect(x - left - size/2, y - top - size/2, size, size);
-      ctx.strokeRect(x - left - size/2, y - top - size/2, size, size);
+    // Minimal Figma-style selection: only four bbox corners. Side capsules,
+    // rotation controls and center crosshairs are intentionally omitted.
+    const xs = sbContour.map((pt: [number, number]) => pt[0]);
+    const ys = sbContour.map((pt: [number, number]) => pt[1]);
+    const corners: Array<[number, number]> = [
+      [Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.min(...ys)],
+      [Math.min(...xs), Math.max(...ys)], [Math.max(...xs), Math.max(...ys)],
+    ];
+    corners.forEach(([x, y]) => {
+      const zoom = this.canvas?.getZoom() || 1;
+      const size = Math.max(8, Math.min(12, this.cornerSize || 10)) / zoom;
+      ctx.fillStyle = '#111318';
+      ctx.strokeStyle = this.cornerStrokeColor || '#f59e0b';
+      ctx.lineWidth = 1.25 / zoom;
+      ctx.beginPath();
+      ctx.roundRect(x - left - size / 2, y - top - size / 2, size, size, 2 / zoom);
+      ctx.fill();
+      ctx.stroke();
     });
 
     ctx.restore();
