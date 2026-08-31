@@ -669,8 +669,13 @@ export const App: React.FC = () => {
       return true;
     }
   });
-  const [showMenuView, setShowMenuView] = useState(false);
-  const [isFormattingWidgetOpen, setIsFormattingWidgetOpen] = useState(true);
+  const [isFormattingWidgetOpen, setIsFormattingWidgetOpen] = useState(() => {
+    try {
+      return localStorage.getItem('houmi_formatting_widget_open') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [isFormattingWidgetMinimized, setIsFormattingWidgetMinimized] = useState(false);
   const [formattingWidgetPos, setFormattingWidgetPos] = useState<{ x: number; y: number }>(() => {
     try {
@@ -1389,7 +1394,6 @@ export const App: React.FC = () => {
           process_by_text_areas: true,
           force_lama_inpaint: true,
           default_image_inpaint_method: 'LamaInpaint',
-          mask_dilation_kernel: 3,
           inpaint_context_padding: 96,
         }
       : {
@@ -1398,7 +1402,6 @@ export const App: React.FC = () => {
           process_by_text_areas: true,
           force_lama_inpaint: false,
           default_image_inpaint_method: 'Telea',
-          mask_dilation_kernel: 3,
           inpaint_context_padding: 64,
         };
 
@@ -1503,7 +1506,7 @@ export const App: React.FC = () => {
   }, []);
   
   // Settings states
-  const [settingsMaskDilationKernel, setSettingsMaskDilationKernel] = useState(() => getStoredSetting('mask_dilation_kernel', 5));
+  const [settingsMaskDilationKernel, setSettingsMaskDilationKernel] = useState(() => getStoredSetting('mask_dilation_kernel', 3));
   const [settingsMaskMagneticLineFill, setSettingsMaskMagneticLineFill] = useState(() => getStoredSetting('mask_magnetic_line_fill', false));
   const [settingsProcessByTextAreas, setSettingsProcessByTextAreas] = useState(() => getStoredSetting('process_by_text_areas', true));
   const [settingsCleanupMaskStrategy, setSettingsCleanupMaskStrategy] = useState(() => getStoredSetting('cleanup_mask_strategy', 'smart'));
@@ -3996,6 +3999,37 @@ export const App: React.FC = () => {
                 <button
                   onClick={() => {
                     closeAllMenus();
+                    void runAutoStylePage(true);
+                  }}
+                  disabled={!activePage || isProcessing}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition disabled:opacity-40 cursor-pointer"
+                >
+                  ⚡ Style Judge (AI Style Alignment)
+                </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    void reorganizePageText();
+                  }}
+                  disabled={!activePage || isProcessing}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition disabled:opacity-40 cursor-pointer"
+                >
+                  📐 Recompute Typesetting Layout
+                </button>
+                <button
+                  onClick={() => {
+                    closeAllMenus();
+                    setLayerDecisionFilter((f) => (f === 'NEEDS_REVIEW' ? 'all' : 'NEEDS_REVIEW'));
+                  }}
+                  disabled={!activePage}
+                  className="w-full text-left px-3 py-2 hover:bg-yellow-500/10 hover:text-yellow-400 rounded-md transition-all spring-transition disabled:opacity-40 cursor-pointer"
+                >
+                  🔍 Review Queue (NEEDS_REVIEW Filter)
+                </button>
+                <div className="h-px bg-zinc-900 my-0.5" />
+                <button
+                  onClick={() => {
+                    closeAllMenus();
                     useDebugStore.getState().openDrawer();
                     logAction('UI_INTERACTION', 'Open Action Debug Console from Tools Menu');
                   }}
@@ -4279,86 +4313,20 @@ export const App: React.FC = () => {
 
           <div className="h-6 w-px bg-zinc-800" />
 
-          {/* Unified B+ Typesetting Actions */}
-          <div className="flex items-center gap-2 text-[10px] flex-wrap">
-            <span className="text-yellow-400 font-pixel font-bold uppercase tracking-wider">B+ Typeset</span>
+          {/* Clean Sub-Toolbar Right Side: Status Badge */}
+          <div className="flex items-center gap-2 text-[10px] ml-auto">
             {activePage && (() => {
               const c = countDecisions(activePage.text_blocks || []);
               if (!c.with_text) return null;
               return (
-                <span className="flex items-center gap-1.5 text-[8px] font-pixel bg-zinc-900/80 px-2 py-0.5 rounded border border-zinc-800">
+                <span className="flex items-center gap-1.5 text-[8.5px] font-mono bg-zinc-900/80 px-2 py-0.5 rounded-md border border-zinc-800 text-zinc-400">
                   <span className="text-emerald-400" title="AUTO_APPLIED">OK {c.AUTO_APPLIED || 0}</span>
-                  <span className="text-sky-400" title="DEFAULTED">DEF {c.DEFAULTED || 0}</span>
+                  <span>•</span>
                   <span className="text-amber-400" title="NEEDS_REVIEW">REV {c.NEEDS_REVIEW || 0}</span>
                 </span>
               );
             })()}
-            <button
-              type="button"
-              disabled={!activePage || isProcessing}
-              onClick={() => void runAutoStylePage(true)}
-              className="rounded border border-yellow-500/40 bg-yellow-500/15 px-2.5 py-1 text-[9px] font-bold text-yellow-300 hover:bg-yellow-500/25 font-pixel disabled:opacity-40 cursor-pointer transition-colors shadow-sm"
-              title="Style Judge ทั้งหน้า + recompute layout"
-            >
-              ⚡ STYLE JUDGE
-            </button>
-            {autoStyleSnapshot && autoStyleSnapshot.pageId === activePage?.id && (
-              <button
-                type="button"
-                disabled={isProcessing}
-                onClick={() => void undoAutoStylePage()}
-                className="rounded border border-sky-500/40 bg-sky-500/10 px-2 py-1 text-[9px] font-bold text-sky-300 hover:bg-sky-500/20 font-pixel disabled:opacity-40 cursor-pointer transition-colors"
-                title="คืนค่า template/spec ก่อนรัน Auto Style ล่าสุดบนหน้านี้"
-              >
-                UNDO STYLE
-              </button>
-            )}
-            <button
-              type="button"
-              disabled={!activePage || isProcessing}
-              onClick={() => void reorganizePageText()}
-              className="rounded border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[9px] font-bold text-slate-300 hover:border-emerald-500/40 hover:text-emerald-300 font-pixel disabled:opacity-40 cursor-pointer transition-colors"
-              title="Recompute TypesettingSpec ทั้งหน้า"
-            >
-              RECOMPUTE LAYOUT
-            </button>
-            <button
-              type="button"
-              disabled={!activePage}
-              onClick={() => setLayerDecisionFilter((f) => (f === 'NEEDS_REVIEW' ? 'all' : 'NEEDS_REVIEW'))}
-              className={`rounded border px-2.5 py-1 text-[9px] font-bold font-pixel cursor-pointer transition-colors ${
-                layerDecisionFilter === 'NEEDS_REVIEW'
-                  ? 'border-amber-500/50 bg-amber-500/20 text-amber-200'
-                  : 'border-zinc-700 bg-zinc-900 text-slate-300 hover:border-amber-500/40 hover:text-amber-300'
-              }`}
-              title="Review Queue — แสดงเฉพาะกล่อง NEEDS_REVIEW"
-            >
-              REVIEW QUEUE
-            </button>
-            <div className="h-4 w-px bg-zinc-800 ml-1" />
-            <button type="button" onClick={() => void clearTranslationData('layers')} className="rounded border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-[8px] font-bold text-rose-300 hover:bg-rose-500/15 font-pixel cursor-pointer" title="ลบข้อมูลคำแปลเฉพาะบล็อกที่เลือก">CLEAR SEL</button>
-            <button type="button" onClick={() => void clearTranslationData('page')} className="rounded border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-[8px] font-bold text-rose-300 hover:bg-rose-500/15 font-pixel cursor-pointer" title="ลบข้อมูลคำแปลทั้งหน้า">CLEAR PAGE</button>
-            <div className="h-4 w-px bg-zinc-800 ml-1" />
-            <button
-              type="button"
-              onClick={() => {
-                const next = !showFloatingLetteringBar;
-                setShowFloatingLetteringBar(next);
-                try { localStorage.setItem('houmi_show_floating_lettering_bar', String(next)); } catch {}
-                showToast(next ? 'เปิดแถบเครื่องมือลอยแล้ว (Floating Bar: ON)' : 'ซ่อนแถบเครื่องมือลอยแล้ว (Floating Bar: OFF)', 'info');
-              }}
-              className={`rounded border px-2 py-1 text-[9px] font-bold font-pixel cursor-pointer transition-colors flex items-center gap-1 ${
-                showFloatingLetteringBar
-                  ? 'border-amber-500/40 bg-amber-500/15 text-amber-300'
-                  : 'border-zinc-800 bg-zinc-900 text-slate-500 hover:text-slate-300'
-              }`}
-              title={showFloatingLetteringBar ? 'ซ่อนแถบเครื่องมือลอยเหนือบล็อก (Floating Lettering Bar: ON)' : 'เปิดแถบเครื่องมือลอยเหนือบล็อก (Floating Lettering Bar: OFF)'}
-            >
-              <span>🎛️</span>
-              <span>Toolbar: {showFloatingLetteringBar ? 'ON' : 'OFF'}</span>
-            </button>
           </div>
-
         </div>
 
         <div className="flex items-center gap-3">

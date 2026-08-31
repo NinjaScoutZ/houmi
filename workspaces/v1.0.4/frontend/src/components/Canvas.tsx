@@ -115,7 +115,7 @@ const renderRotateIcon = function(this: any, ctx: CanvasRenderingContext2D, left
 };
 
 import { useProjectStore, type TextBlock } from '../stores/projectStore';
-import { ZoomIn, ZoomOut, Move, Type, Trash2, Sparkles, ScanText, ScanLine, Keyboard, Image as ImageIcon, X, ChevronLeft, ChevronRight, Eye, EyeOff, Maximize2, Minus, Plus, Loader2, CheckCircle2, Crosshair, Wand2 } from 'lucide-react';
+import { ZoomIn, ZoomOut, Move, Type, Trash2, Sparkles, ScanText, ScanLine, Keyboard, Image as ImageIcon, X, ChevronLeft, ChevronRight, Eye, EyeOff, Maximize2, Minus, Plus, Loader2, CheckCircle2 } from 'lucide-react';
 import { apiFetch } from '../api/runtime';
 import { canvasToOriginalSize } from '../utils/scaling';
 import { applyExplicitLineAdapter, removeExplicitLineAdapter } from '../utils/fabricAdapter';
@@ -550,9 +550,10 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
   const [shortcutsOverlayCollapsed, setShortcutsOverlayCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('houmi_shortcuts_collapsed') === 'true';
+      const item = localStorage.getItem('houmi_shortcuts_collapsed');
+      return item === null ? true : item === 'true';
     } catch {
-      return false;
+      return true;
     }
   });
 
@@ -1982,29 +1983,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
         // so top-left in local coords is (-w/2, -h/2)
         const tlX = -w / 2;
         const tlY = -h / 2;
-        
-        // Draw live mask overlay if active
-        if (liveMaskOverlayRef.current) {
-          const activeProj = useProjectStore.getState().activeProject;
-          const dilationKernel = activeProj?.settings?.mask_dilation_kernel ?? 3;
-          const dilationCanvas = dilationKernel / scaleFactorRef.current;
-          
-          ctx.save();
-          const dX = tlX - dilationCanvas;
-          const dY = tlY - dilationCanvas;
-          const dW = w + 2 * dilationCanvas;
-          const dH = h + 2 * dilationCanvas;
-          
-          ctx.beginPath();
-          ctx.rect(dX, dY, dW, dH);
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.25)'; // Red semi-transparent
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-          ctx.lineWidth = 1 / visualZoom;
-          ctx.setLineDash([4 / visualZoom, 4 / visualZoom]);
-          ctx.stroke();
-          ctx.restore();
-        }
         
         const hasSmartBalloon = isSmartBalloonEnabled && Boolean(
           activeBlock && (activeBlock.smart_x != null || (Array.isArray(contourPts) && contourPts.length > 2))
@@ -4173,86 +4151,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
           </div>
         )}
 
-        {/* Top Options Bar (Sticky / Floating Above Manga Artboard) */}
-        {selectedBlock && (
-          <div className="sticky top-2 z-40 flex items-center gap-2 px-3.5 py-1.5 bg-[#121216]/95 border border-zinc-800 backdrop-blur-md rounded-2xl text-xs text-white shadow-2xl animate-fade-in mb-2">
-            <div className="flex items-center gap-2 border-r border-zinc-800 pr-2.5">
-              <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                #{selectedBlock.block_index + 1} {selectedBlock.balloon_type || 'BALLOON'}
-              </span>
-              <span className="font-mono text-[10px] text-zinc-400">
-                X:{Math.round(selectedBlock.x)} Y:{Math.round(selectedBlock.y)} | W:{Math.round(selectedBlock.width)} H:{Math.round(selectedBlock.height)}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={async () => {
-                const b = selectedBlock;
-                if (!b) return;
-                const sf = scaleFactorRef.current || 1;
-                const sbMeta = b.extra_metadata?.smart_balloon;
-                const centroid = sbMeta?.visual_centroid || sbMeta?.centroid;
-                if (centroid) {
-                  const tb = fabricCanvasRef.current?.getObjects().find((obj: any) => obj.data?.blockId === b.id) as fabric.Textbox;
-                  if (tb) {
-                    positionAtCentroid(tb, centroid, sf, tb.height || b.height);
-                    fabricCanvasRef.current?.requestRenderAll();
-                    updateBlock(b.id, { x: tb.left || b.x, y: tb.top || b.y });
-                    setStatus('🎯 Centroid Fit สำเร็จ!', false);
-                  }
-                } else {
-                  setStatus('ไม่มีข้อมูล visual centroid สำหรับบล็อกนี้', false);
-                }
-              }}
-              className="px-2.5 py-1 bg-[#121822] hover:bg-[#1a2230] border border-[#38bdf8]/30 rounded-lg text-[#38bdf8] font-pixel font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
-              title="จัดตำแหน่งกึ่งกลางมวลอัตโนมัติ (Centroid Fit)"
-            >
-              <Crosshair size={12} />
-              <span>CENTROID</span>
-            </button>
-            <button
-              type="button"
-              onClick={async () => {
-                if (!selectedBlock || !activePage) return;
-                try {
-                  const res = await apiFetch('/pipeline/extract-style', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      page_id: activePage.id,
-                      bbox: [Math.round(selectedBlock.x), Math.round(selectedBlock.y), Math.round(selectedBlock.width), Math.round(selectedBlock.height)],
-                      block_id: selectedBlock.id,
-                    }),
-                  });
-                  if (res.ok) {
-                    const data = await res.json();
-                    if (data.style) {
-                      updateBlock(selectedBlock.id, {
-                        color_hex: data.style.text_color,
-                        font_color: data.style.text_color,
-                        stroke_color: data.style.stroke_color || selectedBlock.stroke_color,
-                        stroke_width: data.style.stroke_width || selectedBlock.stroke_width,
-                      });
-                      setStatus('🪄 ดึงสไตล์จากภาพต้นฉบับสำเร็จ!', false);
-                    }
-                  }
-                } catch (e) {
-                  setStatus('Extract style failed: ' + e, false);
-                }
-              }}
-              className="px-2.5 py-1 bg-[#181822] hover:bg-[#222230] border border-amber-500/40 rounded-lg text-amber-300 font-pixel font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
-              title="ดึงสีและสไตล์จากภาพต้นฉบับ (Extract Style)"
-            >
-              <Wand2 size={12} />
-              <span>EXTRACT</span>
-            </button>
-            <div className="h-3.5 w-px bg-zinc-800" />
-            <span className="text-[10px] font-mono text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20 font-semibold">
-              {selectedBlock.font_family || 'Chakra Petch'} • {selectedBlock.font_size || 18}px
-            </span>
-          </div>
-        )}
-
         {/* Dynamic Wrapper size for standard browser scrollbar handling */}
         <div
           style={{
@@ -4422,7 +4320,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
           )}
 
           {/* Floating Lettering Bar for fast styling directly above active textbox */}
-          {showFloatingLetteringBar && selectedBlock && selectedBlocks.length === 1 && !isMaskMode && (
+          {showFloatingLetteringBar && selectedBlock && selectedBlocks.length === 1 && !isMaskMode && showTypesetting && (
             <FloatingLetteringBar
               blockId={selectedBlock.id}
               canvasScale={zoomLevel / scaleFactor}

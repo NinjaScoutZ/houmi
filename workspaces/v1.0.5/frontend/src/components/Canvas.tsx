@@ -550,9 +550,10 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
   const [shortcutsOverlayCollapsed, setShortcutsOverlayCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('houmi_shortcuts_collapsed') === 'true';
+      const item = localStorage.getItem('houmi_shortcuts_collapsed');
+      return item === null ? true : item === 'true';
     } catch {
-      return false;
+      return true;
     }
   });
 
