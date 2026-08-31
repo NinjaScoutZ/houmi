@@ -208,11 +208,15 @@ export const MaskEditorModal: React.FC<MaskEditorModalProps> = ({
   }, [activeProject?.settings?.mask_dilation_kernel]);
 
   const handleKernelChange = (val: number) => {
-    setMaskKernelState(val);
+    const clamped = Math.max(0, Math.min(50, val));
+    setMaskKernelState(clamped);
+    try {
+      localStorage.setItem('houmi_mask_dilation_kernel', String(clamped));
+    } catch {}
     if (activeProject) {
       updateProjectSettings(activeProject.id, {
         ...activeProject.settings,
-        mask_dilation_kernel: val,
+        mask_dilation_kernel: clamped,
       });
     }
   };
@@ -1636,10 +1640,23 @@ interface PropertySliderProps {
 
 const PropertySlider: React.FC<PropertySliderProps> = ({ label, value, onChange, min, max, unit }) => {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400">{label}</span>
-        <span className="text-xs font-mono text-slate-300">{value}{unit}</span>
+        <span className="text-xs text-slate-400 font-medium">{label}</span>
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            min={min}
+            max={max}
+            value={value}
+            onChange={(e) => {
+              const parsed = parseInt(e.target.value, 10);
+              onChange(isNaN(parsed) ? min : Math.max(min, Math.min(max, parsed)));
+            }}
+            className="w-12 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-right font-mono text-amber-300 focus:outline-none focus:border-amber-400"
+          />
+          <span className="text-xs font-mono text-slate-400">{unit}</span>
+        </div>
       </div>
       <input
         type="range"

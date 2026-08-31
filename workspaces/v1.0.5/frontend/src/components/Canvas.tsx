@@ -4055,6 +4055,73 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
             </div>
           )}
         </div>
+
+        {/* Middle: Dedicated View Mode Switcher & Layer Controls */}
+        <div className="flex items-center gap-2">
+          {/* View Mode: Original Source vs Clean Inpainted Background */}
+          <div className="flex items-center bg-[#14141e] border border-[#262638] rounded-lg p-0.5 shadow-inner">
+            <button
+              type="button"
+              onClick={() => void handleCleanImageToggle(false)}
+              className={`flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                !showInpainted
+                  ? 'bg-amber-500 text-black shadow-sm font-bold'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="ดูภาพต้นฉบับ (กด A เพื่อสลับ)"
+            >
+              <span>🖼️</span>
+              <span>ต้นฉบับ</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleCleanImageToggle(true)}
+              disabled={isPreparingInpainted}
+              className={`flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                showInpainted
+                  ? 'bg-emerald-500 text-black shadow-sm font-bold'
+                  : 'text-zinc-400 hover:text-emerald-300'
+              } ${isPreparingInpainted ? 'opacity-60 animate-pulse' : ''}`}
+              title="ดูภาพคลีน Inpainted (กด A เพื่อสลับ)"
+            >
+              <span>✨</span>
+              <span>ภาพคลีน</span>
+              {isPreparingInpainted && <Loader2 size={11} className="animate-spin ml-0.5" />}
+            </button>
+          </div>
+
+          {/* Layer Visibility Toggles */}
+          <div className="flex items-center gap-1 bg-[#14141e] border border-[#262638] rounded-lg px-1.5 py-0.5">
+            <button
+              type="button"
+              onClick={() => setShowTranslated(prev => !prev)}
+              className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors cursor-pointer ${
+                showTranslated
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+              title="แสดง/ซ่อน เลเยอร์ข้อความแปล (H)"
+            >
+              {showTranslated ? <Eye size={12} /> : <EyeOff size={12} />}
+              <span>คำแปล</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMaskVisible(prev => !prev)}
+              className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors cursor-pointer ${
+                maskVisible
+                  ? 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+              title="แสดง/ซ่อน Live Mask Overlay สีแดงบนหน้า (M)"
+            >
+              <span>🎭</span>
+              <span>Live Mask</span>
+            </button>
+          </div>
+        </div>
         
         {/* Zoom & Shortcuts details */}
         <div className="flex items-center gap-2.5 bg-zinc-950/45 px-3 py-1.5 rounded-md border border-zinc-900/60 shadow-inner">

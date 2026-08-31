@@ -188,6 +188,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const maskGenMethod = settings.mask_gen_method || settings.default_mask_gen_method || 'hybrid';
 
   const handleUpdateSetting = (updates: Record<string, any>) => {
+    Object.entries(updates).forEach(([k, v]) => {
+      try {
+        localStorage.setItem(`houmi_${k}`, typeof v === 'object' ? JSON.stringify(v) : String(v));
+      } catch {}
+    });
     if (activeProject) {
       updateProjectSettings(activeProject.id, {
         ...settings,
