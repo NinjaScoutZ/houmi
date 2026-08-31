@@ -806,6 +806,33 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
     setStatus('แสดงภาพคลีน (ลบตัวอักษรแล้ว)', false);
   };
 
+  // Listen to external toggle events from Top HUD or keyboard shortcuts
+  useEffect(() => {
+    const onToggleClean = (e: Event) => {
+      const custom = e as CustomEvent<boolean | undefined>;
+      const targetState = custom.detail !== undefined ? custom.detail : !showInpainted;
+      void handleCleanImageToggle(targetState);
+    };
+    const onToggleLiveMask = (e: Event) => {
+      const custom = e as CustomEvent<boolean | undefined>;
+      setMaskVisible(prev => custom.detail !== undefined ? custom.detail : !prev);
+    };
+    const onToggleTranslated = (e: Event) => {
+      const custom = e as CustomEvent<boolean | undefined>;
+      setShowTranslated(prev => custom.detail !== undefined ? custom.detail : !prev);
+    };
+
+    window.addEventListener('toggle-clean-view', onToggleClean);
+    window.addEventListener('toggle-live-mask', onToggleLiveMask);
+    window.addEventListener('toggle-translated-view', onToggleTranslated);
+
+    return () => {
+      window.removeEventListener('toggle-clean-view', onToggleClean);
+      window.removeEventListener('toggle-live-mask', onToggleLiveMask);
+      window.removeEventListener('toggle-translated-view', onToggleTranslated);
+    };
+  }, [showInpainted, maskVisible, showTranslated, activePage?.id, isPreparingInpainted]);
+
   useEffect(() => {
     liveMaskOverlayRef.current = !!liveMaskOverlay;
     fabricCanvasRef.current?.requestRenderAll();

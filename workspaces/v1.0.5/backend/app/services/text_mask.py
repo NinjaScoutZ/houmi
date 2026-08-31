@@ -719,6 +719,14 @@ def generate_manga_unet_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
                 final_mask = cv2.bitwise_and(final_mask, cv2.bitwise_not(cv2.dilate(outline, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)))))
 
         final_mask = clamp_mask_to_balloon_interior(final_mask, image_bgr, margin_px=2)
+
+        # Apply user-configured Dilation Kernel expansion
+        if dilation_kernel and int(dilation_kernel) > 0:
+            k_val = int(dilation_kernel)
+            k_size = max(3, k_val * 2 + 1)
+            k_struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_size, k_size))
+            final_mask = cv2.dilate(final_mask, k_struct)
+
         return final_mask
     except Exception as exc:
         logger.warning("Manga UNet++ text mask execution failed: %s", exc)
@@ -743,31 +751,36 @@ def generate_routed_text_mask(
     mode, diagnostics = classify_text_mask_mode(image_bgr)
 
     # Route 1: UI Glass Status Boxes (dark cyan/blue panel with glowing text and side neon lines)
-    if width >= 200 and height >= 40:
-        left_strip = gray[:, :10]
-        right_strip = gray[:, width - 10:]
-        has_neon_border = (np.max(left_strip) > 220) and (np.max(right_strip) > 220)
-        has_glowing_text = np.count_nonzero(gray > 200) > (height * width * 0.03) and np.median(gray) < 120
-        if has_neon_border and has_glowing_text:
-            bright_text = (gray > 160).astype(np.uint8) * 255
-            num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(bright_text)
-            contour_mask = np.zeros_like(gray)
-            for i in range(1, num_labels):
-                lx, ly, lw, lh, area = stats[i]
-                if area < 3:
-                    continue
-                if (lx <= 8 or (lx + lw) >= width - 8) and lh > (height * 0.40):
-                    continue
-                comp = (labels == i).astype(np.uint8) * 255
-                k_glow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
-                comp_dilated = cv2.dilate(comp, k_glow)
-                contour_mask = cv2.bitwise_or(contour_mask, comp_dilated)
+    if width >= 200 and height >= 40 and image_bgr.ndim == 3:
+        b_ch = image_bgr[:, :, 0].astype(np.float32)
+        r_ch = image_bgr[:, :, 2].astype(np.float32)
+        is_blue_cyan_dominant = (np.mean(b_ch) > np.mean(r_ch) + 25)
+        is_dark_panel = np.median(gray) < 90 and np.mean(gray) < 100
+        if is_blue_cyan_dominant and is_dark_panel:
+            left_strip = gray[:, :10]
+            right_strip = gray[:, width - 10:]
+            has_neon_border = (np.max(left_strip) > 220) and (np.max(right_strip) > 220)
+            has_glowing_text = np.count_nonzero(gray > 200) > (height * width * 0.03)
+            if has_neon_border and has_glowing_text:
+                bright_text = (gray > 160).astype(np.uint8) * 255
+                num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(bright_text)
+                contour_mask = np.zeros_like(gray)
+                for i in range(1, num_labels):
+                    lx, ly, lw, lh, area = stats[i]
+                    if area < 3:
+                        continue
+                    if (lx <= 8 or (lx + lw) >= width - 8) and lh > (height * 0.40):
+                        continue
+                    comp = (labels == i).astype(np.uint8) * 255
+                    k_glow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+                    comp_dilated = cv2.dilate(comp, k_glow)
+                    contour_mask = cv2.bitwise_or(contour_mask, comp_dilated)
 
-            k_bridge = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 3))
-            contour_mask = cv2.morphologyEx(contour_mask, cv2.MORPH_CLOSE, k_bridge)
-            contour_mask[:, :8] = 0
-            contour_mask[:, width - 8:] = 0
-            return contour_mask, "ui_glass_box", diagnostics
+                k_bridge = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 3))
+                contour_mask = cv2.morphologyEx(contour_mask, cv2.MORPH_CLOSE, k_bridge)
+                contour_mask[:, :8] = 0
+                contour_mask[:, width - 8:] = 0
+                return contour_mask, "ui_glass_box", diagnostics
 
     # Route 2: Speech Balloons (Monochrome Flat)
     if mode == MASK_MODE_MONOCHROME_FLAT:
@@ -916,13 +929,31 @@ def generate_imagetrans_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
         local_bg = cv2.boxFilter(gray, -1, (21, 21))
         bin_mask[gray < (local_bg + 8)] = 0
 
-    # Fill components and produce convex hulls
+    # Disconnect from 1px boundary
+    bin_mask[0, :] = 0
+    bin_mask[-1, :] = 0
+    bin_mask[:, 0] = 0
+    bin_mask[:, -1] = 0
+
+    # Connected component filtering & MangaToolPlus Convex Hull polygon extraction
     num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(bin_mask, connectivity=8)
-    poly_mask = np.zeros_like(bin_mask)
+    poly_mask = np.zeros((height, width), dtype=np.uint8)
+
     for l in range(1, num_labels):
         area = stats[l, cv2.CC_STAT_AREA]
-        if area < 3 or area > (height * width * 0.85):
+        lx = stats[l, cv2.CC_STAT_LEFT]
+        ly = stats[l, cv2.CC_STAT_TOP]
+        lw = stats[l, cv2.CC_STAT_WIDTH]
+        lh = stats[l, cv2.CC_STAT_HEIGHT]
+
+        if area < 3:
             continue
+        if lw >= width * 0.75 or lh >= height * 0.75 or area > (height * width * 0.35):
+            continue
+        if (lx <= 1 or ly <= 1 or (lx + lw) >= width - 1 or (ly + lh) >= height - 1) and (lw > width * 0.35 or lh > height * 0.35):
+            continue
+
+        # Extract Convex Hull polygon for each glyph component
         pts = np.argwhere(labels == l)
         if len(pts) >= 3:
             pts_xy = np.column_stack([pts[:, 1], pts[:, 0]]).astype(np.int32)
@@ -938,7 +969,7 @@ def generate_imagetrans_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ksize, ksize))
         poly_mask = cv2.dilate(poly_mask, kernel, iterations=1)
 
-    # Apply Safe Distance Transform Border Clamping
+    # Apply Safe Distance Transform Border Clamping (MangaToolPlus technique)
     if center_median >= 120:
         poly_mask[dist_from_border <= 2] = 0
 
