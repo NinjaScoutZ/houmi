@@ -2517,7 +2517,17 @@ def generate_text_detection_mask(
         generate_contour_morphology_text_mask,
     )
     try:
-        if method == "imagetrans":
+        if method in ("unet", "manga_unet"):
+            from app.services.text_mask import generate_manga_unet_text_mask
+            mask = generate_manga_unet_text_mask(crop, dilation_kernel=applied_kernel)
+            selected_mode = "manga_unet"
+            diagnostics = {}
+        elif method in ("ctd", "comictextdetector"):
+            from app.services.text_mask import generate_manga_unet_text_mask
+            mask = generate_manga_unet_text_mask(crop, dilation_kernel=applied_kernel)
+            selected_mode = "comictextdetector"
+            diagnostics = {}
+        elif method == "imagetrans":
             mask = generate_imagetrans_text_mask(crop, dilation_kernel=applied_kernel)
             selected_mode = "imagetrans"
             diagnostics = {}
