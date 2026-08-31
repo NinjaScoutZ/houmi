@@ -10,7 +10,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Houmi Studio [Tauri v2 Debug Mode]",
+        "title": "Houmi Studio v1.0.5",
         "width": 1500,
         "height": 960,
         "minWidth": 1100,

@@ -3,24 +3,22 @@
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tauri::{AppHandle, Manager, RunEvent};
-use tauri_plugin_dialog::DialogExt;
+use tauri::{Manager, RunEvent};
 
 struct SidecarState {
     child: Option<std::process::Child>,
 }
 
 #[tauri::command]
-async fn open_manga_folder(app: AppHandle) -> Result<Option<String>, String> {
-    use std::sync::mpsc::channel;
-    let (tx, rx) = channel();
-
-    app.dialog().file().pick_folder(move |folder_path| {
-        let path_str = folder_path.map(|p| p.to_string());
-        let _ = tx.send(path_str);
-    });
-
-    rx.recv().map_err(|e| e.to_string())
+fn open_manga_folder() -> Result<Option<String>, String> {
+    println!("[Tauri v2 IPC] open_manga_folder invoked via native Windows FileDialog...");
+    let folder = rfd::FileDialog::new()
+        .set_title("Select Manga Project Folder (เลือกโฟลเดอร์รูปภาพมังงะ)")
+        .pick_folder();
+    
+    let result = folder.map(|p| p.to_string_lossy().to_string());
+    println!("[Tauri v2 IPC] User selected folder: {:?}", result);
+    Ok(result)
 }
 
 #[tauri::command]
