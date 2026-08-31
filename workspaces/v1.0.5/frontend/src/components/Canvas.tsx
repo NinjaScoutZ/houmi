@@ -3914,147 +3914,145 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
         />
       )}
 
-      {/* Brush cursor ring is now rendered inside the canvas wrapper (overflow-hidden)
-          so it auto-clips when mouse exits the canvas — see line ~3787 */}
-      {/* Top Toolbar */}
-      <div className="flex items-center justify-between p-3.5 border-b border-zinc-800 glass-panel">
-        <div className="flex items-center gap-3">
-          {/* Grouped mode selectors (Figma/Houzilocal style) */}
-          <div className="flex items-center bg-zinc-950/90 p-1 rounded-md border border-zinc-900/60 gap-1 font-pixel shadow-inner">
-            <button 
-              onClick={() => { setCanvasMode('select'); setIsMaskMode(false); setIsBalloonLayoutMode(false); }}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-md transition-all duration-150 cursor-pointer border ${
-                canvasMode === 'select' 
-                  ? 'pixel-btn-magenta shadow-[0_2px_10px_rgba(234,179,8,0.25)] border-yellow-600' 
-                  : 'pixel-btn-purple hover:text-yellow-400 hover:border-yellow-400/50'
-              }`}
-              title="Select / Draw Box (คลิกซ้ายเลือก/ย้าย | คลิกขวาค้างวาดกล่อง) (V / M)"
-            >
-              <Move size={15} />
-              <span>Select & Draw</span>
-            </button>
+      {/* Top Toolbar: Dynamic Single Contextual Toolbar (Zero duplicate pills, Zero stacking) */}
+      <div className="flex items-center justify-between px-3 h-9 bg-[#0c0c12] border-b border-[#1c1c28] z-20 shrink-0">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {/* Dynamic Contextual Toolbar: Page Mode vs Box Inspector Mode */}
+          {selectedBlock || selectedBlocks.length > 0 ? (
+            /* Mode B: Box Inspector Mode (Single unified pill bar) */
+            <div className="flex items-center gap-1.5 bg-[#14141e] border border-amber-500/30 rounded-lg px-2 py-0.5 shadow-sm">
+              <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1 pr-1 border-r border-amber-500/20">
+                <span className="text-amber-400">📍</span>
+                <span>{selectedBlocks.length > 1 ? `${selectedBlocks.length} กล่อง` : `กล่อง #${selectedBlock?.block_index || 1}`}</span>
+              </span>
 
-            <button
-              onClick={() => { setCanvasMode('text'); setIsMaskMode(false); setIsBalloonLayoutMode(false); setShowTypesetting(true); }}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-md transition-all duration-150 cursor-pointer border ${
-                canvasMode === 'text'
-                  ? 'bg-cyan-500 text-black border-cyan-300 shadow-[0_2px_10px_rgba(34,211,238,0.25)]'
-                  : 'pixel-btn-purple hover:text-cyan-300 hover:border-cyan-500/50'
-              }`}
-              title="Text Tool — กด T แล้วคลิกข้อความเพื่อแก้ไขบรรทัด"
-            >
-              <Type size={15} />
-              <span>Text</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={toggleBalloonLayoutMode}
-              disabled={isBalloonSegmenting}
-              aria-label={isBalloonLayoutMode ? 'Close Balloon Layout' : 'Open Balloon Layout'}
-              className={`size-8 flex items-center justify-center rounded-md transition-colors duration-150 cursor-pointer border ${
-                isBalloonLayoutMode
-                  ? 'bg-emerald-400 text-zinc-950 border-emerald-300'
-                  : 'bg-zinc-900 text-slate-400 border-zinc-800 hover:text-emerald-300 hover:border-emerald-500/50'
-              } ${isBalloonSegmenting ? 'opacity-60 cursor-wait' : ''}`}
-              title="Balloon Layout: เลือก text layer แล้วลากกรอบครอบบอลลูน"
-            >
-              <ScanLine size={15} />
-            </button>
-
-            <button 
-              onClick={() => {
-                if (onRunOCR) {
-                  const targetIds = selectedBlocks.map(b => b.id);
-                  onRunOCR(targetIds);
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-md transition-all duration-150 cursor-pointer pixel-btn-purple hover:text-yellow-400 hover:border-yellow-400/50"
-              title="Run OCR (สแกนและแปลภาษานี้)"
-            >
-              <ScanText size={15} className="text-yellow-500" />
-              <span>OCR</span>
-            </button>
-
-            <button 
-              onClick={() => {
-                if (onRunInpaintPreview) onRunInpaintPreview();
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-md transition-all duration-150 cursor-pointer pixel-btn-purple hover:text-yellow-400 hover:border-yellow-400/50"
-              title="Preview Inpaint (ดูผลลัพธ์การลบอักษรก่อนบันทึก)"
-            >
-              <Sparkles size={15} className="text-yellow-500 animate-pulse" />
-              <span>Preview Inpaint</span>
-            </button>
-
-            <button
-              type="button"
-              disabled={!selectedBlock && selectedBlocks.length === 0}
-              onClick={async () => {
-                const targets = selectedBlocks.length > 0 ? selectedBlocks : selectedBlock ? [selectedBlock] : [];
-                useProjectStore.getState().setStatus("⚡ คำนวณ Smart Balloon พิกเซลจริง...", true);
-                for (const b of targets) {
-                  try {
-                    const resp = await apiFetch(`/api/pipeline/blocks/${b.id}/smart-balloon/recompute`, { method: 'POST' });
-                    if (resp.ok) {
-                      const data = await resp.json();
-                      updateBlock(b.id, {
-                        smart_x: data.smart_x,
-                        smart_y: data.smart_y,
-                        smart_width: data.smart_width,
-                        smart_height: data.smart_height,
-                        smart_mask_path: data.smart_mask_path,
-                        extra_metadata: { ...(b.extra_metadata || {}), manual_font_size: null, font_size_mode: 'auto', contour_layout: true }
-                      });
-                    }
-                  } catch (err) {
-                    console.error("Smart Balloon recompute failed for block:", b.id, err);
-                  }
-                }
-                useProjectStore.getState().setStatus("✅ คำนวณ Smart Balloon สำเร็จ!", false);
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-md transition-all duration-150 cursor-pointer border bg-emerald-500/15 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25 hover:border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.25)] disabled:cursor-not-allowed disabled:opacity-35"
-              title="🎈 Auto-Fit Smart Balloon: คำนวณขอบและขนาดฟอนต์อัตโนมัติ 65%-75%"
-            >
-              <Sparkles size={14} className="text-emerald-400 animate-pulse" />
-              <span>🎈 Auto-Fit Smart Balloon</span>
-            </button>
-
-            <button
-              type="button"
-              disabled={!selectedBlock}
-              onClick={() => {
-                if (selectedBlock && onOpenMaskEditor) onOpenMaskEditor(selectedBlock.id);
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-md transition-all duration-150 cursor-pointer border pixel-btn-purple hover:text-rose-300 hover:border-rose-500/50 disabled:cursor-not-allowed disabled:opacity-35"
-              title={selectedBlock ? 'Open the saved Text Mask Editor (B)' : 'Select one text layer first'}
-            >
-              <span aria-hidden="true">🖌️</span>
-              <span>Open Mask Editor</span>
-            </button>
-
-            {onRunFontJudge && (
-              <button 
+              <button
                 type="button"
-                disabled={!selectedBlock}
-                onClick={onRunFontJudge}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-md transition-all duration-150 cursor-pointer border pixel-btn-purple hover:text-yellow-400 hover:border-yellow-400/50 disabled:cursor-not-allowed disabled:opacity-35"
-                title="Run Font Judge for selected block"
+                onClick={() => {
+                  const targetId = selectedBlock?.id || selectedBlocks[0]?.id;
+                  if (targetId && onOpenMaskEditor) onOpenMaskEditor(targetId);
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 transition-colors cursor-pointer"
+                title="แก้ไข Mask (B)"
               >
-                <span aria-hidden="true">✒️</span>
-                <span>Font Judge</span>
+                <span>🎭</span>
+                <span>แก้ไข Mask</span>
               </button>
-            )}
-          </div>
 
-          {selectedBlock && (
-            <button 
-              onClick={handleDeleteBox}
-              className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-md text-red-300 bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 transition-all duration-200 font-pixel shadow-sm cursor-pointer"
-              title="Delete Box (Del)"
-            >
-              <Trash2 size={16} /> Delete Block
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onRunOCR) {
+                    const targetIds = selectedBlocks.length > 0 ? selectedBlocks.map(b => b.id) : selectedBlock ? [selectedBlock.id] : [];
+                    onRunOCR(targetIds);
+                  }
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 transition-colors cursor-pointer"
+                title="สแกน OCR กล่องนี้"
+              >
+                <span>🔍</span>
+                <span>OCR</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (onRunInpaintPreview) onRunInpaintPreview();
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 transition-colors cursor-pointer"
+                title="Inpaint กล่องนี้"
+              >
+                <span>✨</span>
+                <span>Inpaint</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteBox}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-red-500/10 hover:bg-red-500/20 text-red-300 transition-colors cursor-pointer ml-1"
+                title="ลบกล่องนี้ (Del)"
+              >
+                <Trash2 size={12} />
+                <span>ลบ</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  fabricCanvasRef.current?.discardActiveObject();
+                  fabricCanvasRef.current?.requestRenderAll();
+                  setSelectedBlock(null);
+                  setSelectedBlocks([]);
+                }}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                title="ยกเลิกการเลือก (Esc)"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ) : (
+            /* Mode A: Page Mode (Single unified pipeline action bar) */
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!activePage) return;
+                  useProjectStore.getState().setStatus("🔍 ตรวจจับกล่องข้อความทั้งหน้า...", true);
+                  try {
+                    const resp = await apiFetch(`/api/pipeline/detect`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ page_id: activePage.id, force: true })
+                    });
+                    if (resp.ok) {
+                      await refreshActivePage();
+                      useProjectStore.getState().setStatus("✅ ตรวจจับกล่องข้อความสำเร็จ", false);
+                    }
+                  } catch (e) {
+                    console.error("Detect error:", e);
+                  }
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161622] hover:bg-[#1e1e2e] text-zinc-300 hover:text-amber-400 border border-[#262638] transition-all cursor-pointer"
+                title="ตรวจจับกล่องบอลลูนทั้งหน้า"
+              >
+                <span>🏷️</span>
+                <span>ตรวจจับกล่อง</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (onRunOCR) onRunOCR();
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161622] hover:bg-[#1e1e2e] text-zinc-300 hover:text-cyan-400 border border-[#262638] transition-all cursor-pointer"
+                title="สแกน OCR ทั้งหน้า"
+              >
+                <span>🔍</span>
+                <span>สแกน OCR</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsMaskMode(true)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161622] hover:bg-[#1e1e2e] text-zinc-300 hover:text-fuchsia-400 border border-[#262638] transition-all cursor-pointer"
+                title="เปิดเครื่องมือแก้ไข Mask ทั้งหน้า (B)"
+              >
+                <span>🎭</span>
+                <span>แก้ไข Mask</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (onEnsureInpainted) onEnsureInpainted();
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all cursor-pointer"
+                title="Clean Inpaint ลบตัวหนังสือทั้งหน้า"
+              >
+                <span>✨</span>
+                <span>Clean Inpaint</span>
+              </button>
+            </div>
           )}
         </div>
         

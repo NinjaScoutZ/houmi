@@ -198,6 +198,7 @@ export const MaskEditorModal: React.FC<MaskEditorModalProps> = ({
     activeProject?.settings?.mask_dilation_kernel ?? initialKernel ?? 3
   );
   const [maskKernel, setMaskKernelState] = useState<number>(initialKernelValue);
+  const [selectedMaskModel, setSelectedMaskModel] = useState<string>('unet');
 
   // Keep kernel state synced with project settings
   useEffect(() => {
@@ -733,7 +734,7 @@ export const MaskEditorModal: React.FC<MaskEditorModalProps> = ({
     setNotice({ tone: 'info', text: 'กำลังวิเคราะห์ภาพและสร้างมาสก์ด้วยระบบที่เหมาะสม…' });
 
     try {
-      const res = await apiFetch(`/api/pipeline/blocks/${blockId}/mask/text-detect?kernel=${maskKernel}`, {
+      const res = await apiFetch(`/api/pipeline/blocks/${blockId}/mask/text-detect?kernel=${maskKernel}&method=${selectedMaskModel}`, {
         method: 'POST',
       });
 
@@ -1082,22 +1083,44 @@ export const MaskEditorModal: React.FC<MaskEditorModalProps> = ({
               }}
               disabled={editorBusy}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-all bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 active:scale-95 cursor-pointer"
-              title="Solid Color Paint: วาดแปะสีพื้นหลังทึบปิดทับตัวหนังสือทันทีแบบ Koharu"
+              title="Solid Color Paint: วาดแปะสีพื้นหลังทึบปิดทับตัวหนังสือทันที"
             >
               <Zap size={14} />
-              <span>Solid Color Paint</span>
+              <span>Solid Wipe</span>
             </button>
 
-            {/* HQ Smart button */}
-            <button
-              onClick={handleHQSmartMask}
-              disabled={editorBusy}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-all bg-fuchsia-500/20 border border-fuchsia-500/40 text-fuchsia-300 hover:bg-fuchsia-500/30 active:scale-95 cursor-pointer"
-              title="สแกนตรวจจับตัวอักษรด้วย AI และสร้างมาสก์ใหม่ (AI Text Detect & Mask)"
-            >
-              {isDetectingText ? <Loader2 size={14} className="animate-spin motion-reduce:animate-none" /> : <Sparkles size={14} />}
-              <span>สแกนตัวอักษร AI</span>
-            </button>
+            {/* Dedicated Mask Model Selector & Explicit Scan Action */}
+            <div className="flex items-center gap-1.5 bg-zinc-900/90 border border-cyan-500/40 rounded-lg px-2.5 py-1 shadow-sm">
+              <span className="text-[11px] text-cyan-400 font-bold flex items-center gap-1">
+                <span>🎭</span>
+                <span>โมเดล:</span>
+              </span>
+              <select
+                value={selectedMaskModel}
+                onChange={(e) => setSelectedMaskModel(e.target.value)}
+                disabled={editorBusy}
+                className="bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-xs text-cyan-200 font-medium focus:outline-none focus:border-cyan-400 cursor-pointer"
+                title="เลือกโมเดล/วิธีการสร้าง Mask"
+              >
+                <option value="unet">🎨 Manga UNet++ (Pixel Neural)</option>
+                <option value="ctd">🤖 ComicTextDetector (CTD ONNX)</option>
+                <option value="sam">🎯 Meta SAM 2.1 (Segment Anything)</option>
+                <option value="contour">⚡ Adaptive Contours (มังงะขาวดำ)</option>
+                <option value="imagetrans">📄 ImageTrans Otsu (Binarization)</option>
+                <option value="balloon">📦 Full Bounding Box (Solid Rect)</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={handleHQSmartMask}
+                disabled={editorBusy}
+                className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-all bg-cyan-500/20 hover:bg-cyan-500/35 border border-cyan-500/50 text-cyan-200 active:scale-95 cursor-pointer shadow-sm"
+                title="สแกนสร้าง Mask ทันทีด้วยโมเดลที่เลือก"
+              >
+                {isDetectingText ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                <span>สแกน Mask</span>
+              </button>
+            </div>
 
             <button
               onClick={handleResetToAuto}
