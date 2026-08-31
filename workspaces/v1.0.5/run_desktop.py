@@ -59,7 +59,9 @@ os.environ["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"] = (
     "--ignore-gpu-blocklist "
     "--enable-hardware-overlays "
     "--num-raster-threads=4 "
-    "--enable-features=UseDWritePriorities,FontSrcLocalMatching"
+    "--enable-features=UseDWritePriorities,FontSrcLocalMatching "
+    "--disable-http-cache "
+    "--disable-cache"
 )
 
 class FastAPIThread(threading.Thread):
