@@ -669,6 +669,7 @@ export const App: React.FC = () => {
       return true;
     }
   });
+  const [showMenuView, setShowMenuView] = useState(false);
   const [isFormattingWidgetOpen, setIsFormattingWidgetOpen] = useState(() => {
     try {
       return localStorage.getItem('houmi_formatting_widget_open') === 'true';
