@@ -104,7 +104,30 @@ def create_project(
     return db_project
 
 def _ask_folder_dialog(title: str = "เลือกโฟลเดอร์", initialdir: Optional[str] = None) -> Optional[str]:
-    # 1. Try PyWebView native dialog if running inside desktop webview
+    # 1. Native Windows PowerShell FolderBrowserDialog (100% reliable in background/threaded servers on Windows)
+    if sys.platform == "win32":
+        try:
+            import subprocess
+            ps_cmd = (
+                "Add-Type -AssemblyName System.Windows.Forms; "
+                "$f = New-Object System.Windows.Forms.FolderBrowserDialog; "
+                f"$f.Description = '{title}'; "
+                "$f.ShowNewFolderButton = $true; "
+            )
+            if initialdir and Path(initialdir).exists():
+                ps_cmd += f"$f.SelectedPath = '{initialdir}'; "
+            ps_cmd += "if ($f.ShowDialog((New-Object System.Windows.Forms.NativeWindow)) -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $f.SelectedPath }"
+            out = subprocess.check_output(
+                ["powershell", "-NoProfile", "-Command", ps_cmd],
+                text=True,
+                creationflags=0x08000000  # CREATE_NO_WINDOW
+            ).strip()
+            if out and Path(out).is_dir():
+                return out
+        except Exception as exc:
+            logging.getLogger("houmi-projects").warning("PowerShell FolderBrowserDialog failed: %s", exc)
+
+    # 2. Try PyWebView native dialog if running inside desktop webview
     try:
         import webview
         if webview.windows and len(webview.windows) > 0:
@@ -119,7 +142,7 @@ def _ask_folder_dialog(title: str = "เลือกโฟลเดอร์", i
     except Exception as exc:
         logging.getLogger("houmi-projects").debug("PyWebView dialog unavailable: %s", exc)
 
-    # 2. Fallback to Tkinter native dialog
+    # 3. Fallback to Tkinter native dialog
     try:
         import tkinter as tk
         from tkinter import filedialog

@@ -3,8 +3,6 @@ from sqlalchemy.orm import Session
 from typing import Any, Dict, List, Optional
 import datetime
 import logging
-import sys
-import time
 from pathlib import Path
 from app.database import get_db
 from app.config import RUNTIME_MODE
@@ -42,35 +40,41 @@ def _default_project_settings() -> Dict[str, Any]:
         # Experimental contour-aware line fitting stays opt-in until a
         # story-separated benchmark confirms it beats the ellipse fallback.
         "enable_contour_layout": False,
-        "enable_smart_balloon": False,
+        "enable_smart_balloon": True,
         "expand_after_balloon_detection": False,
         "translation_layout_policy_version": TRANSLATION_LAYOUT_POLICY_VERSION,
     }
 
 
 def _matches_folder_workspace(project: Project, folder_path: str) -> bool:
-    """Reuse existing project if local_folder matches the selected folder."""
+    """Reuse only an explicitly persisted folder-backed project.
+
+    ``project.json`` is the ownership marker.  Without it, users have removed
+    the Houmi project state and importing the folder must start fresh instead
+    of silently restoring stale records from the database.
+    """
     settings = project.settings or {}
     stored_folder = settings.get("local_folder")
-    if not stored_folder:
+    if not stored_folder or not project.pages:
         return False
     try:
         same_folder = Path(str(stored_folder)).resolve() == Path(folder_path).resolve()
     except OSError:
         same_folder = str(stored_folder) == folder_path
-    if same_folder:
-        return True
-
+    if not same_folder:
+        return False
     manifest = Path(folder_path) / "project.json"
-    if manifest.is_file():
-        try:
-            import json
-            saved_id = str(json.loads(manifest.read_text(encoding="utf-8")).get("id") or "")
-            if saved_id and saved_id == str(project.id):
-                return True
-        except (OSError, ValueError, TypeError):
-            pass
-    return False
+    if not manifest.is_file():
+        return False
+    try:
+        import json
+
+        saved_id = str(json.loads(manifest.read_text(encoding="utf-8")).get("id") or "")
+    except (OSError, ValueError, TypeError):
+        return False
+    return saved_id == str(project.id) and all(
+        Path(str(page.source_image_path)).is_file() for page in project.pages
+    )
 
 @router.post("/projects", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
@@ -100,14 +104,28 @@ def create_project(
     return db_project
 
 def _ask_folder_dialog(title: str = "เลือกโฟลเดอร์", initialdir: Optional[str] = None) -> Optional[str]:
-    # 1. Native Modern Windows Explorer Dialog (IFileOpenDialog) / Tkinter
-    try:
-        from app.services.folder_dialog import ask_modern_folder_dialog
-        res = ask_modern_folder_dialog(title=title, initialdir=initialdir)
-        if res and Path(res).is_dir():
-            return res
-    except Exception as exc:
-        logging.getLogger("houmi-projects").warning("Modern folder dialog failed: %s", exc)
+    # 1. Native Windows PowerShell FolderBrowserDialog (100% reliable in background/threaded servers on Windows)
+    if sys.platform == "win32":
+        try:
+            import subprocess
+            ps_cmd = (
+                "Add-Type -AssemblyName System.Windows.Forms; "
+                "$f = New-Object System.Windows.Forms.FolderBrowserDialog; "
+                f"$f.Description = '{title}'; "
+                "$f.ShowNewFolderButton = $true; "
+            )
+            if initialdir and Path(initialdir).exists():
+                ps_cmd += f"$f.SelectedPath = '{initialdir}'; "
+            ps_cmd += "if ($f.ShowDialog((New-Object System.Windows.Forms.NativeWindow)) -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $f.SelectedPath }"
+            out = subprocess.check_output(
+                ["powershell", "-NoProfile", "-Command", ps_cmd],
+                text=True,
+                creationflags=0x08000000  # CREATE_NO_WINDOW
+            ).strip()
+            if out and Path(out).is_dir():
+                return out
+        except Exception as exc:
+            logging.getLogger("houmi-projects").warning("PowerShell FolderBrowserDialog failed: %s", exc)
 
     # 2. Try PyWebView native dialog if running inside desktop webview
     try:
