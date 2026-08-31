@@ -1061,14 +1061,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       }}
                       className="w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-yellow-500 font-sans cursor-pointer"
                     >
-                      <option value="hybrid">Godkiller Intelligent Hybrid Mask (แนะนำ SOTA - แยกหมึกอักษร ไม่กินเส้นบอลลูน)</option>
-                      <option value="imagetrans">ImageTrans Binarization Mask (โหมดดั้งเดิม ImageTrans - ไบนารีแยกกลุ่มตัวอักษร)</option>
-                      <option value="contour">Adaptive Morphology & Contours (โหมดมังงะขาวดำ - ตรวจจับขอบรวดเร็ว)</option>
-                      <option value="sam">Meta SAM AI Segmenter (Segment Anything ONNX - เหมาะกับ SFX ซับซ้อน)</option>
-                      <option value="balloon">Full Bounding Box Mask (ล้างเต็มกรอบสี่เหลี่ยม - โหมดตัดพื้นขาว)</option>
+                      <option value="hybrid">Manga UNet++ (Pixel Neural Mask - แนะนำสำหรับมังงะ/มันฮวา)</option>
+                      <option value="sam">Meta SAM 2.1 Segmenter (Segment Anything ONNX - เหมาะกับ SFX)</option>
+                      <option value="contour">Adaptive Morphology & Contours (โหมดมังงะขาวดำดั้งเดิม - ไวมาก)</option>
+                      <option value="imagetrans">ImageTrans Otsu Binarization (ไบนารีแยกกลุ่มตัวอักษร)</option>
+                      <option value="balloon">Full Bounding Box Mask (ล้างเต็มกรอบสี่เหลี่ยม)</option>
                     </select>
                     <span className="text-[10px] text-slate-400 block">
-                      อัลกอริทึมตรวจจับและแยกพิกเซลตัวอักษรออกจากภาพวาด ก่อนส่งให้ AI Inpaint ลบข้อความ
+                      อัลกอริทึมตรวจจับและแยกพิกเซลตัวอักษร: Manga UNet++ เทรนด้วยฟอนต์การ์ตูน แม่นยำสูง ไม่กินเส้นขอบบอลลูน
                     </span>
                   </div>
 
@@ -1092,13 +1092,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       }}
                       className="w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-yellow-500 font-sans cursor-pointer"
                     >
-                      <option value="lama_manga">AnimeMangaInpainting (LaMa-Manga ONNX - แนะนำ SOTA 198MB)</option>
-                      <option value="lama_onnx">Godkiller Standard LaMa (Big-LaMa ONNX - 208MB)</option>
+                      <option value="lama_manga">LaMa-Manga (FFC-ResNet GPU - แนะนำ SOTA 198MB)</option>
+                      <option value="lama_onnx">Big-LaMa Standard (ONNX 208MB)</option>
                       <option value="mat_onnx">MAT Inpainter (Mask-Aware Transformer ONNX)</option>
                       <option value="telea">OpenCV Telea (Fast Interpolation CPU - พรีวิวเร็ว &lt;5ms)</option>
                     </select>
                     <span className="text-[10px] text-slate-400 block">
-                      โมเดล AI ลบตัวหนังสือ: AnimeMangaInpainting เทรนด้วย Anime & Manga กว่า 300,000 ภาพ คมชัดทั้งมังงะและเว็บตูนสี
+                      โมเดล AI ลบตัวหนังสือ: LaMa-Manga เทรนด้วย Anime & Manga กว่า 300,000 ภาพ คมชัดทั้งมังงะและเว็บตูนสี
                     </span>
 
                     {/* Inpaint Strategy Selection */}
