@@ -23,6 +23,7 @@ import { useWebSocket } from './hooks/useWebSocket';
 import { HotkeyModal } from './components/HotkeyModal';
 import { ProjectPresetModal } from './components/ProjectPresetModal';
 import { CustomWorkflowModal } from './components/CustomWorkflowModal';
+import { BatchProgressModal } from './components/BatchProgressModal';
 import { DobkleOcrProgressModal, type DobkleProgressData } from './components/DobkleOcrProgressModal';
 import { DevMapDashboard } from './components/dev_map/DevMapDashboard';
 import {
@@ -2635,6 +2636,10 @@ export const App: React.FC = () => {
         if (currentModel) {
           url += `&balloon_model=${encodeURIComponent(currentModel)}`;
         }
+      } else if (step === 'font_judge') {
+        url = `/api/pipeline/font_judge?page_id=${targetPage.id}`;
+      } else if (step === 'typeset') {
+        url = `/api/pipeline/typeset?page_id=${targetPage.id}`;
       } else if (step === 'auto') {
         const targetProj = useProjectStore.getState().activeProject || activeProject;
         const currentLang = targetProj?.source_lang || sourceLang || 'zh';
@@ -2645,7 +2650,7 @@ export const App: React.FC = () => {
         url += `&min_confidence=${confidenceThreshold}`;
       }
 
-      const res = await fetch(url, options);
+      const res = await apiFetch(url, options);
       if (!res.ok) throw new Error(`Pipeline step ${step} failed`);
       const resultData = await res.json().catch(() => ({}));
       
@@ -2657,7 +2662,7 @@ export const App: React.FC = () => {
 
       if (isTargetedOcr) {
         // Targeted OCR: lightweight refresh that preserves current block selection and updates text
-        const pageRes = await fetch(`/api/pages/${targetPage.id}`);
+        const pageRes = await apiFetch(`/api/pages/${targetPage.id}`);
         if (pageRes.ok) {
           const freshPage = await pageRes.json();
           const store = useProjectStore.getState();
@@ -2727,7 +2732,7 @@ export const App: React.FC = () => {
     
     setStatus("Generating Inpaint Preview...", true);
     try {
-      const res = await fetch(`/api/pipeline/inpaint-preview?page_id=${activePage.id}`);
+      const res = await apiFetch(`/api/pipeline/inpaint-preview?page_id=${activePage.id}`);
       if (!res.ok) throw new Error("Failed to generate inpaint preview");
       const data = await res.json();
       if (data.status === "success" && data.image) {
@@ -2755,14 +2760,14 @@ export const App: React.FC = () => {
     const label = scope === 'page' ? `หน้า ${activePage.page_number}` : 'ทุกหน้าในโปรเจกต์';
     if (!window.confirm(`ลบมาสก์ที่แก้เองและผลคลีนเดิมของ ${label} แล้วคลีนใหม่หรือไม่?`)) return;
     const query = scope === 'page' ? `page_id=${activePage.id}` : `project_id=${activeProject.id}`;
-    const response = await fetch(`/api/pipeline/masks?${query}`, { method: 'DELETE' });
+    const response = await apiFetch(`/api/pipeline/masks?${query}`, { method: 'DELETE' });
     if (!response.ok) {
       showToast('ล้างมาสก์ไม่สำเร็จ', 'error');
       return;
     }
     if (scope === 'page') {
       setStatus('กำลังคลีนหน้าปัจจุบันด้วย Mask ใหม่...', true);
-      const cleanResponse = await fetch(`/api/pipeline/inpaint?page_id=${activePage.id}`, { method: 'POST' });
+      const cleanResponse = await apiFetch(`/api/pipeline/inpaint?page_id=${activePage.id}`, { method: 'POST' });
       if (!cleanResponse.ok) {
         setStatus('Clean failed', false);
         showToast('คลีนหน้าใหม่ไม่สำเร็จ', 'error');
@@ -2956,7 +2961,7 @@ export const App: React.FC = () => {
       const serverSteps = backendSteps.join(',');
       const currentLang = activeProject?.source_lang || sourceLang || 'zh';
       const currentModel = activeProject?.settings?.balloon_model || settingsBalloonModel;
-      const res = await fetch(`/api/pipeline/batch?project_id=${activeProject.id}&min_confidence=${confidenceThreshold}&steps=${serverSteps}&backend=${ocrEngine}&source_lang=${encodeURIComponent(currentLang)}&balloon_model=${encodeURIComponent(currentModel || '')}`, {
+      const res = await apiFetch(`/api/pipeline/batch?project_id=${activeProject.id}&min_confidence=${confidenceThreshold}&steps=${serverSteps}&backend=${ocrEngine}&source_lang=${encodeURIComponent(currentLang)}&balloon_model=${encodeURIComponent(currentModel || '')}`, {
         method: 'POST'
       });
       if (!res.ok) throw new Error("Failed to start batch pipeline");
@@ -3007,7 +3012,7 @@ export const App: React.FC = () => {
   const handleStartTraining = async () => {
     setStatus('Starting training…', true);
     try {
-      const res = await fetch('/api/pipeline/train', { method: 'POST' });
+      const res = await apiFetch('/api/pipeline/train', { method: 'POST' });
       if (!res.ok) throw new Error("Failed to start training");
       
       setTrainStatus(prev => ({ ...prev, is_training: true }));
@@ -4186,158 +4191,7 @@ export const App: React.FC = () => {
         </div>
       </nav>
 
-      {/* 1.5 SUB-TOOLBAR */}
-      <div className="w-full bg-zinc-950/50 backdrop-blur-md border-b border-zinc-900/60 px-5 h-13 py-1 flex items-center justify-between text-xs text-slate-400 z-20 shrink-0 shadow-sm pywebview-no-drag">
-        <div className="flex items-center gap-3.5">
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded p-0.5 shrink-0 shadow-inner">
-            <button
-              type="button"
-              onClick={() => setWorkspaceMode('ocr')}
-              className={`px-2.5 py-1 text-[9.5px] font-bold font-pixel rounded transition-all cursor-pointer flex items-center gap-1 ${
-                workspaceMode === 'ocr'
-                  ? 'bg-yellow-500 text-black shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="สลับโหมด OCR & ทำความสะอาดพื้นหลัง"
-            >
-              <span>📝</span>
-              <span>OCR Pipeline</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setWorkspaceMode('typeset')}
-              className={`px-2.5 py-1 text-[9.5px] font-bold font-pixel rounded transition-all cursor-pointer flex items-center gap-1 ${
-                workspaceMode === 'typeset'
-                  ? 'bg-amber-400 text-black shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="สลับโหมด Typesetting & ปรับแต่งข้อความ"
-            >
-              <span>🎨</span>
-              <span>Typesetting</span>
-            </button>
-          </div>
 
-          <div className="h-6 w-px bg-zinc-850" />
-
-          {workspaceMode === 'ocr' && <>
-          {/* OCR Engine selection */}
-          <div className="flex items-center gap-1 shrink-0" title="เลือกโปรแกรมสำหรับสแกนข้อความ">
-            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider font-pixel">OCR:</span>
-            <select
-              value={ocrEngine}
-              onChange={(e) => handleToggleProjectSetting('ocr_engine', e.target.value)}
-              className="bg-zinc-950 border border-zinc-800 text-slate-300 text-[9px] rounded py-0.5 px-1 max-w-[130px] truncate focus:outline-none cursor-pointer"
-            >
-              <option value="rapidocr">⚡ RapidOCR (GPU DirectML)</option>
-              <option value="ppocrv5">⚡ RapidOCR (PP-OCRv5)</option>
-              <option value="gemini">✨ DOBKLE OCR (Gemini)</option>
-              <option value="glm">🧠 GLM-OCR (VLM)</option>
-              <option value="deepseek">🐋 DeepSeek-OCR (VLM)</option>
-            </select>
-            {(ocrEngine === 'glm' || ocrEngine === 'deepseek') && !vlmInstalled && (
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await fetch('/api/vlm-server/install', { method: 'POST' });
-                    const data = await res.json();
-                    alert(data.message || 'Launched VLM Server setup CMD terminal.');
-                  } catch (err) {
-                    alert('Failed to launch VLM Server setup: ' + err);
-                  }
-                }}
-                className="bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/40 text-[8px] px-1 py-0.5 rounded transition cursor-pointer"
-                title="ดาวน์โหลด/ติดตั้งเซิร์ฟเวอร์ GLM & DeepSeek VLM PyTorch แยกต่างหาก"
-              >
-                ⚙️ VLM Setup
-              </button>
-            )}
-          </div>
-
-          {/* OCR Source Language Selection */}
-          <div className="flex items-center gap-1 shrink-0" title="เลือกภาษาต้นฉบับสำหรับ OCR">
-            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider font-pixel">Lang:</span>
-            <select
-              value={activeProject?.source_lang || sourceLang || 'ko'}
-              onChange={async (e) => {
-                const newLang = e.target.value;
-                setSourceLang(newLang);
-                updateGlobalSetting('source_lang', newLang);
-                if (activeProject) {
-                  const updated = { ...activeProject, source_lang: newLang };
-                  useProjectStore.setState({ activeProject: updated });
-                  try {
-                    await fetch(`/api/projects/${activeProject.id}`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ settings: activeProject.settings || {}, source_lang: newLang }),
-                    });
-                  } catch (err) {
-                    console.error('Failed to update project source_lang:', err);
-                  }
-                }
-              }}
-              className="bg-zinc-950 border border-zinc-800 text-yellow-400 font-bold text-[9px] rounded py-0.5 px-1 max-w-[95px] truncate focus:outline-none cursor-pointer"
-            >
-              <option value="zh">🇨🇳 จีน (zh)</option>
-              <option value="ko">🇰🇷 เกาหลี (ko)</option>
-              <option value="en">🇬🇧 อังกฤษ (en)</option>
-              <option value="ja">🇯🇵 ญี่ปุ่น (ja)</option>
-            </select>
-          </div>
-
-          <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-slate-200 transition-colors" title="ตรวจสะกดคำผิดปกติของ OCR ด้วยโมเดล AI">
-            <input
-              type="checkbox"
-              checked={aiOcrCorrection}
-              onChange={(e) => handleToggleProjectSetting('ai_ocr_correction', e.target.checked)}
-              className="w-3 h-3 rounded-sm border-zinc-800 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
-            />
-            <span>AI spellcheck</span>
-          </label>
-          </>}
-
-          <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-slate-200 transition-colors" title="แสดงแผ่นสีแดงโปร่งแสงคลุมทับจุดที่จะทำการลบข้อความ">
-            <input
-              type="checkbox"
-              checked={liveMaskOverlay}
-              onChange={(e) => {
-                const val = e.target.checked;
-                setLiveMaskOverlay(val);
-                updateGlobalSetting('live_mask_overlay', val);
-              }}
-              className="w-3 h-3 rounded-sm border-zinc-800 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
-            />
-            <span className="text-amber-400 font-bold">Live Mask</span>
-          </label>
-
-          <div className="h-6 w-px bg-zinc-800" />
-
-          {/* Clean Sub-Toolbar Right Side: Status Badge */}
-          <div className="flex items-center gap-2 text-[10px] ml-auto">
-            {activePage && (() => {
-              const c = countDecisions(activePage.text_blocks || []);
-              if (!c.with_text) return null;
-              return (
-                <span className="flex items-center gap-1.5 text-[8.5px] font-mono bg-zinc-900/80 px-2 py-0.5 rounded-md border border-zinc-800 text-zinc-400">
-                  <span className="text-emerald-400" title="AUTO_APPLIED">OK {c.AUTO_APPLIED || 0}</span>
-                  <span>•</span>
-                  <span className="text-amber-400" title="NEEDS_REVIEW">REV {c.NEEDS_REVIEW || 0}</span>
-                </span>
-              );
-            })()}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {activePage && !leftSidebarOpen && (
-            <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-pixel">
-              Page {activePage.page_number} / {activeProject?.pages?.length || 0}
-            </span>
-          )}
-        </div>
-      </div>
 
       {/* MISSING ESSENTIAL FONTS WARNING BANNER */}
       {missingFonts.length > 0 && !isFontBannerDismissed && (
@@ -6606,6 +6460,23 @@ export const App: React.FC = () => {
         isOpen={isDobkleModalOpen}
         data={dobkleProgress}
         onClose={() => setIsDobkleModalOpen(false)}
+      />
+
+      {/* ANTIGRAVITY FLOATING BATCH PROGRESS HUD (NON-BLOCKING) */}
+      <BatchProgressModal
+        isOpen={Boolean(batchProgress || isBatchRunning)}
+        projectId={activeProject?.id || null}
+        progress={batchProgress?.progress || 0}
+        currentPage={batchProgress?.current_page || 0}
+        totalPages={batchProgress?.total_pages || (activeProject?.pages?.length || 0)}
+        currentStep={batchProgress?.step}
+        status={batchProgress?.status || (isBatchRunning ? 'running' : 'idle')}
+        error={batchProgress?.error}
+        onClose={() => {
+          setBatchProgress(null);
+          setIsBatchRunning(false);
+        }}
+        onCancel={cancelBatchWorkflow}
       />
 
       {/* DIAGNOSTICS & SYSTEM HEALTH MODAL */}
