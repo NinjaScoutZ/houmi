@@ -2477,6 +2477,7 @@ def generate_page_auto_mask(
 def generate_text_detection_mask(
     block_id: str,
     kernel: int = 3,
+    method: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     """Generate a preview mask from line-level text detection.
@@ -2503,9 +2504,10 @@ def generate_text_detection_mask(
     applied_kernel = max(0, min(56, int(kernel)))
     settings = (page.project.settings if page and page.project else {}) or {}
     method = str(
-        settings.get("mask_gen_method")
+        method
+        or settings.get("mask_gen_method")
         or settings.get("default_mask_gen_method")
-        or "hybrid"
+        or "unet"
     ).lower()
 
     from app.services.text_mask import (
