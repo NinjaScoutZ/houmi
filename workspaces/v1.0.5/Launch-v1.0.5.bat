@@ -10,8 +10,8 @@ echo.
 
 cd /d "%~dp0"
 
-echo [*] Freeing ports 4000, 5173...
-powershell -Command "Get-NetTCPConnection -LocalPort 4000, 5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+echo [*] Freeing ports 4000, 4001, 5173...
+powershell -Command "Get-NetTCPConnection -LocalPort 4000, 4001, 5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 
 REM ── Set workspace-isolated environment variables ──
 set "HOUMI_APP_DIR=%~dp0"
