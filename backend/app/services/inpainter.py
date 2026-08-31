@@ -1625,7 +1625,27 @@ def get_configured_block_mask(
         full_mask[py0:py1, px0:px1] = 255
         return full_mask
 
-    # Primary for ALL text mask methods (Hybrid, ImageTrans, Monochrome, Adaptive):
+    elif method == "imagetrans":
+        from app.services.text_mask import generate_imagetrans_text_mask
+        crop = img[py0:py1, px0:px1]
+        if crop.size > 0:
+            mask = generate_imagetrans_text_mask(crop, dilation_kernel=dilation_kernel)
+            if mask is not None and np.any(mask):
+                full_mask = np.zeros((h, w), dtype=np.uint8)
+                full_mask[py0:py1, px0:px1] = mask
+                return full_mask
+
+    elif method in ("contour", "morphology", "adaptive"):
+        from app.services.text_mask import generate_contour_morphology_text_mask
+        crop = img[py0:py1, px0:px1]
+        if crop.size > 0:
+            mask = generate_contour_morphology_text_mask(crop, dilation_kernel=dilation_kernel)
+            if mask is not None and np.any(mask):
+                full_mask = np.zeros((h, w), dtype=np.uint8)
+                full_mask[py0:py1, px0:px1] = mask
+                return full_mask
+
+    # Primary for Intelligent Hybrid (and fallback for others):
     # High-accuracy Neural Manga UNet++ deep learning model
     try:
         from app.services.text_mask import generate_routed_text_mask, generate_adaptive_sfx_mask
@@ -1687,6 +1707,13 @@ def get_automatic_block_mask(
         from app.services.text_mask import generate_imagetrans_text_mask
         crop = img[py0:py1, px0:px1]
         local_mask = generate_imagetrans_text_mask(crop, dilation_kernel=requested_kernel)
+        mask = np.zeros((height, width), dtype=np.uint8)
+        if local_mask is not None and local_mask.shape[:2] == crop.shape[:2]:
+            mask[py0:py1, px0:px1] = local_mask
+    elif method in ("contour", "morphology", "adaptive"):
+        from app.services.text_mask import generate_contour_morphology_text_mask
+        crop = img[py0:py1, px0:px1]
+        local_mask = generate_contour_morphology_text_mask(crop, dilation_kernel=requested_kernel)
         mask = np.zeros((height, width), dtype=np.uint8)
         if local_mask is not None and local_mask.shape[:2] == crop.shape[:2]:
             mask[py0:py1, px0:px1] = local_mask

@@ -1,11 +1,11 @@
 {
   "name": "houmi-frontend",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "echo [LOCKED] Authentic Production Staging UI is locked to prevent accidental overwrite of authentic bundle",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",

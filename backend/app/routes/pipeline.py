@@ -2470,11 +2470,33 @@ def generate_text_detection_mask(
         or "hybrid"
     ).lower()
 
-    from app.services.text_mask import generate_routed_text_mask, generate_adaptive_sfx_mask, generate_imagetrans_text_mask
+    from app.services.text_mask import (
+        generate_routed_text_mask,
+        generate_adaptive_sfx_mask,
+        generate_imagetrans_text_mask,
+        generate_contour_morphology_text_mask,
+    )
     try:
         if method == "imagetrans":
             mask = generate_imagetrans_text_mask(crop, dilation_kernel=applied_kernel)
             selected_mode = "imagetrans"
+            diagnostics = {}
+        elif method in ("contour", "morphology", "adaptive"):
+            mask = generate_contour_morphology_text_mask(crop, dilation_kernel=applied_kernel)
+            selected_mode = "contour"
+            diagnostics = {}
+        elif method in ("sam", "segment"):
+            from app.services.sam_segmenter import smart_segment_box
+            ch, cw = crop.shape[:2]
+            mask = smart_segment_box(crop, 0, 0, cw, ch)
+            if mask is not None and applied_kernel > 0:
+                kelem = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (applied_kernel * 2 + 1, applied_kernel * 2 + 1))
+                mask = cv2.dilate(mask, kelem, iterations=1)
+            selected_mode = "sam"
+            diagnostics = {}
+        elif method in ("balloon", "rectangle", "full_box", "box", "full"):
+            mask = np.full(crop.shape[:2], 255, dtype=np.uint8)
+            selected_mode = "balloon"
             diagnostics = {}
         else:
             mask, selected_mode, diagnostics = generate_routed_text_mask(

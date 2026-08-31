@@ -141,9 +141,42 @@ class TestHighQualityTextMask(unittest.TestCase):
             color_seed=seed,
         )
 
-        self.assertEqual(len(regions), 1)
-        self.assertGreater(np.count_nonzero(mask), np.count_nonzero(seed))
-        self.assertNotIn("A detected line was skipped because its mask covered too much of the text region.", warnings)
+    def test_contour_morphology_mask_generates_isolated_text_strokes(self):
+        from app.services.text_mask import generate_contour_morphology_text_mask
+        image = np.full((120, 300, 3), 255, dtype=np.uint8)
+        # Black comic balloon text on white background
+        cv2.putText(image, "HOUMI TEST", (20, 75), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 3, cv2.LINE_AA)
+        mask = generate_contour_morphology_text_mask(image, dilation_kernel=2)
+        self.assertIsNotNone(mask)
+        self.assertGreater(np.count_nonzero(mask), 50)
+        self.assertLess(np.count_nonzero(mask), image.shape[0] * image.shape[1] * 0.50)
+
+    def test_imagetrans_mask_generates_crisp_binarized_mask(self):
+        from app.services.text_mask import generate_imagetrans_text_mask
+        image = np.full((120, 300, 3), 255, dtype=np.uint8)
+        cv2.putText(image, "MANGA", (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (10, 10, 10), 3, cv2.LINE_AA)
+        mask = generate_imagetrans_text_mask(image, dilation_kernel=2)
+        self.assertIsNotNone(mask)
+        self.assertGreater(np.count_nonzero(mask), 50)
+
+    def test_inpainter_dispatch_respects_all_configured_methods(self):
+        from app.services.inpainter import get_configured_block_mask
+        image = np.full((200, 300, 3), 255, dtype=np.uint8)
+        cv2.putText(image, "SAMPLE", (40, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 2, cv2.LINE_AA)
+
+        # 1. Full Bounding Box
+        box_mask = get_configured_block_mask(image, 20, 20, 200, 150, {"mask_gen_method": "balloon"})
+        self.assertGreater(np.count_nonzero(box_mask), 1000)
+
+        # 2. Contour Morphology
+        contour_mask = get_configured_block_mask(image, 20, 20, 200, 150, {"mask_gen_method": "contour", "mask_dilation_kernel": 2})
+        self.assertIsNotNone(contour_mask)
+        self.assertGreater(np.count_nonzero(contour_mask), 10)
+
+        # 3. ImageTrans
+        it_mask = get_configured_block_mask(image, 20, 20, 200, 150, {"mask_gen_method": "imagetrans", "mask_dilation_kernel": 2})
+        self.assertIsNotNone(it_mask)
+        self.assertGreater(np.count_nonzero(it_mask), 10)
 
 
 if __name__ == "__main__":

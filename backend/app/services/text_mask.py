@@ -968,6 +968,63 @@ def generate_imagetrans_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
     return clamp_mask_to_balloon_interior(poly_mask, image_bgr, margin_px=2)
 
 
+def generate_contour_morphology_text_mask(
+    image_bgr: np.ndarray, dilation_kernel: int = 3
+) -> np.ndarray:
+    """
+    Pure OpenCV Adaptive Morphology & Contour Text Mask Engine.
+    Fast deterministic B&W edge/contour segmentation for comic balloons and SFX
+    without requiring neural AI inference.
+    """
+    if image_bgr is None or image_bgr.size == 0:
+        return np.zeros((1, 1), dtype=np.uint8)
+
+    height, width = image_bgr.shape[:2]
+    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY) if image_bgr.ndim == 3 else image_bgr.copy()
+
+    # Border median to determine text/background polarity
+    border = np.concatenate([gray[0, :], gray[-1, :], gray[:, 0], gray[:, -1]])
+    bg_is_light = bool(np.median(border) > 127)
+
+    # Adaptive threshold to isolate stroke edges
+    block_size = max(11, min(31, int(min(width, height) * 0.25) | 1))
+    if block_size % 2 == 0:
+        block_size += 1
+
+    adaptive_method = cv2.THRESH_BINARY_INV if bg_is_light else cv2.THRESH_BINARY
+    thresh = cv2.adaptiveThreshold(
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, adaptive_method, block_size, 7
+    )
+
+    # Morphological opening to remove isolated noise specks
+    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+    cleaned = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, k_open)
+
+    # Find contours and filter components that are inside the text area
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(cleaned, connectivity=8)
+    contour_mask = np.zeros_like(gray)
+    min_area = max(4, int(width * height * 0.0005))
+    max_area = int(width * height * 0.85)
+
+    for i in range(1, num_labels):
+        lx, ly, lw, lh, area = stats[i]
+        if area < min_area or area > max_area:
+            continue
+        # Avoid balloon border edges touching the outer margin
+        if (lx <= 1 or ly <= 1 or lx + lw >= width - 1 or ly + lh >= height - 1) and area > (width * height * 0.15):
+            continue
+        contour_mask[labels == i] = 255
+
+    # Dilation per user-configured kernel
+    eff_kernel = max(0, int(dilation_kernel))
+    if eff_kernel > 0:
+        ksize = eff_kernel * 2 + 1
+        kelem = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ksize, ksize))
+        contour_mask = cv2.dilate(contour_mask, kelem, iterations=1)
+
+    return clamp_mask_to_balloon_interior(contour_mask, image_bgr, margin_px=2)
+
+
 def generate_high_quality_text_mask(
     image_bgr: np.ndarray,
     dilation_kernel: int = 3,

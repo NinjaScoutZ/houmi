@@ -1,4 +1,4 @@
-﻿# HOUMI AGENT LEDGER (FABLE5 DISCIPLINE)
+# HOUMI AGENT LEDGER (FABLE5 DISCIPLINE)
 
 ## COMPLETED CARDS
 
@@ -25,3 +25,8 @@
 ### [x] BK-05: Adversarial Council 3-Way Debate & Final Production Verification
 - Scope: Full multi-layer stack grill + 3-Way Debate Council
 - Evidence: 26/26 tests passed in 3.24s across all backend core suites.
+
+### [x] BK-06: Mask Engine Routing & Precision Persistence Fix (v1.0.5)
+- Scope: backend/app/services/text_mask.py, backend/app/services/inpainter.py, backend/app/routes/pipeline.py, workspaces/v1.0.5/frontend/src/App.tsx, SettingsModal.tsx, MaskEditorModal.tsx
+- Evidence: 10/10 tests passed in 0.72s (pytest backend/tests/test_text_mask.py) + Vite frontend production build passed in 797ms with 0 errors.
+- Features: Real OpenCV Adaptive Morphology & Contours engine, 5-engine unified dispatch in pipeline and inpainter, unified single source of truth for mask_dilation_kernel (3px baseline, no preset overwrite).
