@@ -293,13 +293,14 @@ def run_detect(
     pid = (payload.page_id if payload and payload.page_id else None) or page_id
     if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
+    page_id = pid
     min_conf = (payload.min_confidence if payload and payload.min_confidence is not None else None) or min_confidence
     force_val = (payload.force if payload and payload.force is not None else False) or force
     backend_val = (payload.backend if payload and payload.backend else None) or backend
     balloon_model_val = (payload.balloon_model if payload and payload.balloon_model else None) or balloon_model
     promote_val = (payload.promote_with_ocr if payload and payload.promote_with_ocr is not None else False) or promote_with_ocr
 
-    page = db.query(Page).filter(Page.id == pid).first()
+    page = db.query(Page).filter(Page.id == page_id).first()
     if not page:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
         

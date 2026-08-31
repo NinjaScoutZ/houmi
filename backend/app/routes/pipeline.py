@@ -4,13 +4,38 @@ import base64
 import binascii
 import cv2
 import numpy as np
-from typing import Optional, Any, Dict, List, Union
+from typing import Optional, Any
 from pathlib import Path
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, UploadFile, File, Form, Body, Query
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, get_db
 from app.models.all_models import Page, TextBlock, Project
+
+
+class DetectPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+    min_confidence: Optional[float] = None
+    force: Optional[bool] = False
+    backend: Optional[str] = None
+    balloon_model: Optional[str] = None
+    promote_with_ocr: Optional[bool] = False
+
+
+class OcrPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+    backend: Optional[str] = None
+    force: Optional[bool] = False
+    block_ids: Optional[Any] = None
+    source_lang: Optional[str] = None
+
+
+class MaskPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+
+
+class InpaintPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
 from app.security.dependencies import get_current_user_or_local, ensure_project_access
 from app.services.detector import balloon_detector
 from app.services.ocr import (
@@ -256,25 +281,24 @@ def get_train_status(_admin=Depends(require_admin)):
 
 @router.post("/pipeline/detect")
 def run_detect(
-    page_id: Optional[str] = None,
-    min_confidence: Optional[float] = None,
-    force: bool = False,
-    backend: Optional[str] = None,
-    balloon_model: Optional[str] = None,
-    promote_with_ocr: bool = False,
-    payload: Optional[Dict[str, Any]] = Body(None),
+    payload: Optional[DetectPipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    min_confidence: Optional[float] = Query(None),
+    force: bool = Query(False),
+    backend: Optional[str] = Query(None),
+    balloon_model: Optional[str] = Query(None),
+    promote_with_ocr: bool = Query(False),
     db: Session = Depends(get_db),
 ):
-    if payload and isinstance(payload, dict):
-        page_id = payload.get("page_id") or page_id
-        min_confidence = payload.get("min_confidence", min_confidence)
-        force = payload.get("force", force)
-        backend = payload.get("backend", backend)
-        balloon_model = payload.get("balloon_model", balloon_model)
-        promote_with_ocr = payload.get("promote_with_ocr", promote_with_ocr)
-
-    if not page_id:
+    pid = (payload.page_id if payload and payload.page_id else None) or page_id
+    if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
+    page_id = pid
+    min_conf = (payload.min_confidence if payload and payload.min_confidence is not None else None) or min_confidence
+    force_val = (payload.force if payload and payload.force is not None else False) or force
+    backend_val = (payload.backend if payload and payload.backend else None) or backend
+    balloon_model_val = (payload.balloon_model if payload and payload.balloon_model else None) or balloon_model
+    promote_val = (payload.promote_with_ocr if payload and payload.promote_with_ocr is not None else False) or promote_with_ocr
 
     page = db.query(Page).filter(Page.id == page_id).first()
     if not page:
@@ -282,18 +306,18 @@ def run_detect(
         
     try:
         has_imported_text = any((block.translation or "").strip() for block in page.text_blocks)
-        if has_imported_text and not force:
+        if has_imported_text and not force_val:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Detection blocked because this page contains imported translations. Use force=true only if replacing them is intentional.",
             )
         gpu_ep = get_execution_provider_setting(page.project.settings if page.project else None)
-        selected_model = balloon_model or (page.project.settings.get("balloon_model") if page.project and page.project.settings else None)
+        selected_model = balloon_model_val or (page.project.settings.get("balloon_model") if page.project and page.project.settings else None)
         def check_cancel() -> bool:
-            return bool(page_jobs.get(page_id, {}).get("cancel_requested")) or bool(batch_jobs.get(page.project_id, {}).get("cancel_requested"))
-        blocks_data = balloon_detector.detect(page.source_image_path, min_confidence=min_confidence, execution_provider=gpu_ep, model_name=selected_model, cancel_check=check_cancel)
+            return bool(page_jobs.get(pid, {}).get("cancel_requested")) or bool(batch_jobs.get(page.project_id, {}).get("cancel_requested"))
+        blocks_data = balloon_detector.detect(page.source_image_path, min_confidence=min_conf, execution_provider=gpu_ep, model_name=selected_model, cancel_check=check_cancel)
         if check_cancel():
-            logger.info("Detection cancelled for page %s", page_id)
+            logger.info("Detection cancelled for page %s", pid)
             return {"status": "cancelled", "message": "Detection cancelled by user"}
 
         from app.utils.image_utils import cv2_imread_unicode
@@ -303,7 +327,7 @@ def run_detect(
 
         # Replace only after inference succeeds. This makes repeated detection
         # idempotent and avoids destroying the current page on model failure.
-        db.query(TextBlock).filter(TextBlock.page_id == page_id).delete(
+        db.query(TextBlock).filter(TextBlock.page_id == pid).delete(
             synchronize_session=False
         )
 
@@ -638,50 +662,55 @@ def _reindex_page_blocks(page_id: str, db: Session) -> None:
 
 @router.post("/pipeline/ocr")
 def run_ocr(
-    page_id: Optional[str] = None,
-    backend: Optional[str] = None,
-    force: bool = False,
-    block_ids: Optional[Any] = None,
-    source_lang: Optional[str] = None,
-    payload: Optional[Dict[str, Any]] = Body(None),
+    payload: Optional[OcrPipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    backend: Optional[str] = Query(None),
+    force: bool = Query(False),
+    block_ids: Optional[Any] = Query(None),
+    source_lang: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     cancel_check: Any = None,
 ):
-    if payload and isinstance(payload, dict):
-        page_id = payload.get("page_id") or page_id
-        backend = payload.get("backend", backend)
-        force = payload.get("force", force)
-        block_ids = payload.get("block_ids", block_ids)
-        source_lang = payload.get("source_lang", source_lang)
-
-    if not page_id:
+    pid = (payload.page_id if payload and payload.page_id else None) or page_id
+    if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
+    backend_val = (payload.backend if payload and payload.backend else None) or backend
+    force_val = (payload.force if payload and payload.force is not None else False) or force
+    
+    raw_bids = (payload.block_ids if payload and payload.block_ids is not None else None) or block_ids
+    if isinstance(raw_bids, list):
+        bids_str = ",".join(str(x) for x in raw_bids)
+    elif isinstance(raw_bids, str):
+        bids_str = raw_bids
+    else:
+        bids_str = None
+    lang_val = (payload.source_lang if payload and payload.source_lang else None) or source_lang
 
-    page = db.query(Page).filter(Page.id == page_id).first()
+    page = db.query(Page).filter(Page.id == pid).first()
     if not page:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
         
     try:
         project = page.project
         effective_lang = str(
-            source_lang
+            lang_val
             or getattr(project, "source_lang", None)
             or (project.settings or {}).get("source_lang")
             or "zh"
         ).strip().lower()
         
         # Parallel OCR execution (only targets empty blocks unless force is True, or specific block_ids are provided)
-        if block_ids:
-            target_ids = [bid.strip() for bid in block_ids.split(",") if bid.strip()]
+        if bids_str:
+            target_ids = [bid.strip() for bid in bids_str.split(",") if bid.strip()]
             ocr_targets = [b for b in page.text_blocks if b.id in target_ids]
         else:
-            ocr_targets = list(page.text_blocks) if force else ([b for b in page.text_blocks if not b.source_text] or list(page.text_blocks))
+            ocr_targets = list(page.text_blocks) if force_val else ([b for b in page.text_blocks if not b.source_text] or list(page.text_blocks))
             
         if ocr_targets:
             from app.services.gemini_quota import get_quota_status
             from app.services.performance import resolve_performance_settings
             
-            if backend and any(b in str(backend).lower() for b in ("gemini", "ai", "agy")):
+            if backend_val and any(b in str(backend_val).lower() for b in ("gemini", "ai", "agy")):
                 quota_st = get_quota_status()
                 if quota_st.get("quota_exceeded"):
                     reason = quota_st.get("reason") or "HTTP 429 Rate Limit Exceeded"
@@ -691,7 +720,7 @@ def run_ocr(
                     )
             
             performance = resolve_performance_settings(page.project.settings or {})
-            if block_ids and len(ocr_targets) == 1:
+            if bids_str and len(ocr_targets) == 1:
                 # Explicit single-layer OCR is intentionally the lightweight
                 # normal path. Composite grid OCR is reserved for page/pipeline
                 # work where all detected balloons are already persisted.
@@ -708,7 +737,7 @@ def run_ocr(
                 ocr_text, ocr_success = crop_and_ocr_block(
                     page.source_image_path,
                     target,
-                    backend=backend,
+                    backend=backend_val,
                     source_lang=effective_lang,
                 )
                 results = [(target, ocr_text, ocr_success)]
@@ -720,7 +749,7 @@ def run_ocr(
                     page.source_image_path,
                     ocr_targets,
                     max_workers=performance.ocr_workers,
-                    backend=backend,
+                    backend=backend_val,
                     source_lang=effective_lang,
                     cancel_check=cancel_check,
                 )
@@ -732,7 +761,7 @@ def run_ocr(
         db.flush()
         
         # Re-index remaining blocks sequentially
-        _reindex_page_blocks(page_id, db)
+        _reindex_page_blocks(pid, db)
             
         db.commit()
 
@@ -744,7 +773,7 @@ def run_ocr(
             "review_blocks_count": evidence["review"],
             "ocr_failed_blocks_count": len(failed_block_ids),
             "ocr_failed_block_ids": failed_block_ids,
-            "ocr_backend": backend or get_ocr_engine(project.settings or {}),
+            "ocr_backend": backend_val or get_ocr_engine(project.settings or {}),
         }
     except Exception as e:
         logger.exception("OCR failed")
@@ -755,13 +784,20 @@ def run_ocr(
 
 
 @router.post("/pipeline/mask")
-def run_mask(page_id: str, db: Session = Depends(get_db)):
+def run_mask(
+    payload: Optional[MaskPipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    pid = (payload.page_id if payload and payload.page_id else None) or page_id
+    if not pid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
     try:
-        page = db.query(Page).filter(Page.id == page_id).first()
+        page = db.query(Page).filter(Page.id == pid).first()
         if page and len(page.text_blocks) == 0:
-            run_detect(page_id, db=db)
+            run_detect(page_id=pid, db=db)
         from app.services.inpainter import generate_page_mask_only
-        generate_page_mask_only(page_id, db)
+        generate_page_mask_only(pid, db)
         return {"status": "success", "message": "Mask generation completed"}
     except Exception as e:
         logger.exception("Mask generation failed")
@@ -773,21 +809,18 @@ def run_mask(page_id: str, db: Session = Depends(get_db)):
 
 @router.post("/pipeline/inpaint")
 def run_inpaint(
-    page_id: Optional[str] = None,
-    payload: Optional[Dict[str, Any]] = Body(None),
+    payload: Optional[InpaintPipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    if payload and isinstance(payload, dict):
-        page_id = payload.get("page_id") or page_id
-
-    if not page_id:
+    pid = (payload.page_id if payload and payload.page_id else None) or page_id
+    if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
-
     try:
-        page = db.query(Page).filter(Page.id == page_id).first()
+        page = db.query(Page).filter(Page.id == pid).first()
         if page and len(page.text_blocks) == 0:
-            run_detect(page_id, db=db)
-        clean_page_text(page_id, db)
+            run_detect(page_id=pid, db=db)
+        clean_page_text(pid, db)
         return {"status": "success", "message": "Inpaint clean completed"}
     except Exception as e:
         logger.exception("Inpaint failed")
@@ -1164,23 +1197,10 @@ def run_sort(page_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/pipeline/auto")
-def run_auto(
-    page_id: Optional[str] = None,
-    min_confidence: Optional[float] = None,
-    backend: Optional[str] = None,
-    payload: Optional[Dict[str, Any]] = Body(None),
-    db: Session = Depends(get_db),
-):
+def run_auto(page_id: str, min_confidence: float = None, backend: Optional[str] = None, db: Session = Depends(get_db)):
     """
     One-Click Full Pipeline: runs detect -> OCR -> inpaint sequentially.
     """
-    if payload and isinstance(payload, dict):
-        page_id = payload.get("page_id") or page_id
-        min_confidence = payload.get("min_confidence", min_confidence)
-        backend = payload.get("backend", backend)
-
-    if not page_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
     try:
         # 1. Detect
         detect_res = run_detect(
@@ -1735,6 +1755,10 @@ def run_batch_pipeline_task(
                 # scanline progress), so mark the phase as started with a small
                 # truthful coarse increment instead of displaying a frozen 0%.
                 broadcast_step("detect", float(step_idx) + 0.25)
+                if any((block.translation or "").strip() for block in page.text_blocks):
+                    raise ValueError(
+                        f"Detection blocked on page {page.page_number}: imported translations would be deleted"
+                    )
                 gpu_ep = get_execution_provider_setting(project.settings if project else None)
                 blocks_data = balloon_detector.detect(page.source_image_path, min_confidence=min_confidence, execution_provider=gpu_ep, model_name=selected_model, cancel_check=check_cancel_requested)
                 if check_cancel_requested():
@@ -2504,34 +2528,13 @@ def generate_text_detection_mask(
             )
             if mask is None or not np.any(mask):
                 mask = generate_adaptive_sfx_mask(crop, dilation_kernel=applied_kernel)
+            selected_mode = selected_mode or "hybrid"
 
-        # Discard any outer components that do not overlap with the core text block (e.g. speedlines/spikes)
-        if mask is not None and np.any(mask):
-            bx_local = max(0, int(block.x - px0))
-            by_local = max(0, int(block.y - py0))
-            bw_local = max(1, int(block.width))
-            bh_local = max(1, int(block.height))
-            core_margin = max(6, applied_kernel)
-
-            num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
-            if num_labels > 1:
-                filtered_mask = np.zeros_like(mask)
-                for l in range(1, num_labels):
-                    lx = stats[l, cv2.CC_STAT_LEFT]
-                    ly = stats[l, cv2.CC_STAT_TOP]
-                    lw = stats[l, cv2.CC_STAT_WIDTH]
-                    lh = stats[l, cv2.CC_STAT_HEIGHT]
-                    overlaps_core = not (
-                        lx + lw < bx_local - core_margin
-                        or lx > bx_local + bw_local + core_margin
-                        or ly + lh < by_local - core_margin
-                        or ly > by_local + bh_local + core_margin
-                    )
-                    if overlaps_core:
-                        filtered_mask[labels == l] = 255
-                mask = filtered_mask
+        regions = []
+        warnings = [f"Selected mask mode: {selected_mode}."]
 
         # Apply project Magnetic Line Fill and hole filling if enabled for 100% parity with auto clean
+        settings = (page.project.settings if page and page.project else {}) or {}
         magnetic_fill_enabled = bool(
             settings.get("mask_magnetic_line_fill")
             or settings.get("magnetic_mask_fill")
@@ -2544,9 +2547,6 @@ def generate_text_detection_mask(
         from app.services.inpainter import fill_mask_holes
         if mask is not None and np.any(mask):
             mask = fill_mask_holes(mask)
-
-        regions = []
-        warnings = [f"Selected mask mode: {selected_mode}."]
     except RuntimeError as exc:
         logger.warning("High quality text mask unavailable for block %s: %s", block_id, exc)
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
@@ -2937,11 +2937,6 @@ def generate_block_inpaint_preview(
 
         from app.utils.image_utils import cv2_imread_unicode
         source_img = cv2_imread_unicode(source_path)
-        if source_img is None:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to load source image"
-            )
 
         image_h, image_w = source_img.shape[:2]
         x0, y0, x1, y1 = get_padded_block_coords(block, image_w, image_h)
