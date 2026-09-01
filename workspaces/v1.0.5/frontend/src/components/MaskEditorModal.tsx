@@ -139,6 +139,8 @@ const drawMaskImage = (
   const source = sourceCtx.getImageData(0, 0, width, height);
   if (mode === 'replace') {
     ctx.putImageData(maskImageDataToOverlay(source), 0, 0);
+    sourceCanvas.width = 0;
+    sourceCanvas.height = 0;
     return;
   }
   const target = ctx.getImageData(0, 0, width, height);
@@ -157,6 +159,8 @@ const drawMaskImage = (
     }
   }
   ctx.putImageData(target, 0, 0);
+  sourceCanvas.width = 0;
+  sourceCanvas.height = 0;
 };
 
 const loadImage = (src: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
@@ -947,36 +951,56 @@ export const MaskEditorModal: React.FC<MaskEditorModalProps> = ({
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         handleUndo();
       } else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         handleRedo();
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         if (previewMode) setPreviewMode(false);
         else requestClose();
       } else if (e.key === ' ' && !spacePanActiveRef.current) {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         if (activeTool !== 'pan') previousToolRef.current = activeTool;
         spacePanActiveRef.current = true;
         setActiveTool('pan');
       } else if (!e.ctrlKey && !e.metaKey && (e.key === 'b' || e.key === 'B' || e.key === '1')) {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         setActiveTool('paint');
       } else if (!e.ctrlKey && !e.metaKey && (e.key === 'r' || e.key === 'R' || e.key === '2')) {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         setActiveTool('rect');
       } else if (!e.ctrlKey && !e.metaKey && (e.key === 's' || e.key === 'S' || e.key === '3')) {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         setActiveTool('segment');
       } else if (e.key === 'h' || e.key === 'H') {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         if (previewDataUrl) setPreviewMode(prev => !prev);
       } else if (e.key === '[') {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         setBrushSize(b => Math.max(1, b - 2));
       } else if (e.key === ']') {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         setBrushSize(b => Math.min(50, b + 2));
       }
     };
@@ -988,11 +1012,11 @@ export const MaskEditorModal: React.FC<MaskEditorModalProps> = ({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    window.addEventListener('keyup', handleKeyUp, { capture: true });
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      window.removeEventListener('keyup', handleKeyUp, { capture: true });
     };
   }, [activeTool, previewMode, previewDataUrl, isDirty, isSaving, isPreviewing, isDetectingText, isSegmenting]);
 

@@ -218,6 +218,8 @@ const enqueueBlockMutation = (
   return run;
 };
 
+let activePageSwitchCounter = 0;
+
 export const flushPendingBlockUpdates = async (specificBlockId?: string) => {
   const promises: Promise<void>[] = [];
   const entries = Array.from(pendingBlockUpdates.entries());
@@ -471,12 +473,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       try {
         localStorage.setItem('houmi_last_project_id', projectId);
       } catch {}
-      set({ activeProject: project, activePage: pages[0] || null, selectedBlock: null, selectedBlocks: [], zoomLevel: null });
-      if (pages && pages.length > 0 && pages[0]?.id) {
+      const currentActivePageId = get().activePage?.id;
+      const targetPage = (currentActivePageId && pages.find((p: any) => p.id === currentActivePageId)) || pages[0] || null;
+      set({ activeProject: project, activePage: targetPage, selectedBlock: null, selectedBlocks: [], zoomLevel: null });
+      if (targetPage?.id) {
         try {
-          await get().selectPage(pages[0].id);
+          await get().selectPage(targetPage.id);
         } catch (e) {
-          console.warn("Failed to auto-select first page:", e);
+          console.warn("Failed to select target page:", e);
         }
       }
       get().setStatus('Project loaded', false);
@@ -647,11 +651,18 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   selectPage: async (pageId) => {
     await flushPendingBlockUpdates();
     const requestPageRevision = getPageMutationRevision(pageId);
+    const thisRequestSeq = ++activePageSwitchCounter;
     get().setStatus('Loading page...', false);
     try {
       const res = await apiFetch(`${API_BASE}/pages/${pageId}`);
       if (!res.ok) throw new Error("Failed to load page");
       const page = await res.json();
+
+      // Discard stale out-of-order page navigation responses
+      if (thisRequestSeq !== activePageSwitchCounter) {
+        console.warn(`[selectPage] Discarding stale page navigation response for ${pageId}`);
+        return;
+      }
 
       // Fetch mask status for all blocks on this page
       try {

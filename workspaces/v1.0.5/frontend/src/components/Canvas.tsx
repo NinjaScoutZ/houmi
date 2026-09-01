@@ -48,15 +48,18 @@ if ((fabric.Textbox as any).prototype) {
   // Thai-Aware Natural Word Wrapping:
   // Uses browser Intl.Segmenter to safely break Thai sentences at word boundaries
   // instead of treating whole Thai sentences as single unbroken words.
+  const thaiSegmenterSingleton = typeof Intl !== 'undefined' && (Intl as any).Segmenter
+    ? new (Intl as any).Segmenter('th', { granularity: 'word' })
+    : null;
+
   const originalWrapLine = (fabric.Textbox as any).prototype._wrapLine;
   (fabric.Textbox as any).prototype._wrapLine = function(this: any, line: any, lineIndex: number, reservedSpace: number = 0) {
     const textStr = Array.isArray(line) ? line.join('') : String(line || '');
-    if (/[\u0e00-\u0e7f]/.test(textStr) && typeof Intl !== 'undefined' && (Intl as any).Segmenter) {
+    if (/[\u0e00-\u0e7f]/.test(textStr) && thaiSegmenterSingleton) {
       const maxWidth = this.width - reservedSpace;
       if (maxWidth > 10) {
         try {
-          const segmenter = new (Intl as any).Segmenter('th', { granularity: 'word' });
-          const words = Array.from(segmenter.segment(textStr)).map((s: any) => s.segment);
+          const words = Array.from(thaiSegmenterSingleton.segment(textStr)).map((s: any) => s.segment);
           const wrappedLines: any[] = [];
           let currentLine = '';
 
@@ -1270,6 +1273,12 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
       const target = e.target as HTMLElement;
       // If typing inside an input/textarea, skip shortcuts except Escape, Enter, Tab
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+      // If a modal dialog is active, suppress global canvas shortcuts
+      const isAnyModalOpen = Boolean(document.querySelector('[role="dialog"], [data-modal-open="true"], div.fixed.inset-0'));
+      if (isAnyModalOpen && e.key !== 'Escape') {
+        return;
+      }
 
       // Find Balloon Shortcut (Custom key binding)
       if (matchBinding(keyBindings.findBalloon, e)) {
@@ -4519,7 +4528,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
               const b = activePage?.text_blocks.find((x) => x.id === id);
               if (b && activePage) {
                 try {
-                  const res = await apiFetch('/pipeline/extract-style', {
+                  const res = await apiFetch('/api/pipeline/extract-style', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

@@ -27,15 +27,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose,
     setLoading(true);
     try {
       if (activeTab === 'overview' || activeTab === 'users') {
-        const userData = await apiFetch('/admin/users');
-        if (userData && userData.users) {
-          setUsers(userData.users);
+        const res = await apiFetch('/api/admin/users');
+        if (res.ok) {
+          const userData = await res.json();
+          if (userData && userData.users) {
+            setUsers(userData.users);
+          }
         }
       }
       if (activeTab === 'audit') {
-        const auditData = await apiFetch('/admin/audit-logs');
-        if (auditData && auditData.logs) {
-          setAuditLogs(auditData.logs);
+        const res = await apiFetch('/api/admin/audit-logs');
+        if (res.ok) {
+          const auditData = await res.json();
+          if (auditData && auditData.logs) {
+            setAuditLogs(auditData.logs);
+          }
         }
       }
     } catch (err: any) {
@@ -48,15 +54,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose,
   const handleGenerateCodes = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await apiFetch('/admin/redeem-codes/generate', {
+      const res = await apiFetch('/api/admin/redeem-codes/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prefix: genPrefix, duration_days: genDays, count: genCount }),
       });
-      if (res && res.codes) {
-        setGeneratedCodes(res.codes);
-        setMessage(`Successfully generated ${res.codes.length} redeem codes!`);
-        loadDashboardData();
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.codes) {
+          setGeneratedCodes(data.codes);
+          setMessage(`Successfully generated ${data.codes.length} redeem codes!`);
+          loadDashboardData();
+        }
       }
     } catch (err: any) {
       setMessage(`Failed: ${err.message}`);
@@ -66,7 +75,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose,
   const handleToggleUserStatus = async (userId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
     try {
-      await apiFetch(`/admin/users/${userId}/status`, {
+      await apiFetch(`/api/admin/users/${userId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),

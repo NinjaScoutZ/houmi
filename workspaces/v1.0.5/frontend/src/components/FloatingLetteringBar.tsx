@@ -83,7 +83,7 @@ export const FloatingLetteringBar: React.FC<FloatingLetteringBarProps> = ({
     if (!activePage) return;
     setIsExtracting(true);
     try {
-      const res = await apiFetch('/pipeline/extract-style', {
+      const res = await apiFetch('/api/pipeline/extract-style', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -122,7 +122,7 @@ export const FloatingLetteringBar: React.FC<FloatingLetteringBarProps> = ({
     if (!block) return;
     setIsCentering(true);
     try {
-      const res = await apiFetch(`/pipeline/blocks/${block.id}/smart-balloon/recompute`, {
+      const res = await apiFetch(`/api/pipeline/blocks/${block.id}/smart-balloon/recompute`, {
         method: 'POST',
       });
       if (res.ok) {
