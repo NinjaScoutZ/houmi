@@ -532,7 +532,14 @@ if FRONTEND_DIST_DIR.exists() or True:
             if apath.is_file():
                 return FileResponse(str(apath))
 
-        # On Central Server (host/admin mode), serve Central Service Portal on root
+        # Dedicated Web Studio Application Routes (/app, /studio, /workspace)
+        if fallback_path.startswith("app") or fallback_path.startswith("studio") or fallback_path.startswith("workspace"):
+            return FileResponse(
+                str(dist / "index.html"),
+                headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"}
+            )
+
+        # On Central Server (host/admin mode), serve Central Landing / Download Portal on root
         if RUNTIME_MODE != "local" and (fallback_path == "" or fallback_path == "/"):
             return HTMLResponse(content=get_central_landing_html())
 

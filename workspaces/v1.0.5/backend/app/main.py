@@ -97,6 +97,23 @@ async def lifespan(app: FastAPI):
     # owned by the desktop process or app.worker_runtime so a web restart
     # cannot duplicate them.
     if RUNTIME_MODE == "local":
+        # 0. Auto-Check & Apply Delta Patch from Central Server on startup if update is available
+        def _auto_apply_patch_on_startup():
+            try:
+                from app.routes.updater import check_for_update, apply_patch
+                logger.info("Checking for startup delta patches from Central Server...")
+                info = check_for_update()
+                if info.get("update_available"):
+                    logger.info("Update available (%s -> %s). Applying delta patch...", info.get("current_version"), info.get("latest_version"))
+                    res = apply_patch()
+                    logger.info("Startup delta patch result: %s", res)
+                else:
+                    logger.info("Application is up to date (v%s).", info.get("current_version"))
+            except Exception as e_ap:
+                logger.warning("Startup delta patch check skipped: %s", e_ap)
+
+        threading.Thread(target=_auto_apply_patch_on_startup, daemon=True).start()
+
         # 1. Start OCR Managed Subprocess
         logger.info("Launching DeepSeek OCR Subprocess...")
         ocr_manager.start_server()
@@ -458,35 +475,24 @@ from pathlib import Path
 from app.config import DATA_DIR
 
 def get_frontend_dist_dir() -> Path:
-    # 1. Primary Authority: Explicit environment variable set by launcher/runtime
-    env_dist = os.environ.get("HOUMI_FRONTEND_DIST")
-    if env_dist:
-        p = Path(env_dist).resolve()
-        if p.exists() and (p / "index.html").exists():
-            return p
-        logger.warning(f"HOUMI_FRONTEND_DIST set to '{env_dist}' but index.html was not found.")
+    repo_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+    if not getattr(sys, "frozen", False) and repo_dist.exists() and (repo_dist / "index.html").exists():
+        return repo_dist
 
-    # 2. Local workspace / worktree dist adjacent to backend
-    worktree_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
-    if worktree_dist.exists() and (worktree_dist / "index.html").exists():
-        return worktree_dist
-
-    # 3. PyInstaller frozen bundled assets
-    if getattr(sys, "frozen", False):
-        frozen_internal = Path(sys.executable).parent / "_internal" / "frontend" / "dist"
-        if frozen_internal.exists() and (frozen_internal / "index.html").exists():
-            return frozen_internal
-        frozen_direct = Path(sys.executable).parent / "frontend" / "dist"
-        if frozen_direct.exists() and (frozen_direct / "index.html").exists():
-            return frozen_direct
-
-    # 4. Fallback in data/patches/current ONLY if auto patch is explicitly allowed
-    if os.environ.get("HOUMI_DISABLE_AUTO_PATCH") != "1":
-        patch_dist = DATA_DIR / "patches" / "current" / "frontend" / "dist"
-        if patch_dist.exists() and (patch_dist / "index.html").exists():
-            return patch_dist
-
-    return worktree_dist
+    candidates = [
+        DATA_DIR / "patches" / "current" / "frontend" / "dist",
+        Path(sys.executable).parent / "_internal" / "frontend" / "dist",
+        Path(sys.executable).parent / "frontend" / "dist",
+        Path(__file__).resolve().parent.parent / "frontend" / "dist",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "HoumiStudio" / "_internal" / "frontend" / "dist",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "HoumiStudio" / "frontend" / "dist",
+        repo_dist,
+    ]
+    valid = [c for c in candidates if c.exists() and (c / "index.html").exists()]
+    if valid:
+        valid.sort(key=lambda p: (p / "index.html").stat().st_mtime, reverse=True)
+        return valid[0]
+    return repo_dist
 
 FRONTEND_DIST_DIR = get_frontend_dist_dir()
 
@@ -510,6 +516,9 @@ if FRONTEND_DIST_DIR.exists() or True:
         if fallback_path == "admin" or fallback_path == "admin/":
             return get_web_admin_portal()
 
+        if fallback_path == "download" or fallback_path == "download/":
+            return HTMLResponse(content=get_central_landing_html())
+
         # Prevent catching API or Static paths
         if (fallback_path.startswith("api") or 
             fallback_path.startswith("static")):
@@ -523,7 +532,14 @@ if FRONTEND_DIST_DIR.exists() or True:
             if apath.is_file():
                 return FileResponse(str(apath))
 
-        # On Central Server (host/admin mode), serve Central Service Portal on root
+        # Dedicated Web Studio Application Routes (/app, /studio, /workspace)
+        if fallback_path.startswith("app") or fallback_path.startswith("studio") or fallback_path.startswith("workspace"):
+            return FileResponse(
+                str(dist / "index.html"),
+                headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"}
+            )
+
+        # On Central Server (host/admin mode), serve Central Landing / Download Portal on root
         if RUNTIME_MODE != "local" and (fallback_path == "" or fallback_path == "/"):
             return HTMLResponse(content=get_central_landing_html())
 

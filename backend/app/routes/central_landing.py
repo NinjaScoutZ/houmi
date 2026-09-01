@@ -59,7 +59,10 @@ def get_central_landing_html() -> str:
             <div class="flex items-center gap-4">
                 <a href="#features" class="text-xs font-semibold text-slate-400 hover:text-white transition">ฟีเจอร์เด่น</a>
                 <a href="#versions" class="text-xs font-semibold text-slate-400 hover:text-white transition">คลังเวอร์ชัน</a>
-                <a href="#quickstart" class="text-xs font-semibold text-slate-400 hover:text-white transition">วิธีติดตั้ง</a>
+                <a href="/app" class="px-3.5 py-1.5 rounded-lg border border-amber-500/50 bg-amber-500/20 hover:bg-amber-500/30 text-xs font-bold text-amber-300 transition flex items-center gap-1.5 shadow-md shadow-amber-500/10">
+                    <span>✨</span>
+                    <span>เปิด Web Studio</span>
+                </a>
                 <a href="/admin" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-700 text-xs font-bold text-slate-200 transition flex items-center gap-1.5">
                     <span>🛡️</span>
                     <span>Admin Portal</span>
@@ -73,7 +76,7 @@ def get_central_landing_html() -> str:
         <div class="text-center space-y-5 max-w-3xl mx-auto pt-6">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Production Release พร้อมให้ดาวน์โหลดแล้ว</span>
+                <span>Production Release พร้อมให้บริการแล้ว</span>
             </div>
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
                 สตูดิโอแปลมังงะ & เว็บตูน <br>
@@ -86,26 +89,30 @@ def get_central_landing_html() -> str:
                 และส่งออกเลเยอร์ข้อความแท้ไปยัง Adobe Photoshop ในคลิกเดียว
             </p>
 
-            <!-- Main Download CTA Box -->
+            <!-- Main CTA Buttons Box -->
             <div class="p-6 rounded-3xl bg-gradient-to-b from-slate-800/60 to-slate-900/80 border border-amber-500/30 shadow-2xl shadow-amber-500/5 max-w-xl mx-auto space-y-4">
                 <div class="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-3">
                     <span class="flex items-center gap-1.5 font-bold text-white">
                         <span>📦</span>
-                        <span>เวอร์ชันแนะนำล่าสุด: <strong class="text-amber-400 font-mono">v{active_ver}</strong></span>
+                        <span>เวอร์ชันแนะนำ: <strong class="text-amber-400 font-mono">v{active_ver}</strong></span>
                     </span>
                     <span class="font-mono text-slate-400">{active_rel.get('size_mb', '3.44') if active_rel else '3.44'} MB • Windows 64-bit</span>
                 </div>
 
-                <div class="space-y-2">
-                    <a id="mainDownloadBtn" href="/api/system/download-update" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-extrabold text-base transition-all shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2 group cursor-pointer">
-                        <span>🚀</span>
-                        <span>ดาวน์โหลด Houmi Studio (v{active_ver})</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <a href="/app" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-extrabold text-sm transition-all shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2 group cursor-pointer">
+                        <span>✨</span>
+                        <span>เปิดใช้งาน Web Studio</span>
                         <span class="group-hover:translate-x-1 transition-transform">➔</span>
                     </a>
-                    <p class="text-[11px] text-slate-500 text-center">
-                        ไม่ต้องติดตั้งตัวเต็มใหม่เมื่อมีอัปเดต • รองรับระบบ Fast OTA Delta Patch อัตโนมัติ
-                    </p>
+                    <a id="mainDownloadBtn" href="/api/system/download-update" class="w-full py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+                        <span>📥</span>
+                        <span>ดาวน์โหลดแอป PC</span>
+                    </a>
                 </div>
+                <p class="text-[11px] text-slate-500 text-center">
+                    ใช้งานผ่านเว็บได้ทันที หรือติดตั้งแอปรองรับระบบ Fast OTA Delta Patch อัตโนมัติ
+                </p>
             </div>
         </div>
 
