@@ -102,6 +102,7 @@ TOKEN_REGEX = re.compile(
     r"("
     r"[a-zA-Z0-9_]+"
     r"|[ \t]+"
+    r"|[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f]+"
     r"|[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\u30a0-\u30ff\uff00-\uffef]"
     r"|[^\u0e31\u0e34-\u0e3a\u0e47-\u0e4e\s][\u0e31\u0e34-\u0e3a\u0e47-\u0e4e]*"
     r"|\S"
