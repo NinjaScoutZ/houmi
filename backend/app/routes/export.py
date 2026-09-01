@@ -287,3 +287,63 @@ def api_download_jsx_script():
         filename="format_thai_text.jsx",
     )
 
+
+@router.get("/export/page/{page_id}/native-psd")
+def api_export_page_native_psd(
+    page_id: str,
+    dpi: float = 600.0,
+    db: Session = Depends(get_db),
+):
+    """Export page as native Adobe Photoshop 8BPS (.psd) with editable TySh text layers."""
+    try:
+        from app.services.export_psd_clip import export_page_to_native_psd_clip
+        out_dir = DATA_DIR / "exports" / "psd"
+        results = export_page_to_native_psd_clip(
+            page_id=page_id, db=db, output_dir=out_dir, include_psd=True, include_clip=False, dpi=dpi
+        )
+        psd_path = results["psd"]
+        return FileResponse(
+            path=str(psd_path),
+            media_type="image/vnd.adobe.photoshop",
+            filename=psd_path.name,
+            headers={"Content-Disposition": f"attachment; filename={quote(psd_path.name)}"},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        logger.exception("Native PSD export failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Native PSD export failed: {e}",
+        )
+
+
+@router.get("/export/page/{page_id}/native-clip")
+def api_export_page_native_clip(
+    page_id: str,
+    dpi: float = 600.0,
+    db: Session = Depends(get_db),
+):
+    """Export page as native Clip Studio Paint (.clip) SQLite container with vector & text data."""
+    try:
+        from app.services.export_psd_clip import export_page_to_native_psd_clip
+        out_dir = DATA_DIR / "exports" / "clip"
+        results = export_page_to_native_psd_clip(
+            page_id=page_id, db=db, output_dir=out_dir, include_psd=False, include_clip=True, dpi=dpi
+        )
+        clip_path = results["clip"]
+        return FileResponse(
+            path=str(clip_path),
+            media_type="application/octet-stream",
+            filename=clip_path.name,
+            headers={"Content-Disposition": f"attachment; filename={quote(clip_path.name)}"},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        logger.exception("Native CLIP export failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Native CLIP export failed: {e}",
+        )
+
