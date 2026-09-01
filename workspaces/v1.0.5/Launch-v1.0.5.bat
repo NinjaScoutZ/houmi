@@ -27,11 +27,9 @@ echo [*] Workspace Root:  %~dp0
 echo [*] Backend Engine:  %~dp0backend
 echo [*] Data & DB Path:  %~dp0data
 echo [*] PSD CLI Path:    %~dp0bin\houmi-psd-cli.exe
-REM ── Guard: Ensure authentic UI bundle is locked and preserved ──
-if not exist "%~dp0frontend\dist\index.html" (
-    if exist "%~dp0frontend\dist_golden_backup" (
-        xcopy /E /Y /I "%~dp0frontend\dist_golden_backup\*" "%~dp0frontend\dist\" >nul 2>&1
-    )
+REM ── Guard: Ensure authentic Modern Golden UI bundle is strictly enforced ──
+if exist "%~dp0frontend\dist_golden_backup" (
+    xcopy /E /Y /I "%~dp0frontend\dist_golden_backup\*" "%~dp0frontend\dist\" >nul 2>&1
 )
 
 echo [*] [1/2] Starting Native Tauri v2 Rust Host + AI Sidecar Supervisor...
