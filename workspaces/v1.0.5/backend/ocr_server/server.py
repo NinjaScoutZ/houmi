@@ -319,10 +319,13 @@ class DeepSeekBackend(BaseBackend):
                 "aux_loss_alpha": 0.0,
                 "seq_aux": True,
             }
+            if item.startswith("__") and item.endswith("__"):
+                raise AttributeError(f"'{type(obj).__name__}' object has no attribute '{item}'")
             if item == "pad_token_id":
                 return obj.__dict__.get("pad_token_id") or obj.__dict__.get("eos_token_id") or 0
-            if hasattr(obj, "text_config") and hasattr(obj.text_config, item):
-                return getattr(obj.text_config, item)
+            text_cfg = obj.__dict__.get("text_config")
+            if text_cfg is not None and hasattr(text_cfg, item):
+                return getattr(text_cfg, item)
             if item in defaults:
                 return defaults[item]
             raise AttributeError(f"'{type(obj).__name__}' object has no attribute '{item}'")
