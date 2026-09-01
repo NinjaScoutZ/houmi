@@ -617,6 +617,25 @@ def generate_manga_unet_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
     """High-precision UNet++ text mask for colored/textured Manga & Webtoon balloons."""
     if image_bgr is None or image_bgr.size == 0:
         return None
+
+    h, w = image_bgr.shape[:2]
+
+    # Ultra-Fast Vertical Tiled Inference for giant Webtoon strips (e.g. 14k+ pixels)
+    if h > 2048:
+        chunk_size = 1536
+        overlap = 128
+        stride = chunk_size - overlap
+        final_full_mask = np.zeros((h, w), dtype=np.uint8)
+        for y_start in range(0, h, stride):
+            y_end = min(h, y_start + chunk_size)
+            chunk_bgr = image_bgr[y_start:y_end, :]
+            chunk_mask = generate_manga_unet_text_mask(chunk_bgr, dilation_kernel=dilation_kernel, threshold=threshold)
+            if chunk_mask is not None:
+                final_full_mask[y_start:y_end, :] = np.maximum(final_full_mask[y_start:y_end, :], chunk_mask)
+            if y_end >= h:
+                break
+        return final_full_mask
+
     try:
         loaded = get_manga_unet_model()
         if loaded is None:
@@ -624,7 +643,6 @@ def generate_manga_unet_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
         model_obj, device = loaded
 
         image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-        h, w = image_rgb.shape[:2]
         pad_h = (32 - h % 32) % 32
         pad_w = (32 - w % 32) % 32
 
@@ -730,6 +748,49 @@ def generate_manga_unet_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
     except Exception as exc:
         logger.warning("Manga UNet++ text mask execution failed: %s", exc)
         return None
+
+
+def generate_ensemble_text_mask(
+    image_bgr: np.ndarray,
+    dilation_kernel: int = 3,
+) -> tuple[np.ndarray | None, str, dict[str, Any]]:
+    """
+    Dual Ensemble Text Mask Engine (Manga UNet++ AI Vision + MangaToolPlus Polygon Binarization).
+    
+    1. Manga UNet++ AI: Deep learning segmentation of complex typography, glyph textures, and faint strokes.
+    2. MangaToolPlus Polygon Binarization: Mathematical contrast isolation, Convex Hull polygon grouping, and safe Euclidean distance-transform boundary clamping.
+    3. Synergistic Fusion: Bitwise OR union of both engines followed by balloon contour clamping.
+    """
+    if image_bgr is None or image_bgr.size == 0:
+        return None, "empty", {}
+
+    height, width = image_bgr.shape[:2]
+    eff_kernel = max(0, min(56, int(dilation_kernel)))
+
+    # 1. Run MangaToolPlus & ImageTrans Polygon Binarization Mask
+    poly_mask = generate_imagetrans_text_mask(image_bgr, dilation_kernel=eff_kernel)
+
+    # 2. Run Manga UNet++ Neural Vision Model
+    unet_mask = generate_manga_unet_text_mask(image_bgr, dilation_kernel=eff_kernel)
+
+    # 3. Intelligent Dual Ensemble Fusion
+    if unet_mask is not None and np.any(unet_mask) and poly_mask is not None and np.any(poly_mask):
+        fused = cv2.bitwise_or(poly_mask, unet_mask)
+        mode = "dual_ensemble_unet_plus_polygon"
+    elif unet_mask is not None and np.any(unet_mask):
+        fused = unet_mask
+        mode = "manga_unet_vision"
+    elif poly_mask is not None and np.any(poly_mask):
+        fused = poly_mask
+        mode = "polygon_binarization"
+    else:
+        fused = generate_adaptive_sfx_mask(image_bgr, dilation_kernel=max(1, eff_kernel))
+        mode = "adaptive_sfx_fallback"
+
+    if fused is not None:
+        fused = clamp_mask_to_balloon_interior(fused, image_bgr, margin_px=2)
+
+    return fused, mode, {"height": float(height), "width": float(width)}
 
 
 def generate_routed_text_mask(

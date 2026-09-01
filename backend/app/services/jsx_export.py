@@ -193,12 +193,38 @@ def generate_page_jsx_script(
     }}
 
     var bgFile = new File("{bg_path_str}");
-    if (!bgFile.exists) {{
-        alert("ไม่พบไฟล์ภาพพื้นหลัง: " + bgFile.fsName);
-        return;
-    }}
+    var doc = null;
+    if (bgFile.exists) {
+        doc = app.open(bgFile);
+    } else {
+        try {
+            var scriptFolder = (new File($.fileName)).parent;
+            var candidates = [
+                "{Path(bg_path_str).name}",
+                "page_{page.page_number:03d}_clean.png",
+                "page_{page.page_number:03d}.png",
+                "page_{page.page_number:03d}.jpg",
+                "page_{page.page_number}.png",
+                "clean_page.png",
+                "{page.name or 'image.png'}"
+            ];
+            for (var c = 0; c < candidates.length; c++) {
+                var candidate = new File(scriptFolder + "/" + candidates[c]);
+                if (candidate.exists) {
+                    doc = app.open(candidate);
+                    break;
+                }
+            }
+        } catch(e) {}
+        if (!doc && app.documents.length > 0) {
+            doc = app.activeDocument;
+        }
+    }
 
-    var doc = app.open(bgFile);
+    if (!doc) {
+        alert("ไม่พบไฟล์ภาพมังงะ กรุณาเปิดไฟล์ภาพใน Photoshop ก่อนรันสคริปต์นี้");
+        return;
+    }
     try {{
         doc.resizeImage(doc.width, doc.height, 72, ResampleMethod.NONE);
     }} catch(e) {{}}

@@ -101,13 +101,23 @@ def export_project_jsx_zip(
     errors = []
 
     with zipfile.ZipFile(str(zip_path), 'w', zipfile.ZIP_DEFLATED) as zf:
+        from app.services.project_paths import inpainted_asset_path
         for page in pages:
             try:
                 jsx_path = export_page_jsx(page.id, db, text_mode=text_mode)
                 arcname = f"page_{page.page_number:03d}.jsx"
                 zf.write(str(jsx_path), arcname)
+                
+                # Bundle clean image if present
+                clean_img = inpainted_asset_path(page)
+                if not clean_img.exists() and page.inpainted_image_path:
+                    clean_img = Path(page.inpainted_image_path)
+                if clean_img.exists():
+                    img_arcname = f"page_{page.page_number:03d}_clean.png"
+                    zf.write(str(clean_img), img_arcname)
+                    
                 exported_count += 1
-                logger.info(f"Added page {page.page_number} JSX to ZIP")
+                logger.info(f"Added page {page.page_number} JSX & clean image to ZIP")
             except Exception as e:
                 error_msg = f"Page {page.page_number}: {str(e)}"
                 errors.append(error_msg)
