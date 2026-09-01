@@ -1,3 +1,5 @@
+import os
+os.environ["PRELOAD_MODEL"] = "false"
 import sys
 import os
 import io

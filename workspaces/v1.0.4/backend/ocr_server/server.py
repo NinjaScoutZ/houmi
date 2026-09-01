@@ -655,7 +655,7 @@ class OCRService:
 
 ocr_service = OCRService()
 
-PRELOAD_MODEL = os.environ.get("PRELOAD_MODEL", "true").lower() == "true"
+PRELOAD_MODEL = os.environ.get("PRELOAD_MODEL", "false").lower() == "true"
 if PRELOAD_MODEL:
     try:
         LOGGER.info("Pre-loading OCR backend: %s", ocr_service.backend_name)
