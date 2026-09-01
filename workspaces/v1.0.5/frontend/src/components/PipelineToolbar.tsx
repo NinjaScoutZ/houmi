@@ -7,6 +7,8 @@ export interface PipelineToolbarProps {
   onOpenBatchModal?: () => void;
   onOpenSettings?: () => void;
   onExport?: () => void;
+  onExportNativePsd?: () => void;
+  onExportNativeClip?: () => void;
   isProcessing?: boolean;
   pageCount?: number;
   backendStatus?: 'online' | 'degraded' | 'offline' | 'loading';
@@ -510,6 +512,17 @@ export const PipelineToolbar: React.FC<PipelineToolbarProps> = ({
             title="Open Global Settings"
           >
             <span>⚙️</span>
+          </button>
+        )}
+
+        {onExportNativePsd && (
+          <button
+            onClick={onExportNativePsd}
+            className="px-2.5 py-1 bg-amber-600/90 hover:bg-amber-500 text-white font-medium rounded shadow-sm transition-all flex items-center gap-1 text-xs cursor-pointer border border-amber-500/50"
+            title="Export Native 600 DPI Adobe Photoshop (.psd) with editable TySh text layers"
+          >
+            <span>⚡</span>
+            <span>PSD (600 DPI)</span>
           </button>
         )}
 
