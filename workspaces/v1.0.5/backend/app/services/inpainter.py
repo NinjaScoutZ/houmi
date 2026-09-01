@@ -633,7 +633,7 @@ def _clip_auto_mask_to_balloon(
         num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask_roi, connectivity=8)
         if num_labels > 1:
             filtered_roi = np.zeros_like(mask_roi)
-            core_margin = max(6, eff_margin)
+            core_margin = max(margin_x, margin_y, 32)
             for l in range(1, num_labels):
                 lx = stats[l, cv2.CC_STAT_LEFT] + tx0
                 ly = stats[l, cv2.CC_STAT_TOP] + ty0
@@ -649,7 +649,8 @@ def _clip_auto_mask_to_balloon(
                 )
                 if overlaps_core:
                     filtered_roi[labels == l] = 255
-            mask[ty0:ty1, tx0:tx1] = filtered_roi
+            if np.count_nonzero(filtered_roi) > 0:
+                mask[ty0:ty1, tx0:tx1] = filtered_roi
 
     if image is not None and np.any(mask[ty0:ty1, tx0:tx1]):
         from app.services.mask.border_clamper import clamp_mask_to_balloon_interior
