@@ -591,20 +591,18 @@ class PaddleOCRBackend(BaseBackend):
 
 class OCRService:
     def __init__(self) -> None:
-        self.backend_name = "glm" if should_use_glm_by_default() else "deepseek"
+        self.backend_name = "glm"
         self.backend = self._create_backend(self.backend_name)
         self.last_error: Optional[str] = None
         self._lock = threading.RLock()
 
     @staticmethod
     def _create_backend(name: str) -> BaseBackend:
-        if name == "deepseek":
-            return DeepSeekBackend()
-        if name == "glm":
+        if name in ("deepseek", "glm"):
             return GLMBackend()
-        if name == "paddleocr":
+        if name in ("paddleocr", "rapidocr"):
             return PaddleOCRBackend()
-        raise ValueError(f"Unsupported backend: {name}")
+        return GLMBackend()
 
     def switch_backend(self, name: str, reason: str) -> None:
         with self._lock:

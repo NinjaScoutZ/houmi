@@ -472,7 +472,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         {[
                           { id: 'gemini', label: '✨ DOBKLE OCR (Gemini 3.6 Flash)' },
                           { id: 'glm', label: '🧠 GLM-OCR (PyTorch VLM Server)' },
-                          { id: 'deepseek', label: '🐋 DeepSeek-OCR (PyTorch VLM Server)' },
+                          { id: 'rapidocr', label: '🐋 RapidOCR-OCR (PyTorch VLM Server)' },
                         ].map((eng) => {
                           const st = getEngineStatus(eng.id);
                           return (

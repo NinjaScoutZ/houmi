@@ -294,7 +294,7 @@ export const ProjectPresetModal: React.FC<ProjectPresetModalProps> = ({
                   <option value="rapidocr">⚡ RapidOCR (PP-OCRv6 Multilingual)</option>
                   <option value="gemini">✨ DOBKLE OCR (Gemini)</option>
                   <option value="glm">🧠 GLM-OCR (VLM)</option>
-                  <option value="deepseek">🐋 DeepSeek-OCR (VLM)</option>
+                  <option value="rapidocr">🐋 RapidOCR-OCR (VLM)</option>
                 </select>
               </div>
               <div>

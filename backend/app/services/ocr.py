@@ -901,11 +901,11 @@ def crop_and_ocr_block(
                     logger.info(f"RapidOCR recognized text successfully: {text[:30]}")
                 return text, ok
 
-            # C. GLM / DeepSeek PyTorch VLM OCR Path - STRICT NO SILENT FALLBACK
+            # C. GLM PyTorch VLM OCR Path - STRICT NO SILENT FALLBACK
             if any(k in b_lower for k in ("glm", "deepseek", "vlm")):
-                b_name = "deepseek" if "deepseek" in b_lower else "glm"
-                logger.info(f"Running GLM PyTorch VLM OCR ({b_name}) on block {block.id} (lang: {source_lang})")
-                text, ok = _run_vlm_server_ocr(temp_path_str, backend_name=b_name)
+                b_name = "glm"
+                logger.info(f"Running GLM PyTorch VLM OCR on block {block.id} (lang: {source_lang})")
+                text, ok = _run_vlm_server_ocr(temp_path_str, backend_name="glm")
                 if ok:
                     logger.info(f"GLM PyTorch VLM OCR recognized text successfully: {text[:30]}")
                     return text, ok

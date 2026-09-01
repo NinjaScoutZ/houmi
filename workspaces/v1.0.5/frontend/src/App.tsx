@@ -23,7 +23,6 @@ import { useWebSocket } from './hooks/useWebSocket';
 import { HotkeyModal } from './components/HotkeyModal';
 import { ProjectPresetModal } from './components/ProjectPresetModal';
 import { CustomWorkflowModal } from './components/CustomWorkflowModal';
-import { BatchProgressModal } from './components/BatchProgressModal';
 import { DobkleOcrProgressModal, type DobkleProgressData } from './components/DobkleOcrProgressModal';
 import { DevMapDashboard } from './components/dev_map/DevMapDashboard';
 import {
@@ -2636,10 +2635,6 @@ export const App: React.FC = () => {
         if (currentModel) {
           url += `&balloon_model=${encodeURIComponent(currentModel)}`;
         }
-      } else if (step === 'font_judge') {
-        url = `/api/pipeline/font_judge?page_id=${targetPage.id}`;
-      } else if (step === 'typeset') {
-        url = `/api/pipeline/typeset?page_id=${targetPage.id}`;
       } else if (step === 'auto') {
         const targetProj = useProjectStore.getState().activeProject || activeProject;
         const currentLang = targetProj?.source_lang || sourceLang || 'zh';
@@ -2650,7 +2645,7 @@ export const App: React.FC = () => {
         url += `&min_confidence=${confidenceThreshold}`;
       }
 
-      const res = await apiFetch(url, options);
+      const res = await fetch(url, options);
       if (!res.ok) throw new Error(`Pipeline step ${step} failed`);
       const resultData = await res.json().catch(() => ({}));
       
@@ -2662,7 +2657,7 @@ export const App: React.FC = () => {
 
       if (isTargetedOcr) {
         // Targeted OCR: lightweight refresh that preserves current block selection and updates text
-        const pageRes = await apiFetch(`/api/pages/${targetPage.id}`);
+        const pageRes = await fetch(`/api/pages/${targetPage.id}`);
         if (pageRes.ok) {
           const freshPage = await pageRes.json();
           const store = useProjectStore.getState();
@@ -2732,7 +2727,7 @@ export const App: React.FC = () => {
     
     setStatus("Generating Inpaint Preview...", true);
     try {
-      const res = await apiFetch(`/api/pipeline/inpaint-preview?page_id=${activePage.id}`);
+      const res = await fetch(`/api/pipeline/inpaint-preview?page_id=${activePage.id}`);
       if (!res.ok) throw new Error("Failed to generate inpaint preview");
       const data = await res.json();
       if (data.status === "success" && data.image) {
@@ -2760,14 +2755,14 @@ export const App: React.FC = () => {
     const label = scope === 'page' ? `หน้า ${activePage.page_number}` : 'ทุกหน้าในโปรเจกต์';
     if (!window.confirm(`ลบมาสก์ที่แก้เองและผลคลีนเดิมของ ${label} แล้วคลีนใหม่หรือไม่?`)) return;
     const query = scope === 'page' ? `page_id=${activePage.id}` : `project_id=${activeProject.id}`;
-    const response = await apiFetch(`/api/pipeline/masks?${query}`, { method: 'DELETE' });
+    const response = await fetch(`/api/pipeline/masks?${query}`, { method: 'DELETE' });
     if (!response.ok) {
       showToast('ล้างมาสก์ไม่สำเร็จ', 'error');
       return;
     }
     if (scope === 'page') {
       setStatus('กำลังคลีนหน้าปัจจุบันด้วย Mask ใหม่...', true);
-      const cleanResponse = await apiFetch(`/api/pipeline/inpaint?page_id=${activePage.id}`, { method: 'POST' });
+      const cleanResponse = await fetch(`/api/pipeline/inpaint?page_id=${activePage.id}`, { method: 'POST' });
       if (!cleanResponse.ok) {
         setStatus('Clean failed', false);
         showToast('คลีนหน้าใหม่ไม่สำเร็จ', 'error');
@@ -2961,7 +2956,7 @@ export const App: React.FC = () => {
       const serverSteps = backendSteps.join(',');
       const currentLang = activeProject?.source_lang || sourceLang || 'zh';
       const currentModel = activeProject?.settings?.balloon_model || settingsBalloonModel;
-      const res = await apiFetch(`/api/pipeline/batch?project_id=${activeProject.id}&min_confidence=${confidenceThreshold}&steps=${serverSteps}&backend=${ocrEngine}&source_lang=${encodeURIComponent(currentLang)}&balloon_model=${encodeURIComponent(currentModel || '')}`, {
+      const res = await fetch(`/api/pipeline/batch?project_id=${activeProject.id}&min_confidence=${confidenceThreshold}&steps=${serverSteps}&backend=${ocrEngine}&source_lang=${encodeURIComponent(currentLang)}&balloon_model=${encodeURIComponent(currentModel || '')}`, {
         method: 'POST'
       });
       if (!res.ok) throw new Error("Failed to start batch pipeline");
@@ -3012,7 +3007,7 @@ export const App: React.FC = () => {
   const handleStartTraining = async () => {
     setStatus('Starting training…', true);
     try {
-      const res = await apiFetch('/api/pipeline/train', { method: 'POST' });
+      const res = await fetch('/api/pipeline/train', { method: 'POST' });
       if (!res.ok) throw new Error("Failed to start training");
       
       setTrainStatus(prev => ({ ...prev, is_training: true }));
@@ -4191,7 +4186,158 @@ export const App: React.FC = () => {
         </div>
       </nav>
 
+      {/* 1.5 SUB-TOOLBAR */}
+      <div className="w-full bg-zinc-950/50 backdrop-blur-md border-b border-zinc-900/60 px-5 h-13 py-1 flex items-center justify-between text-xs text-slate-400 z-20 shrink-0 shadow-sm pywebview-no-drag">
+        <div className="flex items-center gap-3.5">
+          {/* Mode Switcher */}
+          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded p-0.5 shrink-0 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setWorkspaceMode('ocr')}
+              className={`px-2.5 py-1 text-[9.5px] font-bold font-pixel rounded transition-all cursor-pointer flex items-center gap-1 ${
+                workspaceMode === 'ocr'
+                  ? 'bg-yellow-500 text-black shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="สลับโหมด OCR & ทำความสะอาดพื้นหลัง"
+            >
+              <span>📝</span>
+              <span>OCR Pipeline</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setWorkspaceMode('typeset')}
+              className={`px-2.5 py-1 text-[9.5px] font-bold font-pixel rounded transition-all cursor-pointer flex items-center gap-1 ${
+                workspaceMode === 'typeset'
+                  ? 'bg-amber-400 text-black shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="สลับโหมด Typesetting & ปรับแต่งข้อความ"
+            >
+              <span>🎨</span>
+              <span>Typesetting</span>
+            </button>
+          </div>
 
+          <div className="h-6 w-px bg-zinc-850" />
+
+          {workspaceMode === 'ocr' && <>
+          {/* OCR Engine selection */}
+          <div className="flex items-center gap-1 shrink-0" title="เลือกโปรแกรมสำหรับสแกนข้อความ">
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider font-pixel">OCR:</span>
+            <select
+              value={ocrEngine}
+              onChange={(e) => handleToggleProjectSetting('ocr_engine', e.target.value)}
+              className="bg-zinc-950 border border-zinc-800 text-slate-300 text-[9px] rounded py-0.5 px-1 max-w-[130px] truncate focus:outline-none cursor-pointer"
+            >
+              <option value="rapidocr">⚡ RapidOCR (GPU DirectML)</option>
+              <option value="ppocrv5">⚡ RapidOCR (PP-OCRv5)</option>
+              <option value="gemini">✨ DOBKLE OCR (Gemini)</option>
+              <option value="glm">🧠 GLM-OCR (VLM)</option>
+              <option value="rapidocr">🐋 RapidOCR-OCR (VLM)</option>
+            </select>
+            {(ocrEngine === 'glm' || ocrEngine === 'rapidocr') && !vlmInstalled && (
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/vlm-server/install', { method: 'POST' });
+                    const data = await res.json();
+                    alert(data.message || 'Launched VLM Server setup CMD terminal.');
+                  } catch (err) {
+                    alert('Failed to launch VLM Server setup: ' + err);
+                  }
+                }}
+                className="bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/40 text-[8px] px-1 py-0.5 rounded transition cursor-pointer"
+                title="ดาวน์โหลด/ติดตั้งเซิร์ฟเวอร์ GLM & RapidOCR VLM PyTorch แยกต่างหาก"
+              >
+                ⚙️ VLM Setup
+              </button>
+            )}
+          </div>
+
+          {/* OCR Source Language Selection */}
+          <div className="flex items-center gap-1 shrink-0" title="เลือกภาษาต้นฉบับสำหรับ OCR">
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider font-pixel">Lang:</span>
+            <select
+              value={activeProject?.source_lang || sourceLang || 'ko'}
+              onChange={async (e) => {
+                const newLang = e.target.value;
+                setSourceLang(newLang);
+                updateGlobalSetting('source_lang', newLang);
+                if (activeProject) {
+                  const updated = { ...activeProject, source_lang: newLang };
+                  useProjectStore.setState({ activeProject: updated });
+                  try {
+                    await fetch(`/api/projects/${activeProject.id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ settings: activeProject.settings || {}, source_lang: newLang }),
+                    });
+                  } catch (err) {
+                    console.error('Failed to update project source_lang:', err);
+                  }
+                }
+              }}
+              className="bg-zinc-950 border border-zinc-800 text-yellow-400 font-bold text-[9px] rounded py-0.5 px-1 max-w-[95px] truncate focus:outline-none cursor-pointer"
+            >
+              <option value="zh">🇨🇳 จีน (zh)</option>
+              <option value="ko">🇰🇷 เกาหลี (ko)</option>
+              <option value="en">🇬🇧 อังกฤษ (en)</option>
+              <option value="ja">🇯🇵 ญี่ปุ่น (ja)</option>
+            </select>
+          </div>
+
+          <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-slate-200 transition-colors" title="ตรวจสะกดคำผิดปกติของ OCR ด้วยโมเดล AI">
+            <input
+              type="checkbox"
+              checked={aiOcrCorrection}
+              onChange={(e) => handleToggleProjectSetting('ai_ocr_correction', e.target.checked)}
+              className="w-3 h-3 rounded-sm border-zinc-800 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
+            />
+            <span>AI spellcheck</span>
+          </label>
+          </>}
+
+          <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-slate-200 transition-colors" title="แสดงแผ่นสีแดงโปร่งแสงคลุมทับจุดที่จะทำการลบข้อความ">
+            <input
+              type="checkbox"
+              checked={liveMaskOverlay}
+              onChange={(e) => {
+                const val = e.target.checked;
+                setLiveMaskOverlay(val);
+                updateGlobalSetting('live_mask_overlay', val);
+              }}
+              className="w-3 h-3 rounded-sm border-zinc-800 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 accent-yellow-500 cursor-pointer"
+            />
+            <span className="text-amber-400 font-bold">Live Mask</span>
+          </label>
+
+          <div className="h-6 w-px bg-zinc-800" />
+
+          {/* Clean Sub-Toolbar Right Side: Status Badge */}
+          <div className="flex items-center gap-2 text-[10px] ml-auto">
+            {activePage && (() => {
+              const c = countDecisions(activePage.text_blocks || []);
+              if (!c.with_text) return null;
+              return (
+                <span className="flex items-center gap-1.5 text-[8.5px] font-mono bg-zinc-900/80 px-2 py-0.5 rounded-md border border-zinc-800 text-zinc-400">
+                  <span className="text-emerald-400" title="AUTO_APPLIED">OK {c.AUTO_APPLIED || 0}</span>
+                  <span>•</span>
+                  <span className="text-amber-400" title="NEEDS_REVIEW">REV {c.NEEDS_REVIEW || 0}</span>
+                </span>
+              );
+            })()}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {activePage && !leftSidebarOpen && (
+            <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-pixel">
+              Page {activePage.page_number} / {activeProject?.pages?.length || 0}
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* MISSING ESSENTIAL FONTS WARNING BANNER */}
       {missingFonts.length > 0 && !isFontBannerDismissed && (
@@ -4260,47 +4406,166 @@ export const App: React.FC = () => {
 
       {/* MAIN CONTAINER */}
       <div className="flex flex-1 gap-4 p-4 pt-2 overflow-hidden z-10 relative pywebview-no-drag">
-        {/* 2. LEFT SIDEBAR (Modern Pages Navigation Dock) */}
-        {activeProject && (
-          <PagesSidebar
-            pages={activeProject.pages || []}
-            activePage={activePage}
-            onSelectPage={(pageId) => void selectPage(pageId)}
-            onUploadPages={(files) => {
-              const fileArr = Array.from(files);
-              if (fileArr.length > 0) {
-                setStatus(`Uploading ${fileArr.length} pages...`, true);
-                Promise.all(fileArr.map((f, i) => {
-                  const pNum = (activeProject.pages?.length || 0) + i + 1;
-                  return uploadPage(activeProject.id, pNum, f);
-                })).then(() => {
-                  showToast(`Uploaded ${fileArr.length} page(s) successfully!`, 'success');
-                }).catch(err => {
-                  showToast(`Upload failed: ${err.message}`, 'error');
-                }).finally(() => {
-                  setStatus('Ready', false);
-                });
+        {/* 2. LEFT SIDEBAR (Page List navigator) */}
+        <aside 
+          className={`transition-[width,opacity] duration-200 flex flex-col overflow-hidden border-r border-zinc-900/60 bg-zinc-950/95 animate-slide-up ${
+            activeProject && leftSidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0 border-none'
+          } ${
+            isDraggingOverPages 
+              ? 'border-2 border-dashed border-yellow-500/60 shadow-[0_0_15px_rgba(234,179,8,0.15)] bg-yellow-500/[0.02]' 
+              : 'border-zinc-900/50'
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (activeProject) {
+              setIsDraggingOverPages(true);
+            }
+          }}
+          onDragLeave={() => {
+            setIsDraggingOverPages(false);
+          }}
+          onDrop={async (e) => {
+            e.preventDefault();
+            setIsDraggingOverPages(false);
+            if (!activeProject) return;
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              const files = Array.from(e.dataTransfer.files)
+                .filter(file => file.type.startsWith('image/'))
+                .sort((a, b) => a.name.localeCompare(b.name));
+              
+              if (files.length === 0) return;
+              
+              setStatus(`Uploading ${files.length} dropped pages...`, true);
+              try {
+                for (let i = 0; i < files.length; i++) {
+                  const file = files[i];
+                  const pageNum = (activeProject.pages?.length || 0) + i + 1;
+                  await uploadPage(activeProject.id, pageNum, file);
+                }
+                showToast(`Successfully uploaded ${files.length} page(s) via drag-and-drop!`, 'success');
+                
+                // Auto OCR trigger if enabled
+                if (activeProject?.settings?.auto_ocr ?? true) {
+                  showToast("เริ่มต้นตรวจจับและ OCR อัตโนมัติ...", "info");
+                  await runPipelineStep('detect');
+                  await runPipelineStep('ocr');
+                }
+              } catch (err: any) {
+                showToast(`Upload failed: ${err.message}`, 'error');
+              } finally {
+                setStatus('Ready', false);
               }
-            }}
-            onDeletePage={(pageId, pNum) => {
-              showConfirmDialog(
-                `คุณแน่ใจหรือไม่ที่จะลบ "หน้า ${pNum}"?\nรูปภาพนี้จะถูกลบอย่างถาวร!`,
-                async () => {
-                  try {
-                    await useProjectStore.getState().deletePage(pageId);
-                    showToast(`ลบหน้า ${pNum} สำเร็จ!`, 'success');
-                  } catch (err: any) {
-                    showToast(`ลบล้มเหลว: ${err.message}`, 'error');
-                  }
-                },
-                `ยืนยันการลบหน้า ${pNum}`
-              );
-            }}
-            isProcessing={isProcessing}
-            isOpen={leftSidebarOpen}
-            onToggleOpen={() => setLeftSidebarOpen(!leftSidebarOpen)}
-          />
-        )}
+            }
+          }}
+        >
+          {/* Page Navigator */}
+          <div className="flex-1 flex flex-col p-4.5 overflow-hidden">
+            <div className="flex items-center justify-between mb-3.5 border-b border-zinc-900 pb-2">
+              <h3 className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-1.5 font-pixel">
+                <ImageIcon size={12} /> Page List
+              </h3>
+              
+              {activeProject && (
+                <label className={`flex items-center gap-1.5 text-[9px] font-bold transition-all font-pixel ${
+                  isProcessing 
+                    ? 'text-slate-600 cursor-not-allowed' 
+                    : 'cursor-pointer text-yellow-500 hover:text-yellow-400 hover-zoom'
+                }`}>
+                  <UploadCloud size={14} /> Add Pages
+                  {!isProcessing && (
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      onChange={handlePageUpload} 
+                      className="hidden" 
+                    />
+                  )}
+                </label>
+              )}
+            </div>
+ 
+            {!activeProject ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-zinc-900/10 rounded-sm border border-zinc-850">
+                <FolderOpen size={32} className="text-slate-800 mb-2" />
+                <p className="text-xs text-slate-500 font-medium">Please select or create a project to start translating.</p>
+              </div>
+            ) : !activeProject.pages || activeProject.pages.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 border border-dashed border-zinc-850 rounded-sm bg-zinc-900/10">
+                <UploadCloud size={32} className="text-zinc-800 mb-2" />
+                <p className="text-xs text-slate-500 font-medium">No pages added. Upload image files above.</p>
+              </div>
+            ) : (
+              <div className="page-list-scroll flex-1 overflow-y-auto pr-1 flex flex-col gap-2.5">
+                {activeProject.pages.map((p) => {
+                  const previewUrl = `/static/projects/${p.project_id}/${p.id}/thumbnail.jpg`;
+                  const isActive = activePage?.id === p.id;
+                  return (
+                    <div
+                      key={p.id}
+                      className={`group relative flex items-center gap-3.5 p-2.5 rounded-md border sidebar-page-card ${
+                        isActive
+                          ? 'active-page-card'
+                          : 'bg-zinc-950/35 border-zinc-900/80'
+                      }`}
+                    >
+                      <button
+                        onClick={() => selectPage(p.id)}
+                        className="flex flex-1 items-center gap-3.5 text-left focus:outline-none min-w-0 cursor-pointer"
+                      >
+                        <div className="w-12 h-16 rounded-sm overflow-hidden bg-slate-950 flex-shrink-0 border border-zinc-850 shadow-md">
+                          <img 
+                            src={previewUrl} 
+                            alt={`Page ${p.page_number}`} 
+                            width={48}
+                            height={64}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover" 
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-200">Page {p.page_number}</p>
+                          <p className="text-[10px] text-slate-500 truncate mt-0.5">{p.name || 'Image File'}</p>
+                          <span className={`inline-block text-[9px] px-2 py-0.5 rounded-md mt-2.5 font-bold uppercase tracking-wider ${
+                            p.status === 'processed' ? 'badge-active' : 'badge-pending'
+                          }`}>
+                            {p.status}
+                          </span>
+                        </div>
+                      </button>
+ 
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          showConfirmDialog(
+                            `คุณแน่ใจหรือไม่ที่จะลบ "หน้า ${p.page_number}"?\nรูปภาพนี้จะถูกลบอย่างถาวร!`,
+                            async () => {
+                              try {
+                                const store = useProjectStore.getState();
+                                await store.deletePage(p.id);
+                                showToast(`ลบหน้า ${p.page_number} สำเร็จ!`, 'success');
+                              } catch (err: any) {
+                                showToast(`ลบล้มเหลว: ${err.message}`, 'error');
+                              }
+                            },
+                            `ยืนยันการลบหน้า ${p.page_number}`
+                          );
+                        }}
+                        disabled={isProcessing}
+                        className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 text-slate-500 hover:text-rose-400 transition-all rounded bg-slate-950/80 border border-white/5 hover:border-rose-900/30"
+                        title="ลบหน้านี้"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </aside>
         {/* 3. MIDDLE CANVAS WORKSPACE (Floating with backdrop glow) */}
         <main className="flex-1 border border-zinc-900 bg-zinc-950/25 backdrop-blur-sm overflow-hidden flex flex-col shadow-2xl relative select-none animate-fade-in">
           {/* Ambient Glow behind Canvas */}
@@ -4988,7 +5253,7 @@ export const App: React.FC = () => {
                       if (!activePage || !selectedBlock) return;
                       showToast('✨ กำลังวิเคราะห์สีและเส้นขอบ...', 'info');
                       try {
-                        const res = await apiFetch('/api/pipeline/extract-style', {
+                        const res = await apiFetch('/pipeline/extract-style', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
@@ -5029,7 +5294,7 @@ export const App: React.FC = () => {
                       if (!activePage || !selectedBlock) return;
                       showToast('🎯 กำลังคำนวณและจัดข้อความกึ่งกลางบอลลูน...', 'info');
                       try {
-                        const res = await apiFetch(`/api/pipeline/blocks/${selectedBlock.id}/smart-balloon/recompute`, {
+                        const res = await apiFetch(`/pipeline/blocks/${selectedBlock.id}/smart-balloon/recompute`, {
                           method: 'POST',
                         });
                         if (res.ok) {
@@ -5554,53 +5819,258 @@ export const App: React.FC = () => {
         )}
         </div>
 
-        {/* 4. RIGHT PANEL (Modern AI Pipeline & Conversation Layers Dock) */}
-        {activeProject && rightSidebarOpen && (
-          <aside className="w-80 border-l border-[#20202c] bg-[#0c0c12] flex flex-col overflow-hidden shadow-2xl shrink-0 z-30 font-sans">
-            {/* Top AI Pipeline Dock */}
-            <PipelineDock
+        {/* 4. RIGHT PANEL (Stacked Dock Layout - Pipeline Controls on top, Layers & Text Review on bottom) */}
+        <aside 
+          className={`transition-all duration-300 flex flex-col overflow-hidden shadow-2xl border-l border-zinc-900/60 bg-zinc-950/40 backdrop-blur-md animate-slide-up shrink-0 ${
+            activeProject && rightSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0 border-none'
+          }`}
+        >
+          {/* Top Panel: Pipeline Controls (Direct 1-Click Action Matrix) */}
+          <div className="p-3 border-b border-zinc-900 bg-zinc-950/90 shrink-0">
+            <PipelineControlsPanel
               activeProject={activeProject}
               activePage={activePage}
               isProcessing={isProcessing}
-              onRunFullPipeline={async (scope) => {
-                if (scope === 'project') {
-                  await runBatchPipeline();
-                } else {
-                  await runPipelineStep('detect');
-                  await runPipelineStep('ocr');
-                  await runPipelineStep('inpaint');
-                  await runPipelineStep('typeset');
-                }
-              }}
-              onRunStep={(step) => void runPipelineStep(step)}
+              isBatchRunning={isBatchRunning}
+              isPageWorkflowRunning={isPageWorkflowRunning}
+              trainStatus={trainStatus}
+              runBatchPipeline={runBatchPipeline}
+              runPipelineStep={runPipelineStep}
+              cancelPageWorkflow={cancelBatchWorkflow}
+              onOpenAIProviderSettings={() => setShowAIProviderSettingsModal(true)}
+              onOpenCustomWorkflowModal={() => setIsCustomWorkflowModalOpen(true)}
             />
 
-            {/* Bottom Conversation & Layers Panel */}
-            <ConversationLayersPanel
-              blocks={activePage?.text_blocks || []}
-              selectedBlockId={selectedBlocks[0]?.id || null}
-              onSelectBlock={(blockId) => {
-                const b = activePage?.text_blocks?.find(x => x.id === blockId);
-                if (b) {
-                  useProjectStore.setState({ selectedBlock: b, selectedBlocks: [b] });
-                }
-              }}
-              onUpdateBlockText={(blockId, text) => {
-                void updateBlock(blockId, { source_text: text });
-              }}
-              onUpdateBlockTranslation={(blockId, translation) => {
-                void updateBlock(blockId, { target_text: translation });
-              }}
-              onDeleteBlock={(blockId) => {
-                void deleteBlock(blockId);
-              }}
-              onSortRTL={() => {
-                reorganizePageText();
-                showToast('จัดเรียงลำดับบล็อกตามทิศทาง RTL สำเร็จ!', 'success');
-              }}
-            />
-          </aside>
-        )}
+            {/* Batch Progress Indicator */}
+            {batchProgress && (
+              <div role="status" aria-live="polite" className="mt-2.5 p-3 bg-zinc-900 border border-zinc-800 rounded-md flex flex-col gap-2 text-[9px] font-pixel">
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="font-bold uppercase tracking-wider text-[8px] text-slate-500">Batch Status:</span>
+                  <span className={`font-bold uppercase ${batchProgress.status === 'success' ? 'text-yellow-400' : (batchProgress.status === 'failed' || batchProgress.status === 'cancelled') ? 'text-rose-400' : 'text-yellow-500 animate-pulse'}`}>
+                    {batchProgress.status}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Progress:</span>
+                  <span className="font-bold text-slate-200">Page {batchProgress.current_page} / {batchProgress.total_pages} {batchProgress.step && `[${batchProgress.step.toUpperCase()}]`}</span>
+                </div>
+                <div className="w-full bg-zinc-950 border border-zinc-850 h-1.5 overflow-hidden rounded-full mt-0.5">
+                  <div 
+                    className="bg-yellow-400 h-full transition-all duration-300 shadow-[0_0_8px_rgba(234,179,8,0.5)]"
+                    style={{ width: `${batchProgress.progress * 100}%` }}
+                  />
+                </div>
+                {batchProgress.error && (
+                  <span className="text-rose-400 font-mono text-[8px] truncate mt-1">Error: {batchProgress.error}</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Panel: Layers & Text Review */}
+          <div className="flex-1 flex flex-col overflow-hidden bg-zinc-950 min-h-0">
+            <div className="px-3.5 py-2.5 border-b border-zinc-900 bg-zinc-950/90 flex items-center justify-between font-pixel">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                <Layers size={13} className="text-yellow-500" />
+                📑 Layers & Text Review
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-slate-400">
+                {activePage?.text_blocks?.length || 0} Blocks
+              </span>
+            </div>
+
+            {/* Selected Mask Action Toolbar */}
+            {selectedBlocks.length > 0 && (
+              <div className="px-3 py-2 bg-zinc-900/60 border-b border-zinc-900 flex items-center justify-between gap-2 font-pixel text-[10px]">
+                <span className="text-amber-400 font-bold flex items-center gap-1">
+                  Selected ({selectedBlocks.length})
+                </span>
+                <div className="flex items-center gap-1">
+                  {selectedBlocks.length === 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBlockForMaskEdit(selectedBlocks[0].id)}
+                      className="px-2 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 rounded font-bold transition-all cursor-pointer"
+                      title="แก้ไข Mask ส้นข้อความ"
+                    >
+                      🖌️ Mask Editor
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void deleteBlocks(selectedBlocks.map(b => b.id))}
+                    className="px-2 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 rounded font-bold transition-all cursor-pointer"
+                    title="ลบเลเยอร์"
+                  >
+                    🗑️ ลบ
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Layers List Cards (Matching HTML Mockup layer-card style) */}
+            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+              {(!activePage?.text_blocks || activePage.text_blocks.length === 0) ? (
+                <div className="p-6 text-center text-xs text-slate-500 italic font-pixel">
+                  ยังไม่มีข้อมูล Balloon Text Layer
+                </div>
+              ) : (
+                [...activePage.text_blocks].sort((a, b) => a.block_index - b.block_index).map((block) => {
+                  const isSelected = selectedBlocks.some(b => b.id === block.id);
+                  const role = resolveBlockTemplateRole(block, stylePresets);
+                  const displayValue = (typeof block.translation === 'string' && block.translation.trim() !== '')
+                    ? block.translation
+                    : (block.source_text || '');
+
+                  return (
+                    <div
+                      key={block.id}
+                      ref={(el) => {
+                        layerCardRefs.current[block.id] = el;
+                      }}
+                      id={`layer-card-${block.id}`}
+                      onClick={(e) => handleLayerSelection(block, e)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleLayerSelection(block, e);
+                        setLayerContextMenu({
+                          x: e.clientX,
+                          y: e.clientY,
+                          blockId: block.id,
+                        });
+                      }}
+                      className={`p-2.5 rounded-lg border transition-all cursor-pointer font-pixel text-xs ${
+                        isSelected
+                          ? 'border-amber-500 bg-amber-500/12 shadow-sm shadow-amber-500/20'
+                          : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-mono font-bold text-[10px] border border-amber-500/30">
+                            #{block.block_index + 1}
+                          </span>
+                          <span className="text-[10.5px] font-bold text-slate-300">
+                            {role.roleLabel}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLayerSelection(block, e);
+                              setLayerStrokeModalBlockId(block.id);
+                            }}
+                            className="text-zinc-500 hover:text-yellow-400 p-1 rounded transition-colors cursor-pointer hover:bg-zinc-800"
+                            title="เปิดเอฟเฟกต์เฉพาะเลเยอร์ (Photoshop Layer Style: Stroke & Outline)"
+                          >
+                            <Palette size={12} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const textToCopy = stripSemanticTranslationTags(block.translation || block.source_text || '');
+                              if (textToCopy) {
+                                navigator.clipboard.writeText(textToCopy);
+                                showToast('คัดลอกคำแปลแล้ว! 📋', 'info');
+                              }
+                            }}
+                            className="text-zinc-500 hover:text-amber-300 p-1 rounded transition-colors cursor-pointer hover:bg-zinc-800"
+                            title="คัดลอกข้อความ (Copy Text)"
+                          >
+                            <Copy size={12} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              showConfirmDialog(
+                                'คุณต้องการลบเลเยอร์ข้อความนี้ใช่หรือไม่?',
+                                () => { void deleteBlocks([block.id]); },
+                                'ยืนยันการลบเลเยอร์'
+                              );
+                            }}
+                            className="text-zinc-500 hover:text-rose-400 p-1 rounded transition-colors cursor-pointer hover:bg-zinc-800"
+                            title="ลบเลเยอร์"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dual Slots: 1. Source Text (ต้นฉบับ) & 2. Translation (คำแปล) */}
+                      <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+                        {/* Slot 1: Source Text / OCR */}
+                        <div>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 font-sans">
+                              <span>🔤</span> ต้นฉบับ (Source / OCR)
+                            </span>
+                            {block.source_text && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(block.source_text);
+                                  showToast('คัดลอกข้อความต้นฉบับแล้ว! 📋', 'info');
+                                }}
+                                className="text-[9px] text-slate-500 hover:text-slate-300 font-sans cursor-pointer"
+                                title="คัดลอกข้อความต้นฉบับ"
+                              >
+                                copy
+                              </button>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            value={block.source_text || ''}
+                            onChange={(e) => {
+                              void updateBlock(block.id, { source_text: e.target.value });
+                            }}
+                            placeholder="ข้อความต้นฉบับ (OCR)..."
+                            className="w-full bg-zinc-950/70 border border-zinc-800/80 hover:border-zinc-700 focus:border-amber-500/70 rounded px-2.5 py-1 text-[11px] text-slate-300 font-sans focus:outline-none select-text"
+                          />
+                        </div>
+
+                        {/* Slot 2: Translation Text */}
+                        <div>
+                          <span className="text-[9px] font-bold text-amber-400/90 uppercase tracking-wider block mb-0.5 font-sans flex items-center gap-1">
+                            <span>🇹🇭</span> คำแปล (Translation)
+                          </span>
+                          <textarea
+                            rows={Math.max(1, Math.min(6, (block.translation || '').split('\n').length))}
+                            value={block.translation || ''}
+                            onChange={(e) => {
+                              const newText = e.target.value;
+                              const { typesetting_spec: _staleSpec, ...freshMetadata } = block.extra_metadata || {};
+                              void updateBlock(block.id, {
+                                translation: newText,
+                                extra_metadata: {
+                                  ...freshMetadata,
+                                  line_break_source: 'manual_hard',
+                                  ai_preferred_lines: null,
+                                  ai_layout_hint: null,
+                                  ai_layout_text: null,
+                                },
+                              });
+                            }}
+                            placeholder="พิมพ์คำแปลใหม่..."
+                            className="w-full bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 focus:border-amber-500 rounded-md px-2.5 py-1.5 text-xs text-slate-100 font-sans focus:outline-none resize-y min-h-[34px] leading-relaxed select-text"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </aside>
       </div>
 
       {/* 5. BOTTOM STATUS BAR */}
@@ -6138,23 +6608,6 @@ export const App: React.FC = () => {
         onClose={() => setIsDobkleModalOpen(false)}
       />
 
-      {/* ANTIGRAVITY FLOATING BATCH PROGRESS HUD (NON-BLOCKING) */}
-      <BatchProgressModal
-        isOpen={Boolean(batchProgress || isBatchRunning)}
-        projectId={activeProject?.id || null}
-        progress={batchProgress?.progress || 0}
-        currentPage={batchProgress?.current_page || 0}
-        totalPages={batchProgress?.total_pages || (activeProject?.pages?.length || 0)}
-        currentStep={batchProgress?.step}
-        status={batchProgress?.status || (isBatchRunning ? 'running' : 'idle')}
-        error={batchProgress?.error}
-        onClose={() => {
-          setBatchProgress(null);
-          setIsBatchRunning(false);
-        }}
-        onCancel={cancelBatchWorkflow}
-      />
-
       {/* DIAGNOSTICS & SYSTEM HEALTH MODAL */}
       {showDiagnostics && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
@@ -6219,7 +6672,7 @@ export const App: React.FC = () => {
                       
                       {/* OCR Server Status */}
                       <div className="flex items-center justify-between text-xs py-1 border-b border-white/[0.02]">
-                        <span className="text-slate-400">DeepSeek OCR Subprocess</span>
+                        <span className="text-slate-400">RapidOCR OCR Subprocess</span>
                         <div className="flex items-center gap-1.5">
                           <span className={`w-2 h-2 rounded-full ${diagnosticsHealth?.ocr_server?.status === 'ok' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                           <span className="font-bold text-slate-200">{diagnosticsHealth?.ocr_server?.status === 'ok' ? 'Online' : 'Offline'}</span>
@@ -7958,14 +8411,15 @@ export const App: React.FC = () => {
                                   }}
                                   className="w-full p-2.5 text-xs rounded-lg text-slate-100 bg-zinc-900 border border-zinc-700 focus:outline-none focus:border-yellow-500 cursor-pointer font-sans"
                                 >
-                                  <option value="hybrid">Godkiller Intelligent Hybrid Mask (แนะนำ SOTA - แยกหมึกอักษร ไม่กินเส้นบอลลูน)</option>
-                                  <option value="imagetrans">ImageTrans Binarization Mask (โหมดดั้งเดิม ImageTrans - ไบนารีแยกกลุ่มตัวอักษร)</option>
-                                  <option value="contour">Adaptive Morphology & Contours (โหมดมังงะขาวดำ - ตรวจจับขอบรวดเร็ว)</option>
-                                  <option value="sam">Meta SAM AI Segmenter (Segment Anything ONNX - เหมาะกับ SFX ซับซ้อน)</option>
-                                  <option value="balloon">Full Bounding Box Mask (ล้างเต็มกรอบสี่เหลี่ยม - โหมดตัดพื้นขาว)</option>
+                                  <option value="hybrid">🌟 Manga UNet++ × ImageTrans Dual Ensemble (แนะนำ SOTA - ผสาน AI Vision + โพลีกอน ไม่กินเส้นบอลลูน)</option>
+                                  <option value="unet">🤖 Manga UNet++ AI Segmenter (โมเดล Deep Learning แยกหมึกอักษร / SFX)</option>
+                                  <option value="imagetrans">📐 ImageTrans & Polygon Binarization (โหมดดั้งเดิม ImageTrans - ไบนารีโพลีกอน)</option>
+                                  <option value="sam">🎯 Meta SAM 2.1 Segmenter (Segment Anything ONNX - เหมาะกับ SFX ซับซ้อน)</option>
+                                  <option value="contour">⚡ Adaptive Morphology & Contours (โหมดมังงะขาวดำ - ตรวจจับขอบรวดเร็ว)</option>
+                                  <option value="balloon">⬜ Full Bounding Box Mask (ล้างเต็มกรอบสี่เหลี่ยม - โหมดตัดพื้นขาว)</option>
                                 </select>
                                 <span className="text-[10px] text-slate-400 block font-sans">
-                                  อัลกอริทึมตรวจจับและแยกพิกเซลตัวอักษรออกจากภาพวาด ก่อนส่งให้ AI Inpaint ลบข้อความ
+                                  อัลกอริทึมตรวจจับและแยกพิกเซลตัวอักษร: Manga UNet++ AI ทำงานร่วมกับ Polygon Binarization แม่นยำสูง ไม่กินเส้นขอบบอลลูน
                                 </span>
                               </div>
 
@@ -8050,19 +8504,12 @@ export const App: React.FC = () => {
                                     min="0" 
                                     max="56" 
                                     value={settingsMaskDilationKernel} 
-                                    onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                      const val = Math.max(0, Math.min(56, parseInt(e.target.value, 10) || 0));
-                                      setSettingsMaskDilationKernel(val);
-                                      updateGlobalSetting('mask_dilation_kernel', val);
-                                      updateGlobalSetting('cleanup_pipeline_profile', 'custom');
-                                    }}
                                     onChange={(e) => {
-                                      const val = Math.max(0, Math.min(56, parseInt(e.target.value, 10) || 0));
-                                      setSettingsMaskDilationKernel(val);
+                                      const val = Math.max(0, Math.min(56, parseInt(e.target.value) || 0));
                                       updateGlobalSetting('mask_dilation_kernel', val);
                                       updateGlobalSetting('cleanup_pipeline_profile', 'custom');
                                     }} 
-                                    className="flex-1 accent-yellow-500 cursor-pointer h-2 bg-zinc-800 rounded-lg" 
+                                    className="flex-1 accent-yellow-500 cursor-pointer" 
                                   />
                                   <input 
                                     type="number" 
@@ -8070,14 +8517,7 @@ export const App: React.FC = () => {
                                     max="56" 
                                     value={settingsMaskDilationKernel} 
                                     onChange={(e) => {
-                                      const raw = e.target.value;
-                                      if (raw === "") {
-                                        setSettingsMaskDilationKernel(0);
-                                        return;
-                                      }
-                                      const parsed = parseInt(raw, 10);
-                                      const val = isNaN(parsed) ? 0 : Math.max(0, Math.min(56, parsed));
-                                      setSettingsMaskDilationKernel(val);
+                                      const val = Math.max(0, Math.min(56, parseInt(e.target.value) || 0));
                                       updateGlobalSetting('mask_dilation_kernel', val);
                                       updateGlobalSetting('cleanup_pipeline_profile', 'custom');
                                     }} 
@@ -9006,7 +9446,4 @@ export const App: React.FC = () => {
   );
 };
 
-export default App;import { PagesSidebar } from './components/modern/PagesSidebar';
-import { PipelineDock } from './components/modern/PipelineDock';
-import { ConversationLayersPanel } from './components/modern/ConversationLayersPanel';
-
+export default App;

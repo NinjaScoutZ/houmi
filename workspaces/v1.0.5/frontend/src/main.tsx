@@ -1,7 +1,7 @@
 import React, { StrictMode, Component, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.tsx'
+import App from './App.jsx'
 
 interface Props {
   children: ReactNode;

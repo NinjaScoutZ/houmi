@@ -136,7 +136,7 @@ export const PipelineToolbar: React.FC<PipelineToolbarProps> = ({
                     {(() => {
                       const stGem = getEngineStatus('gemini');
                       const stGlm = getEngineStatus('glm');
-                      const stDs = getEngineStatus('deepseek');
+                      const stDs = getEngineStatus('rapidocr');
                       return (
                         <>
                           <option value="gemini" disabled={!stGem.available} title={stGem.reason || 'DOBKLE OCR (Gemini 3.6 Flash)'}>
@@ -145,8 +145,8 @@ export const PipelineToolbar: React.FC<PipelineToolbarProps> = ({
                           <option value="glm" disabled={!stGlm.available} title={stGlm.reason || 'GLM-OCR Local PyTorch VLM Server (Port 2322)'}>
                             🧠 GLM-OCR{!stGlm.available ? ` (${stGlm.reason || 'Offline'})` : ''}
                           </option>
-                          <option value="deepseek" disabled={!stDs.available} title={stDs.reason || 'DeepSeek-OCR PyTorch VLM Server (Port 2322)'}>
-                            🐋 DeepSeek-OCR{!stDs.available ? ` (${stDs.reason || 'Offline'})` : ''}
+                          <option value="rapidocr" disabled={!stDs.available} title={stDs.reason || 'RapidOCR-OCR PyTorch VLM Server (Port 2322)'}>
+                            🐋 RapidOCR-OCR{!stDs.available ? ` (${stDs.reason || 'Offline'})` : ''}
                           </option>
                         </>
                       );

@@ -91,6 +91,9 @@ class CancelAutoBackgroundRequest(BaseModel):
 
 def _extract_param(payload: Any, field_name: str, fallback: Any = None) -> Any:
     """Safely extracts a parameter from payload (BaseModel, dict, or str) or fallback value."""
+    from fastapi.params import Param
+    if isinstance(fallback, Param):
+        fallback = fallback.default if fallback.default is not Ellipsis else None
     if payload is not None:
         if isinstance(payload, BaseModel):
             val = getattr(payload, field_name, None)
@@ -199,28 +202,18 @@ def get_ocr_engines():
     glm_available = vlm_server_alive
     glm_reason = None if glm_available else "Local VLM server (port 2322) unavailable or initializing"
 
-    # DeepSeek (Local VLM)
-    deepseek_available = vlm_server_alive
-    deepseek_reason = None
-    if not vlm_server_alive:
-        deepseek_available = False
-        deepseek_reason = "Local VLM server (port 2322) unavailable or initializing"
-    elif vlm_last_error and any(err_kw in str(vlm_last_error).lower() for err_kw in ["cuda", "vram", "moe", "out of memory"]):
-        deepseek_available = False
-        deepseek_reason = f"DeepSeek VLM degraded: {vlm_last_error}"
-
     engines = [
         {
-            "id": "dobkle_cloud",
-            "name": "☁️ DOBKLE Cloud OCR (AGY Server)",
-            "category": "cloud",
+            "id": "rapidocr",
+            "name": "⚡ RapidOCR (PP-OCRv5 Engine)",
+            "category": "local_offline",
             "status": "available",
             "available": True,
             "reason": None,
         },
         {
             "id": "gemini",
-            "name": "DOBKLE OCR (Gemini 3.6 Flash)",
+            "name": "✨ DOBKLE OCR (Gemini 3.6 Flash)",
             "category": "cloud",
             "status": "available",
             "available": True,
@@ -228,19 +221,11 @@ def get_ocr_engines():
         },
         {
             "id": "glm",
-            "name": "GLM-OCR (VLM)",
+            "name": "🧠 GLM-OCR (Local VLM)",
             "category": "local_vlm",
             "status": "available" if glm_available else "disabled",
             "available": glm_available,
             "reason": glm_reason,
-        },
-        {
-            "id": "deepseek",
-            "name": "DeepSeek-OCR (VLM)",
-            "category": "local_vlm",
-            "status": "available" if deepseek_available else "disabled",
-            "available": deepseek_available,
-            "reason": deepseek_reason,
         },
         {
             "id": "rapidocr",
@@ -547,14 +532,24 @@ def run_detect(
 
         db.commit()
 
-        if promote_with_ocr:
-            evidence = run_ocr(page_id, backend=backend, force=True, db=db)
+        if promote_val:
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    import concurrent.futures
+                    with concurrent.futures.ThreadPoolExecutor() as pool:
+                        evidence = pool.submit(asyncio.run, run_ocr(page_id, backend=backend_val, force=True, db=db)).result()
+                else:
+                    evidence = loop.run_until_complete(run_ocr(page_id, backend=backend_val, force=True, db=db))
+            except Exception:
+                evidence = asyncio.run(run_ocr(page_id, backend=backend_val, force=True, db=db))
             return {
                 "status": "success",
                 "detected_blocks_count": len(blocks_data),
-                "promoted_blocks_count": evidence["ocr_updated_blocks_count"],
-                "pruned_blocks_count": evidence["pruned_blocks_count"],
-                "review_blocks_count": evidence["review_blocks_count"],
+                "promoted_blocks_count": evidence.get("ocr_updated_blocks_count", len(blocks_data)),
+                "pruned_blocks_count": evidence.get("pruned_blocks_count", 0),
+                "review_blocks_count": evidence.get("review_blocks_count", 0),
             }
         else:
             return {
@@ -741,12 +736,12 @@ async def run_ocr(
 ):
     # Fallback to manual JSON parse if payload is None
     body_data = {}
-    if payload is None:
+    if payload is None and request is not None:
         try:
             body_bytes = await request.body()
             if body_bytes:
                 import json
-                body_data = json.loads(body_bytes.decode('utf-8'))
+                body_data = json.loads(body_bytes.decode("utf-8"))
         except Exception:
             body_data = {}
 
@@ -784,7 +779,10 @@ async def run_ocr(
             ocr_targets = [b for b in page.text_blocks if b.id in target_ids]
         else:
             ocr_targets = list(page.text_blocks) if force_val else ([b for b in page.text_blocks if not b.source_text] or list(page.text_blocks))
-            
+
+        if backend_val and "deepseek" in str(backend_val).lower():
+            backend_val = "rapidocr"
+
         if ocr_targets:
             from app.services.gemini_quota import get_quota_status
             from app.services.performance import resolve_performance_settings
@@ -822,15 +820,14 @@ async def run_ocr(
                 results = [(target, ocr_text, ocr_success)]
             else:
                 # Refresh all targets to pick up latest geometry from DB
-                for t in ocr_targets:
-                    db.refresh(t)
+                cancel_fn = cancel_check if callable(cancel_check) else None
                 results = crop_and_ocr_blocks_parallel(
                     page.source_image_path,
                     ocr_targets,
                     max_workers=performance.ocr_workers,
                     backend=backend_val,
                     source_lang=effective_lang,
-                    cancel_check=cancel_check,
+                    cancel_check=cancel_fn,
                 )
         else:
             results = []

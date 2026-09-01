@@ -115,7 +115,7 @@ async def lifespan(app: FastAPI):
         threading.Thread(target=_auto_apply_patch_on_startup, daemon=True).start()
 
         # 1. Start OCR Managed Subprocess
-        logger.info("Launching DeepSeek OCR Subprocess...")
+        logger.info("Launching VLM OCR Engine...")
         ocr_manager.start_server()
         ocr_started_by_this_process = True
 
@@ -188,7 +188,7 @@ async def lifespan(app: FastAPI):
     
     # 1. Terminate OCR Subprocess only when this process owns it.
     if ocr_started_by_this_process:
-        logger.info("Stopping DeepSeek OCR Subprocess...")
+        logger.info("Stopping VLM OCR Subprocess...")
         ocr_manager.stop_server()
 
 

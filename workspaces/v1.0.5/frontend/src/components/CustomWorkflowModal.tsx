@@ -481,7 +481,7 @@ export const CustomWorkflowModal: React.FC<CustomWorkflowModalProps> = ({
                 <option value="rapidocr">⚡ RapidOCR (DirectML GPU / PP-OCRv6 SOTA)</option>
                 <option value="gemini">🌟 DOBKLE OCR (Gemini 3.6 Flash)</option>
                 <option value="glm">🤖 GLM-OCR (VLM)</option>
-                <option value="deepseek">🐋 DeepSeek-OCR (VLM)</option>
+                <option value="rapidocr">🐋 RapidOCR-OCR (VLM)</option>
                 <option value="paddleocr">📦 PaddleOCR (Local ONNX)</option>
               </select>
             </div>
