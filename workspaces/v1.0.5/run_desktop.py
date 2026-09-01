@@ -90,8 +90,20 @@ class FastAPIThread(threading.Thread):
         self.server = None
 
     def run(self):
-        # Disable uvicorn reload in production/desktop mode
+        # Auto-free port 4000 if occupied by a lingering stale process on Windows
         port = int(os.environ.get("HOUMI_PORT", "4000"))
+        try:
+            import subprocess
+            res = subprocess.check_output(f"netstat -ano | findstr :{port}", shell=True, stderr=subprocess.DEVNULL)
+            for line in res.decode("utf-8", errors="ignore").splitlines():
+                parts = line.strip().split()
+                if len(parts) >= 5 and parts[1].endswith(f":{port}") and parts[3] == "LISTENING":
+                    pid = int(parts[4])
+                    if pid != os.getpid():
+                        subprocess.run(f"taskkill /F /PID {pid}", shell=True, capture_output=True)
+                        time.sleep(0.5)
+        except Exception:
+            pass
         config = uvicorn.Config(
             "app.main:app",
             host="127.0.0.1",
