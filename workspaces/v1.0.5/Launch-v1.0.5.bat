@@ -11,7 +11,7 @@ echo.
 cd /d "%~dp0"
 
 echo [*] Freeing ports 4000, 4001, 5173 and clearing WebView2 cache...
-powershell -Command "Get-NetTCPConnection -LocalPort 4000, 4001, 5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Remove-Item \"$HOME\.houmi\webview_profile\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"$HOME\.houmi\webview_session_*\" -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+powershell -Command "Get-NetTCPConnection -LocalPort 4000, 4001, 5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Remove-Item \"$HOME\.houmi\webview_profile\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"$HOME\.houmi\webview_session_*\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"$env:LOCALAPPDATA\com.houmi.studio\EBWebView\" -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
 
 REM ── Set workspace-isolated environment variables ──
 set "HOUMI_APP_DIR=%~dp0"
