@@ -393,6 +393,18 @@ export const PipelineToolbar: React.FC<PipelineToolbarProps> = ({
               </button>
             )}
 
+            {onReorderBlocks && (
+              <button
+                disabled={isProcessing}
+                onClick={() => onReorderBlocks('rtl')}
+                className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-slate-300 hover:text-yellow-400 font-bold rounded flex items-center gap-1 text-[10.5px] cursor-pointer transition-colors"
+                title="เรียงลำดับเลเยอร์และบอลลูนข้อความจากขวาไปซ้าย (RTL - Manga Order)"
+              >
+                <span>🔄</span>
+                <span>Sort RTL</span>
+              </button>
+            )}
+
             {/* Individual Steps Dropdown */}
             <div className="relative" ref={stepsDropdownRef}>
               <button

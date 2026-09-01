@@ -161,10 +161,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     externalStylePresets || DEFAULT_TEXT_TEMPLATES
   );
   const [templateDirty, setTemplateDirty] = useState(false);
+  const [localMaskDilationKernel, setLocalMaskDilationKernel] = useState<number>(3);
+
+  const settings = activeProject?.settings || {};
+
+  useEffect(() => {
+    if (settings.mask_dilation_kernel !== undefined) {
+      setLocalMaskDilationKernel(Number(settings.mask_dilation_kernel));
+    }
+  }, [settings.mask_dilation_kernel, isOpen]);
 
   if (!isOpen) return null;
 
-  const settings = activeProject?.settings || {};
   const currentGpuProvider = settings.execution_provider || settings.gpu_execution_provider || 'CUDA';
   const currentEngine = settings.ocr_engine || settings.ocr_model || 'glm';
 
@@ -1172,30 +1180,43 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-slate-300 font-semibold text-xs">🔍 Mask Expansion Dilation (ขยายขอบมาสก์เก็บรอยหมึก)</label>
-                      <span className="text-xs font-mono text-yellow-400 font-bold">{maskDilationKernel} px</span>
+                      <span className="text-xs font-mono text-yellow-400 font-bold">{localMaskDilationKernel} px</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <input
                         type="range"
                         min="0"
                         max="56"
-                        value={maskDilationKernel}
-                        onChange={(e) => {
-                          const val = Math.max(0, Math.min(56, Number(e.target.value) || 0));
+                        value={localMaskDilationKernel}
+                        onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const val = Math.max(0, Math.min(56, parseInt(e.target.value, 10) || 0));
+                          setLocalMaskDilationKernel(val);
                           handleUpdateSetting({ mask_dilation_kernel: val });
                         }}
-                        className="flex-1 accent-yellow-500 cursor-pointer"
+                        onChange={(e) => {
+                          const val = Math.max(0, Math.min(56, parseInt(e.target.value, 10) || 0));
+                          setLocalMaskDilationKernel(val);
+                          handleUpdateSetting({ mask_dilation_kernel: val });
+                        }}
+                        className="flex-1 accent-yellow-500 cursor-pointer h-2 bg-zinc-800 rounded-lg"
                       />
                       <input
                         type="number"
                         min="0"
                         max="56"
-                        value={maskDilationKernel}
+                        value={localMaskDilationKernel}
                         onChange={(e) => {
-                          const val = Math.max(0, Math.min(56, Number(e.target.value) || 0));
+                          const raw = e.target.value;
+                          if (raw === "") {
+                            setLocalMaskDilationKernel(0);
+                            return;
+                          }
+                          const parsed = parseInt(raw, 10);
+                          const val = isNaN(parsed) ? 0 : Math.max(0, Math.min(56, parsed));
+                          setLocalMaskDilationKernel(val);
                           handleUpdateSetting({ mask_dilation_kernel: val });
                         }}
-                        className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-slate-200 text-center font-mono focus:outline-none focus:border-yellow-500"
+                        className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-slate-200 text-center font-mono focus:outline-none focus:border-yellow-500 font-bold"
                       />
                     </div>
                     <span className="text-[10px] text-slate-400 block mt-1">

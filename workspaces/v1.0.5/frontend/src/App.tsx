@@ -8374,12 +8374,19 @@ export const App: React.FC = () => {
                                     min="0" 
                                     max="56" 
                                     value={settingsMaskDilationKernel} 
+                                    onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                      const val = Math.max(0, Math.min(56, parseInt(e.target.value, 10) || 0));
+                                      setSettingsMaskDilationKernel(val);
+                                      updateGlobalSetting('mask_dilation_kernel', val);
+                                      updateGlobalSetting('cleanup_pipeline_profile', 'custom');
+                                    }}
                                     onChange={(e) => {
-                                      const val = Math.max(0, Math.min(56, parseInt(e.target.value) || 0));
+                                      const val = Math.max(0, Math.min(56, parseInt(e.target.value, 10) || 0));
+                                      setSettingsMaskDilationKernel(val);
                                       updateGlobalSetting('mask_dilation_kernel', val);
                                       updateGlobalSetting('cleanup_pipeline_profile', 'custom');
                                     }} 
-                                    className="flex-1 accent-yellow-500 cursor-pointer" 
+                                    className="flex-1 accent-yellow-500 cursor-pointer h-2 bg-zinc-800 rounded-lg" 
                                   />
                                   <input 
                                     type="number" 
@@ -8387,7 +8394,14 @@ export const App: React.FC = () => {
                                     max="56" 
                                     value={settingsMaskDilationKernel} 
                                     onChange={(e) => {
-                                      const val = Math.max(0, Math.min(56, parseInt(e.target.value) || 0));
+                                      const raw = e.target.value;
+                                      if (raw === "") {
+                                        setSettingsMaskDilationKernel(0);
+                                        return;
+                                      }
+                                      const parsed = parseInt(raw, 10);
+                                      const val = isNaN(parsed) ? 0 : Math.max(0, Math.min(56, parsed));
+                                      setSettingsMaskDilationKernel(val);
                                       updateGlobalSetting('mask_dilation_kernel', val);
                                       updateGlobalSetting('cleanup_pipeline_profile', 'custom');
                                     }} 
