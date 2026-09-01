@@ -1,8 +1,39 @@
 import sys
 import os
+import io
 import time
 import threading
 from pathlib import Path
+
+# Windows UTF-8 Safe standard output/error redirection (prevents OSError Errno 22 on detached pipes)
+class SafeStream:
+    def __init__(self, stream):
+        self._stream = stream
+    def write(self, s):
+        try:
+            if self._stream is not None:
+                self._stream.write(s)
+                self._stream.flush()
+        except Exception:
+            pass
+    def flush(self):
+        try:
+            if self._stream is not None:
+                self._stream.flush()
+        except Exception:
+            pass
+
+try:
+    if sys.stdout is not None:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+except Exception:
+    sys.stdout = SafeStream(sys.stdout)
+
+try:
+    if sys.stderr is not None:
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+except Exception:
+    sys.stderr = SafeStream(sys.stderr)
 
 # Fix pythonnet runtime initialization in PyInstaller frozen mode on Windows
 if getattr(sys, "frozen", False):
@@ -38,24 +69,8 @@ os.environ["HOUMI_WORKSPACE_DIR"] = str(current_dir)
 os.environ["HOUMI_DATA_DIR"] = str(current_dir / "data")
 os.environ["HOUMI_FRONTEND_DIST"] = str(current_dir / "frontend" / "dist")
 os.environ["HOUMI_DISABLE_AUTO_PATCH"] = "1"
-
-# Set environment variables for FastAPI backend config and force WebView2 GPU acceleration
-HOUMI_PORT_VAL = 4000
-try:
-    import socket
-    for p in range(4000, 4100):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                s.bind(("127.0.0.1", p))
-                HOUMI_PORT_VAL = p
-                break
-            except OSError:
-                continue
-except Exception:
-    pass
-
 os.environ["HOUMI_HOST"] = "127.0.0.1"
-os.environ["HOUMI_PORT"] = str(HOUMI_PORT_VAL)
+os.environ["HOUMI_PORT"] = os.environ.get("HOUMI_PORT", "4000")
 os.environ["PRODUCTION_MODE"] = "1"
 os.environ["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"] = (
     "--enable-gpu-rasterization "

@@ -47,8 +47,20 @@ fn main() {
             get_sidecar_health
         ])
         .setup(move |_app| {
-            let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            let workspace_root = manifest_dir.join("../..");
+            let workspace_root = if let Ok(exe_path) = std::env::current_exe() {
+                let exe_dir = exe_path.parent().unwrap_or(&exe_path);
+                if exe_dir.join("run_desktop.py").exists() {
+                    exe_dir.to_path_buf()
+                } else if exe_dir.join("../../../run_desktop.py").exists() {
+                    exe_dir.join("../../..")
+                } else if exe_dir.join("../../run_desktop.py").exists() {
+                    exe_dir.join("../..")
+                } else {
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
+                }
+            } else {
+                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
+            };
             let venv_python = workspace_root.join("backend/.venv/Scripts/python.exe");
 
             let python_bin = if venv_python.exists() {
