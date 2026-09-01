@@ -47,7 +47,7 @@ from app.services.project_paths import (
 
 logger = logging.getLogger("houmi-inpainter")
 
-CLEAN_PIPELINE_VERSION = "2.7"  # adaptive monochrome edge coverage and editor provenance
+CLEAN_PIPELINE_VERSION = "2.8"  # leak-proof balloon clamping and margin-preserved text masks
 EFFECTIVE_MASK_CACHE_KIND = "editor_effective_mask"
 
 
