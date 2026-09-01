@@ -19,7 +19,9 @@
         "resizable": true,
         "fullscreen": false,
         "useHttpsScheme": false,
-        "devtools": true
+        "devtools": true,
+        "visible": true,
+        "focus": true
       }
     ],
     "security": {
