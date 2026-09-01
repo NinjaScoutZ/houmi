@@ -286,15 +286,27 @@ def segment_text(text: str, project_dictionary: Sequence[str] | None = None) -> 
             elif prev_tok in OPENING_PUNCTUATION:
                 punct_glued[-1] = prev_tok + tok
             else:
-                # Subdivide 4-syllable compound idioms (e.g. 'พร้อมหน้าพร้อมตา' -> 'พร้อมหน้า', 'พร้อมตา')
-                if len(tok) >= 12 and any(p in tok for p in ["พร้อมหน้าพร้อมตา", "ข้าวปลาอาหาร", "มากมายก่ายกอง", "สวยงามหมดจด"]):
-                    for p in ["พร้อมหน้าพร้อมตา", "ข้าวปลาอาหาร", "มากมายก่ายกอง", "สวยงามหมดจด"]:
-                        if p in tok:
-                            mid = len(p) // 2
-                            split_pattern = f"{p[:mid]}|{p[mid:]}"
-                            tok_parts = tok.replace(p, split_pattern).split("|")
-                            punct_glued.extend([pt for pt in tok_parts if pt])
-                            break
+                # Two-Tier Hierarchical Sub-Tokenization for Long Thai Compounds (len >= 10)
+                # Prevents massive tokens from blowing out balloon widths and forcing extreme font downscaling
+                if len(tok) >= 10 and re.search(r'[\u0E00-\u0E7F]', tok):
+                    sub_parts = []
+                    # Leading vowel regex pattern: binds เ, แ, โ, ใ, ไ to consonant
+                    syllable_pat = r'(?:[เแโใไ]?[ก-ฮ][\u0E30-\u0E39\u0E47-\u0E4E]*)+'
+                    raw_sub = re.findall(syllable_pat, tok)
+                    if len(raw_sub) >= 2 and sum(len(s) for s in raw_sub) == len(tok):
+                        # Group small 2-3 char syllables into 4-8 char chunks
+                        curr_chunk = ""
+                        for s in raw_sub:
+                            if curr_chunk and len(curr_chunk) + len(s) > 8:
+                                sub_parts.append(curr_chunk)
+                                curr_chunk = s
+                            else:
+                                curr_chunk += s
+                        if curr_chunk:
+                            sub_parts.append(curr_chunk)
+                        punct_glued.extend(sub_parts)
+                    else:
+                        punct_glued.append(tok)
                 else:
                     punct_glued.append(tok)
 
