@@ -120,6 +120,10 @@ fn main() {
                         std::thread::sleep(Duration::from_millis(500));
                         if TcpStream::connect_timeout(&addr, Duration::from_millis(500)).is_ok() {
                             println!("[Tauri v2] AI Engine is HEALTHY and READY on port 4000!");
+                            println!("==========================================================================");
+                            println!("  ✨ [READY] HOUMI STUDIO v1.0.5 IS LOADED & OPERATIONAL!");
+                            println!("  👉 หน้าต่างโปรแกรมพร้อมใช้งานแล้ว (สามารถสลับไปใช้หน้าต่างโปรแกรมได้เลย)");
+                            println!("==========================================================================");
                             break;
                         }
                     }
