@@ -718,8 +718,6 @@ def generate_manga_unet_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
                 outline = (b_out == b).astype(np.uint8) * 255
                 final_mask = cv2.bitwise_and(final_mask, cv2.bitwise_not(cv2.dilate(outline, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)))))
 
-        final_mask = clamp_mask_to_balloon_interior(final_mask, image_bgr, margin_px=2)
-
         # Apply user-configured Dilation Kernel expansion
         if dilation_kernel and int(dilation_kernel) > 0:
             k_val = int(dilation_kernel)
@@ -727,6 +725,7 @@ def generate_manga_unet_text_mask(image_bgr: np.ndarray, dilation_kernel: int = 
             k_struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_size, k_size))
             final_mask = cv2.dilate(final_mask, k_struct)
 
+        final_mask = clamp_mask_to_balloon_interior(final_mask, image_bgr, margin_px=2)
         return final_mask
     except Exception as exc:
         logger.warning("Manga UNet++ text mask execution failed: %s", exc)

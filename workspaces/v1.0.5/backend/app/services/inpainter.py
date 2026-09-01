@@ -718,7 +718,11 @@ def _clip_auto_mask_to_balloon(
             interior = np.zeros((height, width), dtype=np.uint8)
             poly_pts = np.array(contour_points, dtype=np.int32).reshape(-1, 1, 2)
             cv2.fillPoly(interior, [poly_pts], 255)
-            return cv2.bitwise_and(mask, cv2.bitwise_or(interior, text_bbox_mask))
+            clamped = cv2.bitwise_and(mask, interior)
+            if image is not None and np.any(clamped):
+                from app.services.mask.border_clamper import clamp_mask_to_balloon_interior
+                return clamp_mask_to_balloon_interior(clamped, image, margin_px=2)
+            return clamped
 
     region = metadata.get("layout_region") if isinstance(metadata, dict) else None
     if not isinstance(region, dict):
@@ -745,8 +749,6 @@ def _clip_auto_mask_to_balloon(
     except (KeyError, TypeError, ValueError):
         return clip_to_source_bbox(margin=eff_margin)
 
-    text_bbox_mask = clip_to_source_bbox(margin=eff_margin)
-
     interior = np.zeros((height, width), dtype=np.uint8)
     x0, y0 = rx + safe, ry + safe
     x1, y1 = max(x0, rx + rw - safe), max(y0, ry + rh - safe)
@@ -756,7 +758,11 @@ def _clip_auto_mask_to_balloon(
                     0, 0, 360, 255, -1)
     else:
         interior[y0:y1, x0:x1] = 255
-    return cv2.bitwise_and(mask, cv2.bitwise_or(interior, text_bbox_mask))
+    clamped = cv2.bitwise_and(mask, interior)
+    if image is not None and np.any(clamped):
+        from app.services.mask.border_clamper import clamp_mask_to_balloon_interior
+        return clamp_mask_to_balloon_interior(clamped, image, margin_px=2)
+    return clamped
 
 
 def build_effective_page_mask(page_id: str, db: Session) -> np.ndarray:

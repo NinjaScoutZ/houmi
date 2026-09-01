@@ -23,9 +23,9 @@ def join_tokens(tokens: list[str]) -> str:
     """
     if not tokens:
         return ""
-    # Match CJK characters and Thai characters
+    # Match CJK characters, Hangul Korean characters, and Thai characters
     no_space_pattern = re.compile(
-        r"[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\u30a0-\u30ff\uff00-\uffef\u0e00-\u0e7f]"
+        r"[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\u30a0-\u30ff\uff00-\uffef\uac00-\ud7af\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\ud7b0-\ud7ff\u0e00-\u0e7f]"
     )
     result = []
     for i, tok in enumerate(tokens):
@@ -40,12 +40,12 @@ def join_tokens(tokens: list[str]) -> str:
                 result.append(" ")
         elif prev_tok.isspace():
             result.append(tok)
-        # If BOTH tokens are CJK/Thai, no space unless the author supplied one.
+        # If BOTH tokens are CJK/Hangul/Thai, no space unless the author supplied one.
         elif no_space_pattern.search(prev_tok) and no_space_pattern.search(tok):
             result.append(tok)
-        elif tok.startswith(tuple(".,!?:;)）]】”’")):
+        elif tok.startswith(tuple(".,!?:;)）]】”’」』")):
             result.append(tok)
-        elif prev_tok.endswith(tuple("([{（【“‘")):
+        elif prev_tok.endswith(tuple("([{（【“‘「『")):
             result.append(tok)
         else:
             result.append(" " + tok)
@@ -84,13 +84,13 @@ def _measure_width(
 
 def _join_type(prev_tok: str, next_tok: str) -> str:
     no_space_pattern = re.compile(
-        r"[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\u30a0-\u30ff\uff00-\uffef\u0e00-\u0e7f]"
+        r"[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\u30a0-\u30ff\uff00-\uffef\uac00-\ud7af\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\ud7b0-\ud7ff\u0e00-\u0e7f]"
     )
     if no_space_pattern.search(prev_tok) and no_space_pattern.search(next_tok):
         return "cjk_thai"
-    if next_tok.startswith(tuple(".,!?:;)）]】”’")):
+    if next_tok.startswith(tuple(".,!?:;)）]】”’」』")):
         return "cjk_thai"
-    if prev_tok.endswith(tuple("([{（【“‘")):
+    if prev_tok.endswith(tuple("([{（【“‘「『")):
         return "cjk_thai"
     return "space"
 

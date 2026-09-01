@@ -80,15 +80,35 @@ def clamp_mask_to_balloon_interior(
             if max_thickness <= 24.0 or (touches_perimeter and not is_dark_background):
                 border_binary[labels_l == l] = 255
 
-    # Safety Gate: If border_binary occupies more than 40% of the entire crop,
-    # it is solid artwork or background fill, not a clean boundary stroke.
-    border_coverage = np.count_nonzero(border_binary) / max(1, total_pixels)
-    if border_coverage == 0 or border_coverage > 0.40:
-        return mask
+    # Seal small gaps in balloon stroke to form an impassable flood barrier
+    k_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    closed_border = cv2.morphologyEx(border_binary, cv2.MORPH_CLOSE, k_close)
+
+    # Flood fill from perimeter edges to segment exterior artwork from balloon interior
+    flood_mask = np.zeros((height + 2, width + 2), dtype=np.uint8)
+    flood_mask[1:-1, 1:-1] = (closed_border > 0).astype(np.uint8)
+    flooded_exterior = np.zeros((height, width), dtype=np.uint8)
+
+    step_x = max(1, width // 10)
+    step_y = max(1, height // 10)
+    for x in range(0, width, step_x):
+        if flood_mask[1, x + 1] == 0:
+            cv2.floodFill(flooded_exterior, flood_mask, (x, 0), 255)
+        if flood_mask[height, x + 1] == 0:
+            cv2.floodFill(flooded_exterior, flood_mask, (x, height - 1), 255)
+    for y in range(0, height, step_y):
+        if flood_mask[y + 1, 1] == 0:
+            cv2.floodFill(flooded_exterior, flood_mask, (0, y), 255)
+        if flood_mask[y + 1, width] == 0:
+            cv2.floodFill(flooded_exterior, flood_mask, (width - 1, y), 255)
+
+    exterior_detected = (flood_mask[1:-1, 1:-1] == 255) | (flooded_exterior > 0)
 
     # Euclidean distance transform from detected balloon borders
     dist_map = cv2.distanceTransform((255 - border_binary), cv2.DIST_L2, 5)
 
     clamped_mask = mask.copy()
+    if np.count_nonzero(exterior_detected) > 0 and np.count_nonzero(~exterior_detected) > (total_pixels * 0.05):
+        clamped_mask[exterior_detected] = 0
     clamped_mask[dist_map <= float(margin_px)] = 0
     return clamped_mask
