@@ -7,7 +7,7 @@ import numpy as np
 from typing import Optional, Any
 from pathlib import Path
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, UploadFile, File, Form, Body, Query
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, UploadFile, File, Form, Body, Query, Request
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, get_db
 from app.models.all_models import Page, TextBlock, Project
@@ -36,6 +36,73 @@ class MaskPipelineRequest(BaseModel):
 
 class InpaintPipelineRequest(BaseModel):
     page_id: Optional[str] = None
+    block_id: Optional[str] = None
+
+
+class StyleJudgePipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+    model: Optional[str] = "flash_3.6"
+
+
+class LayoutPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+
+
+class SortPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+
+
+class RenderPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+
+
+class AutoPipelineRequest(BaseModel):
+    page_id: Optional[str] = None
+    min_confidence: Optional[float] = None
+    backend: Optional[str] = None
+
+
+class AutoBackgroundRequest(BaseModel):
+    page_id: Optional[str] = None
+    project_id: Optional[str] = None
+    min_confidence: Optional[float] = None
+    backend: Optional[str] = None
+    steps: Optional[str] = None
+    source_lang: Optional[str] = None
+    balloon_model: Optional[str] = None
+
+
+class BatchPipelineRequest(BaseModel):
+    project_id: Optional[str] = None
+    steps: Optional[str] = "detect,ocr,inpaint"
+    min_confidence: Optional[float] = None
+    backend: Optional[str] = None
+    source_lang: Optional[str] = None
+    balloon_model: Optional[str] = None
+
+
+class CancelBatchPipelineRequest(BaseModel):
+    project_id: Optional[str] = None
+
+
+class CancelAutoBackgroundRequest(BaseModel):
+    page_id: Optional[str] = None
+
+
+def _extract_param(payload: Any, field_name: str, fallback: Any = None) -> Any:
+    """Safely extracts a parameter from payload (BaseModel, dict, or str) or fallback value."""
+    if payload is not None:
+        if isinstance(payload, BaseModel):
+            val = getattr(payload, field_name, None)
+            if val is not None:
+                return val
+        elif isinstance(payload, dict):
+            val = payload.get(field_name)
+            if val is not None:
+                return val
+        elif isinstance(payload, str) and field_name in ("page_id", "project_id"):
+            return payload
+    return fallback
 from app.security.dependencies import get_current_user_or_local, ensure_project_access
 from app.services.detector import balloon_detector
 from app.services.ocr import (
@@ -290,15 +357,15 @@ def run_detect(
     promote_with_ocr: bool = Query(False),
     db: Session = Depends(get_db),
 ):
-    pid = (payload.page_id if payload and payload.page_id else None) or page_id
+    pid = _extract_param(payload, "page_id", page_id)
     if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
     page_id = pid
-    min_conf = (payload.min_confidence if payload and payload.min_confidence is not None else None) or min_confidence
-    force_val = (payload.force if payload and payload.force is not None else False) or force
-    backend_val = (payload.backend if payload and payload.backend else None) or backend
-    balloon_model_val = (payload.balloon_model if payload and payload.balloon_model else None) or balloon_model
-    promote_val = (payload.promote_with_ocr if payload and payload.promote_with_ocr is not None else False) or promote_with_ocr
+    min_conf = _extract_param(payload, "min_confidence", min_confidence)
+    force_val = _extract_param(payload, "force", force)
+    backend_val = _extract_param(payload, "backend", backend)
+    balloon_model_val = _extract_param(payload, "balloon_model", balloon_model)
+    promote_val = _extract_param(payload, "promote_with_ocr", promote_with_ocr)
 
     page = db.query(Page).filter(Page.id == page_id).first()
     if not page:
@@ -661,7 +728,8 @@ def _reindex_page_blocks(page_id: str, db: Session) -> None:
         block.block_index = index
 
 @router.post("/pipeline/ocr")
-def run_ocr(
+async def run_ocr(
+    request: Request,
     payload: Optional[OcrPipelineRequest] = Body(None),
     page_id: Optional[str] = Query(None),
     backend: Optional[str] = Query(None),
@@ -669,22 +737,33 @@ def run_ocr(
     block_ids: Optional[Any] = Query(None),
     source_lang: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    cancel_check: Any = None,
+    cancel_check: Any = Query(None, include_in_schema=False),
 ):
-    pid = (payload.page_id if payload and payload.page_id else None) or page_id
+    # Fallback to manual JSON parse if payload is None
+    body_data = {}
+    if payload is None:
+        try:
+            body_bytes = await request.body()
+            if body_bytes:
+                import json
+                body_data = json.loads(body_bytes.decode('utf-8'))
+        except Exception:
+            body_data = {}
+
+    pid = _extract_param(payload, "page_id", page_id) or body_data.get("page_id")
     if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
-    backend_val = (payload.backend if payload and payload.backend else None) or backend
-    force_val = (payload.force if payload and payload.force is not None else False) or force
+    backend_val = _extract_param(payload, "backend", backend) or body_data.get("backend")
+    force_val = _extract_param(payload, "force", force) if payload is not None else body_data.get("force", force)
     
-    raw_bids = (payload.block_ids if payload and payload.block_ids is not None else None) or block_ids
+    raw_bids = _extract_param(payload, "block_ids", block_ids) or body_data.get("block_ids")
     if isinstance(raw_bids, list):
         bids_str = ",".join(str(x) for x in raw_bids)
     elif isinstance(raw_bids, str):
         bids_str = raw_bids
     else:
         bids_str = None
-    lang_val = (payload.source_lang if payload and payload.source_lang else None) or source_lang
+    lang_val = _extract_param(payload, "source_lang", source_lang)
 
     page = db.query(Page).filter(Page.id == pid).first()
     if not page:
@@ -789,7 +868,7 @@ def run_mask(
     page_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    pid = (payload.page_id if payload and payload.page_id else None) or page_id
+    pid = _extract_param(payload, "page_id", page_id)
     if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
     try:
@@ -807,11 +886,6 @@ def run_mask(
         )
 
 
-class InpaintPipelineRequest(BaseModel):
-    page_id: Optional[str] = None
-    block_id: Optional[str] = None
-
-
 @router.post("/pipeline/inpaint")
 def run_inpaint(
     payload: Optional[InpaintPipelineRequest] = Body(None),
@@ -819,8 +893,8 @@ def run_inpaint(
     block_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    pid = (payload.page_id if payload and payload.page_id else None) or page_id
-    bid = (payload.block_id if payload and payload.block_id else None) or block_id
+    pid = _extract_param(payload, "page_id", page_id)
+    bid = _extract_param(payload, "block_id", block_id)
     if not pid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
     try:
@@ -1025,9 +1099,16 @@ def reset_masks(page_id: str | None = None, project_id: str | None = None, db: S
     return {"status": "success", "scope": "page" if page_id else "project", "removed": removed}
 
 @router.post("/pipeline/render")
-def run_render(page_id: str, db: Session = Depends(get_db)):
+def run_render(
+    payload: Optional[RenderPipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    pid = _extract_param(payload, "page_id", page_id)
+    if not pid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
     try:
-        render_page_text(page_id, db)
+        render_page_text(pid, db)
         return {"status": "success", "message": "Render text completed"}
     except Exception as e:
         logger.exception("Rendering failed")
@@ -1038,18 +1119,31 @@ def run_render(page_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/pipeline/style-judge")
-def run_style_judge(page_id: str, db: Session = Depends(get_db)):
-    page = db.query(Page).filter(Page.id == page_id).first()
+@router.post("/pipeline/style_judge")
+@router.post("/pipeline/font_judge")
+@router.post("/pipeline/font-judge")
+def run_style_judge(
+    payload: Optional[StyleJudgePipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    pid = _extract_param(payload, "page_id", page_id)
+    if not pid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required"
+        )
+    page = db.query(Page).filter(Page.id == pid).first()
     if not page:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Page not found"
         )
 
+    judge_model = _extract_param(payload, "model", "flash_3.6") or "flash_3.6"
     project_settings = page.project.settings if page.project else {}
     evaluated = 0
     applied = 0
     descriptors_map = judge_page_styles_batch_ai(
-        page.text_blocks, project_settings=project_settings, page_height=page.height, model="flash_3.6"
+        page.text_blocks, project_settings=project_settings, page_height=page.height, model=judge_model
     )
     for block in page.text_blocks:
         b_id = str(block.id)
@@ -1159,9 +1253,17 @@ async def upload_rendered_overlay(
 
 
 @router.post("/pipeline/layout")
-def run_layout(page_id: str, db: Session = Depends(get_db)):
+@router.post("/pipeline/typeset")
+def run_layout(
+    payload: Optional[LayoutPipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
     """Refresh balloon-safe regions and canonical typesetting specs for a page."""
-    page = db.query(Page).filter(Page.id == page_id).first()
+    pid = _extract_param(payload, "page_id", page_id)
+    if not pid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
+    page = db.query(Page).filter(Page.id == pid).first()
     if not page:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
     try:
@@ -1192,8 +1294,15 @@ def run_layout(page_id: str, db: Session = Depends(get_db)):
         )
 
 @router.post("/pipeline/sort")
-def run_sort(page_id: str, db: Session = Depends(get_db)):
-    page = db.query(Page).filter(Page.id == page_id).first()
+def run_sort(
+    payload: Optional[SortPipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    pid = _extract_param(payload, "page_id", page_id)
+    if not pid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
+    page = db.query(Page).filter(Page.id == pid).first()
     if not page:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
     try:
@@ -1211,23 +1320,34 @@ def run_sort(page_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/pipeline/auto")
-def run_auto(page_id: str, min_confidence: float = None, backend: Optional[str] = None, db: Session = Depends(get_db)):
+def run_auto(
+    payload: Optional[AutoPipelineRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    min_confidence: Optional[float] = Query(None),
+    backend: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
     """
     One-Click Full Pipeline: runs detect -> OCR -> inpaint sequentially.
     """
+    pid = _extract_param(payload, "page_id", page_id)
+    if not pid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id is required")
+    min_conf = _extract_param(payload, "min_confidence", min_confidence)
+    backend_val = _extract_param(payload, "backend", backend)
     try:
         # 1. Detect
         detect_res = run_detect(
-            page_id=page_id,
-            min_confidence=min_confidence,
-            backend=backend,
+            page_id=pid,
+            min_confidence=min_conf,
+            backend=backend_val,
             promote_with_ocr=False,
             db=db,
         )
         # 2. OCR
-        ocr_res = run_ocr(page_id=page_id, backend=backend, db=db)
+        ocr_res = run_ocr(page_id=pid, backend=backend_val, db=db)
         # 3. Inpaint
-        inpaint_res = run_inpaint(page_id=page_id, db=db)
+        inpaint_res = run_inpaint(page_id=pid, db=db)
         
         return {
             "status": "success",
@@ -1354,49 +1474,65 @@ def run_page_pipeline_task(
 
 @router.post("/pipeline/auto/background")
 def run_auto_background(
-    page_id: str,
-    project_id: str,
     background_tasks: BackgroundTasks,
-    min_confidence: float = None,
-    backend: Optional[str] = None,
-    steps: Optional[str] = None,
-    source_lang: Optional[str] = None,
-    balloon_model: Optional[str] = None,
+    payload: Optional[AutoBackgroundRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+    project_id: Optional[str] = Query(None),
+    min_confidence: Optional[float] = Query(None),
+    backend: Optional[str] = Query(None),
+    steps: Optional[str] = Query(None),
+    source_lang: Optional[str] = Query(None),
+    balloon_model: Optional[str] = Query(None),
 ):
+    pid = _extract_param(payload, "page_id", page_id)
+    prj_id = _extract_param(payload, "project_id", project_id)
+    if not pid or not prj_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page_id and project_id are required")
+    
+    min_conf = _extract_param(payload, "min_confidence", min_confidence)
+    backend_val = _extract_param(payload, "backend", backend)
+    steps_val = _extract_param(payload, "steps", steps)
+    source_lang_val = _extract_param(payload, "source_lang", source_lang)
+    balloon_model_val = _extract_param(payload, "balloon_model", balloon_model)
+
     requested_steps = None
-    if steps is not None:
+    if steps_val is not None:
         aliases = {"mask": "inpaint", "clean": "inpaint", "balloon": "detect"}
         requested_steps = {
             aliases.get(token.strip().lower(), token.strip().lower())
-            for token in steps.split(",")
+            for token in steps_val.split(",")
             if token.strip()
         }
         unsupported = requested_steps - {"detect", "ocr", "inpaint"}
         if unsupported:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported workflow step(s): {', '.join(sorted(unsupported))}")
     for p_id, job in list(page_jobs.items()):
-        if p_id != page_id and job.get("status") in {"queued", "running"}:
+        if p_id != pid and job.get("status") in {"queued", "running"}:
             job["cancel_requested"] = True
             job["status"] = "cancelled"
-    page_jobs[page_id] = {"status": "queued", "cancel_requested": False, "project_id": project_id}
-    background_tasks.add_task(run_page_pipeline_task, page_id, project_id, min_confidence, backend, requested_steps, source_lang, balloon_model)
+    page_jobs[pid] = {"status": "queued", "cancel_requested": False, "project_id": prj_id}
+    background_tasks.add_task(run_page_pipeline_task, pid, prj_id, min_conf, backend_val, requested_steps, source_lang_val, balloon_model_val)
     return {"status": "started"}
 
 
 @router.post("/pipeline/auto/cancel")
-def cancel_auto_background(page_id: Optional[str] = None):
+def cancel_auto_background(
+    payload: Optional[CancelAutoBackgroundRequest] = Body(None),
+    page_id: Optional[str] = Query(None),
+):
     """
     Cancels active auto pipeline jobs for a page (or all running page jobs if page_id omitted).
     """
+    pid = _extract_param(payload, "page_id", page_id)
     cancelled_any = False
-    if page_id:
-        job = page_jobs.get(page_id)
+    if pid:
+        job = page_jobs.get(pid)
         if job and job.get("status") in {"queued", "running"}:
             job["cancel_requested"] = True
             job["status"] = "cancelled"
             cancelled_any = True
             ws_manager.broadcast_sync(job.get("project_id", ""), {
-                "type": "page_progress", "status": "cancelled", "page_id": page_id,
+                "type": "page_progress", "status": "cancelled", "page_id": pid,
             })
     else:
         for p_id, job in page_jobs.items():
@@ -1933,7 +2069,7 @@ def run_batch_pipeline_task(
                     step_idx += 1
             
             # Step: Layout analysis and quality gate
-            if "layout" in page_steps:
+            if "layout" in page_steps or "typeset" in page_steps:
                 if check_cancel_requested():
                     return
                 broadcast_step("layout", float(step_idx))
@@ -1947,6 +2083,46 @@ def run_batch_pipeline_task(
                     persist_typesetting_spec(block, spec)
                     flag_modified(block, "extra_metadata")
                 db.commit()
+                if check_cancel_requested():
+                    return
+                step_idx += 1
+
+            # Step: Filter empty text blocks (Custom Workflow step)
+            if "filter_empty" in page_steps:
+                if check_cancel_requested():
+                    return
+                broadcast_step("filter_empty", float(step_idx))
+                empty_blocks = [b for b in page.text_blocks if not (b.source_text or "").strip() and not (b.translation or "").strip()]
+                for eb in empty_blocks:
+                    db.delete(eb)
+                if empty_blocks:
+                    db.commit()
+                    _reindex_page_blocks(page.id, db)
+                    db.commit()
+                    db.refresh(page)
+                if check_cancel_requested():
+                    return
+                step_idx += 1
+
+            # Step: Merge & expand areas (Custom Workflow step)
+            if "merge_expand" in page_steps:
+                if check_cancel_requested():
+                    return
+                broadcast_step("merge_expand", float(step_idx))
+                img_w = page.width or 2000
+                img_h = page.height or 3000
+                for block in page.text_blocks:
+                    margin = 10.0
+                    new_x = max(0.0, float(block.x) - margin)
+                    new_y = max(0.0, float(block.y) - margin)
+                    new_w = min(float(img_w) - new_x, float(block.width) + margin * 2)
+                    new_h = min(float(img_h) - new_y, float(block.height) + margin * 2)
+                    block.x = new_x
+                    block.y = new_y
+                    block.width = new_w
+                    block.height = new_h
+                db.commit()
+                db.refresh(page)
                 if check_cancel_requested():
                     return
                 step_idx += 1
@@ -2102,22 +2278,30 @@ def run_batch_pipeline_task(
 
 @router.post("/pipeline/batch")
 def run_batch_pipeline(
-    project_id: str,
-    steps: str = "detect,ocr,inpaint",
-    min_confidence: float = None,
-    backend: Optional[str] = None,
-    source_lang: Optional[str] = None,
-    balloon_model: Optional[str] = None,
-    background_tasks: BackgroundTasks = None,
+    background_tasks: BackgroundTasks,
+    payload: Optional[BatchPipelineRequest] = Body(None),
+    project_id: Optional[str] = Query(None),
+    steps: str = Query("detect,ocr,inpaint"),
+    min_confidence: Optional[float] = Query(None),
+    backend: Optional[str] = Query(None),
+    source_lang: Optional[str] = Query(None),
+    balloon_model: Optional[str] = Query(None),
 ):
     """
     Triggers batch processing on all pages of a project as a background task.
     """
-    if not background_tasks:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="BackgroundTasks dependency missing")
+    pid = _extract_param(payload, "project_id", project_id)
+    if not pid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="project_id is required")
     
+    steps_val = _extract_param(payload, "steps", steps) or "detect,ocr,inpaint"
+    min_conf = _extract_param(payload, "min_confidence", min_confidence)
+    backend_val = _extract_param(payload, "backend", backend)
+    lang_val = _extract_param(payload, "source_lang", source_lang)
+    model_val = _extract_param(payload, "balloon_model", balloon_model)
+
     # Initialize job state
-    batch_jobs[project_id] = {
+    batch_jobs[pid] = {
         "status": "running",
         "progress": 0.0,
         "current_page": 0,
@@ -2125,7 +2309,7 @@ def run_batch_pipeline(
         "error": None
     }
     
-    background_tasks.add_task(run_batch_pipeline_task, project_id, steps, min_confidence, backend, source_lang, balloon_model)
+    background_tasks.add_task(run_batch_pipeline_task, pid, steps_val, min_conf, backend_val, lang_val, model_val)
     return {"status": "success", "message": "Batch processing started in background."}
 
 @router.get("/pipeline/batch/status")
@@ -2146,29 +2330,33 @@ def get_batch_status(project_id: str):
 
 
 @router.post("/pipeline/batch/cancel")
-def cancel_batch_pipeline(project_id: Optional[str] = None):
+def cancel_batch_pipeline(
+    payload: Optional[CancelBatchPipelineRequest] = Body(None),
+    project_id: Optional[str] = Query(None),
+):
     """
     Cancels active batch processing jobs for a project (or all running jobs if project_id omitted).
     """
+    pid = _extract_param(payload, "project_id", project_id)
     cancelled_any = False
-    if project_id:
-        if project_id in batch_jobs and batch_jobs[project_id].get("status") in {"running", "queued"}:
-            batch_jobs[project_id]["cancel_requested"] = True
-            batch_jobs[project_id]["status"] = "cancelled"
+    if pid:
+        if pid in batch_jobs and batch_jobs[pid].get("status") in {"running", "queued"}:
+            batch_jobs[pid]["cancel_requested"] = True
+            batch_jobs[pid]["status"] = "cancelled"
             cancelled_any = True
-            ws_manager.broadcast_sync(project_id, {
+            ws_manager.broadcast_sync(pid, {
                 "type": "batch_progress",
                 "status": "cancelled",
-                "progress": batch_jobs[project_id].get("progress", 0.0),
-                "current_page": batch_jobs[project_id].get("current_page", 0),
+                "progress": batch_jobs[pid].get("progress", 0.0),
+                "current_page": batch_jobs[pid].get("current_page", 0),
                 "error": "Cancelled by user"
             })
         for p_id, job in list(page_jobs.items()):
-            if job.get("project_id") == project_id and job.get("status") in {"queued", "running"}:
+            if job.get("project_id") == pid and job.get("status") in {"queued", "running"}:
                 job["cancel_requested"] = True
                 job["status"] = "cancelled"
                 cancelled_any = True
-                ws_manager.broadcast_sync(project_id, {
+                ws_manager.broadcast_sync(pid, {
                     "type": "page_progress", "status": "cancelled", "page_id": p_id,
                 })
     else:
