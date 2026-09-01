@@ -4099,87 +4099,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
           )}
         </div>
 
-        {/* Zone 2: View Modes & Layer Controls with generous spacing */}
-        <div className="flex items-center gap-2.5">
-          {/* Segmented View Mode: Original Source vs Clean Inpainted Background */}
-          <div className="flex items-center bg-[#14141e] border border-[#262638] rounded-lg p-0.5 shadow-inner">
-            <button
-              type="button"
-              onClick={() => void handleCleanImageToggle(false)}
-              className={`flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                !showInpainted
-                  ? 'bg-amber-500 text-black shadow-sm font-bold'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-              title="ดูภาพต้นฉบับภาษาเดิม (กด A เพื่อสลับ)"
-            >
-              <span>🖼️</span>
-              <span>ต้นฉบับ</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => void handleCleanImageToggle(true)}
-              disabled={isPreparingInpainted}
-              className={`flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                showInpainted
-                  ? 'bg-emerald-500 text-black shadow-sm font-bold'
-                  : 'text-zinc-400 hover:text-emerald-300'
-              } ${isPreparingInpainted ? 'opacity-60 animate-pulse' : ''}`}
-              title="ดูภาพคลีน Inpainted (กด A เพื่อสลับ)"
-            >
-              <span>✨</span>
-              <span>ภาพคลีน</span>
-              {isPreparingInpainted && <Loader2 size={11} className="animate-spin ml-0.5" />}
-            </button>
-          </div>
-
-          {/* Layer Visibility Toggles */}
-          <div className="flex items-center gap-1 bg-[#14141e] border border-[#262638] rounded-lg px-1.5 py-0.5">
-            <button
-              type="button"
-              onClick={() => setShowTranslated(prev => !prev)}
-              className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors cursor-pointer ${
-                showTranslated
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                  : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-              title="แสดง/ซ่อน เลเยอร์ข้อความแปล (H)"
-            >
-              {showTranslated ? <Eye size={12} /> : <EyeOff size={12} />}
-              <span>คำแปล</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setMaskVisible(prev => !prev)}
-              className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors cursor-pointer ${
-                maskVisible
-                  ? 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40'
-                  : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-              title="แสดง/ซ่อน Live Mask Overlay สีแดงบนหน้า (M)"
-            >
-              <span>🎭</span>
-              <span>Live Mask</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const cur = localStorage.getItem('houmi_show_balloon_hud') === 'true';
-                localStorage.setItem('houmi_show_balloon_hud', cur ? 'false' : 'true');
-                window.dispatchEvent(new CustomEvent('hud-toggled'));
-              }}
-              className="px-2 py-0.5 text-xs text-zinc-400 hover:text-amber-300 rounded transition-colors cursor-pointer flex items-center gap-1"
-              title="เปิด/ปิด แถบข้อมูลพิกัดบอลลูน (HUD)"
-            >
-              <span>ℹ️</span>
-              <span>HUD</span>
-            </button>
-          </div>
-        </div>
-
         {/* Zone 3: Zoom & Canvas Utilities */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-zinc-950/45 px-2.5 py-1 rounded-md border border-zinc-900/60 shadow-inner">
@@ -4771,31 +4690,18 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
             <span>Typesetting mode</span>
           </label>
 
-          {/* Checkbox: Mask mode */}
-          <label className={`flex items-center gap-1.5 cursor-pointer transition-colors py-0.5 px-2 rounded text-[10px] whitespace-nowrap shrink-0 font-medium ${
-            isMaskMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 font-semibold shadow-sm' : 'hover:text-yellow-400'
-          }`}>
-            <input 
-              type="checkbox"
-              checked={isMaskMode}
-              onChange={(e) => {
-                setIsMaskMode(e.target.checked);
-                if (e.target.checked) setIsBalloonLayoutMode(false);
-              }}
-              className="w-3.5 h-3.5 rounded-sm border-zinc-800 bg-zinc-900 text-amber-500 focus:ring-amber-500 accent-amber-500 cursor-pointer"
-            />
-            <span>Mask mode</span>
-          </label>
-
-          {/* Mask Opacity & Visibility Controls */}
-          <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded-sm shrink-0">
+          {/* Unified Live Mask Controls */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded-sm shrink-0">
             <button
               type="button"
               onClick={() => setMaskVisible(v => !v)}
-              className={`p-0.5 rounded transition-colors cursor-pointer ${maskVisible ? 'text-yellow-400 hover:bg-zinc-800' : 'text-slate-500 hover:bg-zinc-800'}`}
-              title={maskVisible ? 'Hide Mask Overlay' : 'Show Mask Overlay'}
+              className={`p-0.5 rounded transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-semibold ${
+                maskVisible ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'
+              }`}
+              title={maskVisible ? 'Hide Live Mask Overlay (M)' : 'Show Live Mask Overlay (M)'}
             >
               {maskVisible ? <Eye size={13} /> : <EyeOff size={13} />}
+              <span>Live Mask</span>
             </button>
             <span className="text-[9px] text-slate-400 font-bold font-mono min-w-6 text-center">
               {Math.round(maskOpacity * 100)}%
@@ -4806,7 +4712,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
               max="100"
               value={Math.round(maskOpacity * 100)}
               onChange={(e) => setMaskOpacity(Number(e.target.value) / 100)}
-              title="Mask Opacity"
+              title="Live Mask Opacity"
               className="w-12 accent-yellow-500 cursor-pointer h-1 bg-zinc-950 rounded appearance-none"
             />
           </div>
