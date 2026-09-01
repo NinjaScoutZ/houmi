@@ -16,7 +16,7 @@ CENTRAL_HOST = os.environ.get("HOUMI_CENTRAL_SERVER_URL", "https://houmi.click")
 router = APIRouter(tags=["Updater"])
 logger = logging.getLogger("houmi-updater")
 
-CURRENT_VERSION = "1.0.1"
+CURRENT_VERSION = "1.0.5"
 UPDATE_MANIFEST_PATH = DATA_DIR / "update_manifest.json"
 PATCHES_DIR = DATA_DIR / "patches"
 PATCHES_DIR.mkdir(parents=True, exist_ok=True)
@@ -214,8 +214,8 @@ def check_update(response: Response, current_version: str | None = None):
         "download_size_mb": 0.0,
     }
 
-    # 1. If running in local client mode, check Central Server first!
-    if RUNTIME_MODE != "host":
+    # 1. If running in local client mode and auto-patch is NOT disabled, check Central Server
+    if RUNTIME_MODE != "host" and os.environ.get("HOUMI_DISABLE_AUTO_PATCH") != "1":
         try:
             central_url = f"{CENTRAL_HOST}/api/system/check-update?current_version={current}"
             req = urllib.request.Request(

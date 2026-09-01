@@ -16,7 +16,7 @@ CENTRAL_HOST = os.environ.get("HOUMI_CENTRAL_SERVER_URL", "https://houmi.click")
 router = APIRouter(tags=["Updater"])
 logger = logging.getLogger("houmi-updater")
 
-CURRENT_VERSION = "2.0.0"
+CURRENT_VERSION = "1.0.5"
 UPDATE_MANIFEST_PATH = DATA_DIR / "update_manifest.json"
 PATCHES_DIR = DATA_DIR / "patches"
 PATCHES_DIR.mkdir(parents=True, exist_ok=True)
@@ -183,16 +183,11 @@ def parse_version_tuple(ver_str: str) -> tuple:
         parts.append(0)
     return tuple(parts[:3])
 
-_FROZEN = getattr(sys, "frozen", False)
-IS_DEV_ENV = not _FROZEN or os.environ.get("HOUMI_DISABLE_AUTO_UPDATE", "1") == "1" or RUNTIME_MODE == "dev"
-
 def is_newer_version(remote_ver: str, current_ver: str) -> bool:
     return parse_version_tuple(remote_ver) > parse_version_tuple(current_ver)
 
 def get_current_version() -> str:
     """Return the active software version, checking installed patches first."""
-    if IS_DEV_ENV:
-        return "Dev 1.0.1"
     if PATCH_MANIFEST_PATH.exists():
         try:
             with open(PATCH_MANIFEST_PATH, "r", encoding="utf-8-sig") as f:
@@ -203,22 +198,14 @@ def get_current_version() -> str:
     return CURRENT_VERSION
 
 
-def check_for_update(current_version: str | None = None) -> dict:
+@router.get("/system/check-update")
+def check_update(response: Response, current_version: str | None = None):
+    """Check for new software version patches."""
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+
     current = current_version or get_current_version()
-
-    # 0. If running on local development machine, permanently disable auto-updates & remote patch fetching!
-    if IS_DEV_ENV and RUNTIME_MODE != "host":
-        return {
-            "current_version": "Dev 1.0.1",
-            "latest_version": "Dev 1.0.1",
-            "update_available": False,
-            "patch_notes": "🔒 Dev Environment: Local development mode active (auto-updates and remote patches from houmi.click are permanently disabled).",
-            "download_size_mb": 0.0,
-            "target_username": "",
-            "is_dev": True,
-            "auto_update_disabled": True,
-        }
-
     manifest = {
         "current_version": current,
         "latest_version": current,
@@ -227,8 +214,8 @@ def check_for_update(current_version: str | None = None) -> dict:
         "download_size_mb": 0.0,
     }
 
-    # 1. If running in local client mode, check Central Server first!
-    if RUNTIME_MODE != "host":
+    # 1. If running in local client mode and auto-patch is NOT disabled, check Central Server
+    if RUNTIME_MODE != "host" and os.environ.get("HOUMI_DISABLE_AUTO_PATCH") != "1":
         try:
             central_url = f"{CENTRAL_HOST}/api/system/check-update?current_version={current}"
             req = urllib.request.Request(
@@ -272,23 +259,14 @@ def check_for_update(current_version: str | None = None) -> dict:
     return manifest
 
 
-@router.get("/system/check-update")
-def check_update(response: Response, current_version: str | None = None):
-    """Check for new software version patches."""
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return check_for_update(current_version)
-
-
 @router.post("/system/apply-patch")
 @router.get("/system/apply-patch")
 def apply_patch():
     """Download latest patch zip from Central Server and apply automatically."""
     logger.info("Patch application triggered by client.")
 
-    if RUNTIME_MODE == "host" or IS_DEV_ENV:
-        return {"status": "info", "message": "Development environment / Central Host: Remote patch auto-application is permanently disabled."}
+    if RUNTIME_MODE == "host" or os.environ.get("HOUMI_DISABLE_AUTO_PATCH") == "1":
+        return {"status": "info", "message": "Workspace Isolated: Remote patch auto-application is permanently disabled."}
 
     try:
         patch_url = f"{CENTRAL_HOST}/api/system/download-update"
@@ -453,85 +431,10 @@ def download_installer():
 
 
 @router.get("/system/changelog")
-@router.get("/system/changelogs")
 def get_changelog():
-    """Return application version history and structured change logs."""
-    from app.services.changelog_service import get_all_changelogs
+    """Return application version history and change logs."""
     return {
         "status": "success",
         "current_version": get_current_version(),
-        "changelog": CHANGELOG_HISTORY,
-        "changelogs": get_all_changelogs(),
+        "changelog": CHANGELOG_HISTORY
     }
-
-
-@router.get("/download/release/{version}")
-@router.get("/api/download/release/{version}")
-def download_specific_release(version: str):
-    """Download a specific archived version patch zip."""
-    clean_ver = version.strip().lstrip("vV")
-    tag = f"v{clean_ver}"
-    target_zip = DATA_DIR / "releases" / tag / "patch.zip"
-
-    if not target_zip.exists():
-        # Fallback check
-        target_zip = DATA_DIR / "patches" / "latest_patch.zip"
-
-    if not target_zip.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Release {tag} patch zip not found."
-        )
-
-    return FileResponse(
-        path=target_zip,
-        filename=f"HoumiStudio_Patch_{tag}.zip",
-        media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="HoumiStudio_Patch_{tag}.zip"'}
-    )
-
-
-@router.get("/download/latest")
-@router.get("/api/download/latest")
-def download_latest_release():
-    """Download the currently active latest version patch zip."""
-    latest_zip = DATA_DIR / "patches" / "latest_patch.zip"
-    if not latest_zip.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Latest patch zip file not available."
-        )
-    return FileResponse(
-        path=latest_zip,
-        filename="HoumiStudio_Latest_Patch.zip",
-        media_type="application/zip",
-        headers={"Content-Disposition": 'attachment; filename="HoumiStudio_Latest_Patch.zip"'}
-    )
-
-
-@router.get("/api/system/tauri-update")
-@router.get("/api/system/tauri-update/{target}/{arch}/{current_version}")
-def tauri_update_endpoint(target: str = "windows", arch: str = "x86_64", current_version: str | None = None):
-    """Tauri v2 Native Updater API endpoint returning JSON manifest."""
-    latest_ver = get_current_version()
-    if current_version and not is_newer_version(latest_ver, current_version):
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-    manifest_url = f"{CENTRAL_HOST}/api/download/latest"
-    return {
-        "version": latest_ver,
-        "notes": f"Houmi Studio v{latest_ver} Native Update",
-        "pub_date": "2026-08-30T14:00:00Z",
-        "platforms": {
-            f"{target}-{arch}": {
-                "signature": "",
-                "url": manifest_url
-            },
-            "windows-x86_64": {
-                "signature": "",
-                "url": manifest_url
-            }
-        }
-    }
-
-

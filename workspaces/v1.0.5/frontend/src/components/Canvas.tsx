@@ -1879,9 +1879,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
     // Draw Box Outlines and Index Number Badges (Houzi Style)
     canvas.on('after:render', (opt) => {
       if (isExportCaptureRef.current) return;
-      // Draw outlines ONLY if typesetting mode is on
-      const shouldDraw = showTypesettingRef.current;
-      if (!shouldDraw) return;
       
       const ctx = opt.ctx;
       if (!ctx) return;
@@ -1896,9 +1893,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
         ctx.transform(vpt[0], vpt[1], vpt[2], vpt[3], vpt[4], vpt[5]);
       }
       
-      // During a transform, decorate only the object(s) being manipulated.
-      // Scanning every textbox in `after:render` made drag cost grow linearly
-      // with page size even though only one box could have changed.
       const interactionTarget = activeInteractionObjectRef.current as any;
       const overlayObjects: any[] = interactionActiveRef.current && interactionTarget
         ? (interactionTarget.type === 'activeSelection' && typeof interactionTarget.getObjects === 'function'
@@ -1909,7 +1903,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
       const renderedBlockIds = new Set<string>();
       overlayObjects.forEach((obj: any) => {
         if (obj.type !== 'textbox' || !obj.data?.blockId) return;
-        if (!obj.visible) return;
         const blockId = String(obj.data.blockId);
         if (renderedBlockIds.has(blockId)) return;
         renderedBlockIds.add(blockId);
@@ -1927,8 +1920,8 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
         const contourPts = sbMeta?.contour_points || sbMeta?.raw_contour_points;
         const archetype = sbMeta?.archetype || 'UNKNOWN';
 
-        // Render Smart Balloon bounds only when selected or hovered (eliminates distracting dashed rectangular boxes on idle blocks)
-        if (isSmartBalloonEnabled && activeBlock && (isSelected || isHovered) && (activeBlock.smart_x != null || (Array.isArray(contourPts) && contourPts.length > 2))) {
+        // Render Smart Balloon bounds
+        if (isSmartBalloonEnabled && activeBlock && (activeBlock.smart_x != null || (Array.isArray(contourPts) && contourPts.length > 2))) {
           const sf = scaleFactorRef.current || 1;
           const smX = (activeBlock.smart_x ?? activeBlock.x) / sf;
           const smY = (activeBlock.smart_y ?? activeBlock.y) / sf;
@@ -1981,7 +1974,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
 
           ctx.beginPath();
           if (Array.isArray(contourPts) && contourPts.length > 2) {
-            // Draw exact polygon shape matching the manga balloon contour
             ctx.moveTo(contourPts[0][0] / sf, contourPts[0][1] / sf);
             for (let pi = 1; pi < contourPts.length; pi++) {
               ctx.lineTo(contourPts[pi][0] / sf, contourPts[pi][1] / sf);
@@ -1998,7 +1990,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
           ctx.setLineDash(dashPattern);
           ctx.stroke();
 
-          // Draw Smart Balloon Badge Label when Selected or Hovered
           if (isSelected || isHovered) {
             const badgeText = `${archetypeIcon} (${Math.round(smW * sf)}×${Math.round(smH * sf)})`;
             const fontPx = Math.max(9, Math.min(12, 11 / visualZoom));
@@ -2019,20 +2010,13 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
         
         const w = obj.width;
         const h = obj.height;
-        // Fabric transform origin is at the CENTER of the object,
-        // so top-left in local coords is (-w/2, -h/2)
         const tlX = -w / 2;
         const tlY = -h / 2;
-        
-        const hasSmartBalloon = isSmartBalloonEnabled && Boolean(
-          activeBlock && (activeBlock.smart_x != null || (Array.isArray(contourPts) && contourPts.length > 2))
-        );
 
         let boxStroke = isSelected ? '#f59e0b' : '#eab308';
         let boxFill = isSelected ? 'rgba(245, 158, 11, 0.06)' : 'rgba(234, 179, 8, 0.035)';
 
-        // Suppress yellow rectangle when Smart Balloon contour is active (Smart Balloon is the 100% true balloon)
-        if (!hasSmartBalloon) {
+        if (true) {
           
           if (!isSelected) {
             if (isHovered) {
@@ -4357,59 +4341,7 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
               <div className="font-bold mb-1">
                 {maskTooltip.type === 'custom' ? '✏️ Custom Mask' : '🤖 Adaptive Mask'}
               </div>
-              <div className="text-zinc-400 text-[10px]">
-                {maskTooltip.type === 'custom'
-                  ? 'User-drawn mask (highest accuracy)'
-                  : 'Auto-generated with balloon detection'}
-              </div>
             </div>
-          )}
-
-          {/* Floating Lettering Bar for fast styling directly above active textbox */}
-          {showFloatingLetteringBar && selectedBlock && selectedBlocks.length === 1 && !isMaskMode && showTypesetting && (
-            <FloatingLetteringBar
-              blockId={selectedBlock.id}
-              canvasScale={zoomLevel / scaleFactor}
-              blockX={selectedBlock.x}
-              blockY={selectedBlock.y}
-              blockWidth={selectedBlock.width}
-              blockHeight={selectedBlock.height}
-              onClose={onCloseFloatingLetteringBar}
-              onAutoFit={(id) => {
-                const tb = fabricCanvasRef.current?.getObjects().find((obj: any) => obj.data?.blockId === id) as fabric.Textbox;
-                if (tb) {
-                  removeExplicitLineAdapter(tb);
-                  autoFitTextboxFontSize(tb, fabricCanvasRef.current, scaleFactorRef.current, false);
-                }
-              }}
-              onDuplicate={async (id) => {
-                const target = activePage?.text_blocks.find((b) => b.id === id);
-                if (target && activePage) {
-                  await createBlock(activePage.id, {
-                    x: target.x + 20,
-                    y: target.y + 20,
-                    width: target.width,
-                    height: target.height,
-                    source_text: target.source_text,
-                    translation: target.translation,
-                    font_family: target.font_family,
-                    font_size: target.font_size,
-                    color_hex: target.color_hex,
-                    bold: target.bold,
-                    italic: target.italic,
-                    text_align: target.text_align,
-                    text_direction: target.text_direction,
-                    balloon_type: target.balloon_type,
-                    extra_metadata: { ...target.extra_metadata },
-                  });
-                  setStatus('Duplicated block', false);
-                }
-              }}
-              onDelete={async (id) => {
-                await deleteBlocks([id]);
-                setStatus('Deleted block', false);
-              }}
-            />
           )}
         </div>
 
