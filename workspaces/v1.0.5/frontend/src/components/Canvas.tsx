@@ -514,6 +514,12 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
     currentY: number;
   } | null>(null);
   const balloonSelectionRef = useRef<typeof balloonSelection>(null);
+
+  const [maskOpacity, setMaskOpacity] = useState<number>(0.6);
+  const [maskVisible, setMaskVisible] = useState<boolean>(() => !!liveMaskOverlay);
+  const maskOpacityRef = useRef<number>(maskOpacity);
+  const maskVisibleRef = useRef<boolean>(maskVisible);
+
   const {
     isActive: isMaskMode,
     setIsActive: setIsMaskMode,
@@ -675,11 +681,6 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
     setCleanImageUnavailable(false);
     setCleanImageVersion(Date.now());
   }, [activePage?.id, cleanPreviewRequest]);
-
-  const [maskOpacity, setMaskOpacity] = useState<number>(0.6);
-  const [maskVisible, setMaskVisible] = useState<boolean>(() => !!liveMaskOverlay);
-  const maskOpacityRef = useRef<number>(maskOpacity);
-  const maskVisibleRef = useRef<boolean>(maskVisible);
 
   const isSpacePressedRef = useRef(false);
   const isPanningRef = useRef(false);
@@ -1917,7 +1918,8 @@ const Canvas: React.FC<CanvasProps> = ({ onOpenMaskEditor, onRunOCR, onRunInpain
         const contourPts = sbMeta?.contour_points || sbMeta?.raw_contour_points;
         const archetype = sbMeta?.archetype || 'UNKNOWN';
 
-        if (isSmartBalloonEnabled && activeBlock && (activeBlock.smart_x != null || (Array.isArray(contourPts) && contourPts.length > 2))) {
+        // Render Smart Balloon bounds only when selected or hovered (eliminates distracting dashed rectangular boxes on idle blocks)
+        if (isSmartBalloonEnabled && activeBlock && (isSelected || isHovered) && (activeBlock.smart_x != null || (Array.isArray(contourPts) && contourPts.length > 2))) {
           const sf = scaleFactorRef.current || 1;
           const smX = (activeBlock.smart_x ?? activeBlock.x) / sf;
           const smY = (activeBlock.smart_y ?? activeBlock.y) / sf;
