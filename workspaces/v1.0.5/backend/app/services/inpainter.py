@@ -687,7 +687,7 @@ def _clip_auto_mask_to_balloon(
 
     def clip_to_source_bbox(margin: int | None = None) -> np.ndarray:
         """Keep automatic text output safely inside the detector's text box (+ font margin)."""
-        m = eff_margin if margin is None else margin
+        m = max(margin_x, margin_y, 32) if margin is None else margin
         try:
             x0 = max(0, min(width, int(np.floor(float(block.x) - m))))
             y0 = max(0, min(height, int(np.floor(float(block.y) - m))))
@@ -697,10 +697,13 @@ def _clip_auto_mask_to_balloon(
             return np.zeros_like(mask)
         permitted = np.zeros((height, width), dtype=np.uint8)
         permitted[y0:y1, x0:x1] = 255
-        return cv2.bitwise_and(mask, permitted)
+        result = cv2.bitwise_and(mask, permitted)
+        if np.count_nonzero(result) == 0 and np.count_nonzero(mask) > 0:
+            return mask
+        return result
 
     def _get_permitted_text_box(margin: int | None = None) -> np.ndarray:
-        m = eff_margin if margin is None else margin
+        m = max(margin_x, margin_y, 32) if margin is None else margin
         try:
             x0 = max(0, min(width, int(np.floor(float(block.x) - m))))
             y0 = max(0, min(height, int(np.floor(float(block.y) - m))))
