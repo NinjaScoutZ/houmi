@@ -108,7 +108,24 @@ def clamp_mask_to_balloon_interior(
     dist_map = cv2.distanceTransform((255 - border_binary), cv2.DIST_L2, 5)
 
     clamped_mask = mask.copy()
-    if np.count_nonzero(exterior_detected) > 0 and np.count_nonzero(~exterior_detected) > (total_pixels * 0.05):
+    
+    # Only apply exterior wipe if exterior doesn't consume the entire frame (avoiding leaky flood-fills)
+    exterior_count = np.count_nonzero(exterior_detected)
+    if 0 < exterior_count < (total_pixels * 0.85):
         clamped_mask[exterior_detected] = 0
+    
+    # Protect border line stroke with distance margin
     clamped_mask[dist_map <= float(margin_px)] = 0
+
+    # Safety Guard: If clamping accidentally wiped out > 70% of original text or zeroed it out completely,
+    # fall back to protecting the text mask while only suppressing exact border pixels.
+    orig_count = np.count_nonzero(mask)
+    clamped_count = np.count_nonzero(clamped_mask)
+    if orig_count > 0 and clamped_count < max(8, int(orig_count * 0.30)):
+        safe_mask = mask.copy()
+        if np.any(border_binary):
+            safe_mask[border_binary > 0] = 0
+        return safe_mask
+
     return clamped_mask
+

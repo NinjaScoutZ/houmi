@@ -653,9 +653,12 @@ def _clip_auto_mask_to_balloon(
 
     if image is not None and np.any(mask[ty0:ty1, tx0:tx1]):
         from app.services.mask.border_clamper import clamp_mask_to_balloon_interior
-        clamped_roi = clamp_mask_to_balloon_interior(mask[ty0:ty1, tx0:tx1], image[ty0:ty1, tx0:tx1], margin_px=3)
-        if clamped_roi is not None:
+        orig_roi = mask[ty0:ty1, tx0:tx1].copy()
+        clamped_roi = clamp_mask_to_balloon_interior(orig_roi, image[ty0:ty1, tx0:tx1], margin_px=2)
+        if clamped_roi is not None and np.count_nonzero(clamped_roi) > 0:
             mask[ty0:ty1, tx0:tx1] = clamped_roi
+        else:
+            mask[ty0:ty1, tx0:tx1] = orig_roi
 
     # 3. Rival Block Hard-Separation (prevents mask bleeding into adjacent connected twin bubbles)
     page = getattr(block, "page", None)

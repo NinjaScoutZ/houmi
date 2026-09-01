@@ -21,7 +21,11 @@ if getattr(sys, "frozen", False):
                 break
 
 import uvicorn
-import webview
+if "--headless" not in sys.argv:
+    try:
+        import webview
+    except ImportError:
+        pass
 
 # Add backend and workspace directory to python path
 current_dir = Path(__file__).resolve().parent
