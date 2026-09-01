@@ -68,7 +68,10 @@ fn main() {
                 .env("HOUMI_WORKSPACE_DIR", &workspace_root)
                 .env("HOUMI_PORT", "4000")
                 .env("HOUMI_HEADLESS", "1")
-                .env("PRODUCTION_MODE", "1");
+                .env("PYTHONUNBUFFERED", "1")
+                .env("PRODUCTION_MODE", "1")
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::piped());
 
             #[cfg(windows)]
             {
@@ -78,8 +81,28 @@ fn main() {
             }
 
             match cmd.spawn() {
-                Ok(child) => {
+                Ok(mut child) => {
                     println!("[Tauri v2] AI Sidecar started with PID: {}", child.id());
+                    
+                    if let Some(stdout) = child.stdout.take() {
+                        std::thread::spawn(move || {
+                            use std::io::{BufRead, BufReader};
+                            let reader = BufReader::new(stdout);
+                            for line in reader.lines().flatten() {
+                                println!("[AI Backend] {}", line);
+                            }
+                        });
+                    }
+                    if let Some(stderr) = child.stderr.take() {
+                        std::thread::spawn(move || {
+                            use std::io::{BufRead, BufReader};
+                            let reader = BufReader::new(stderr);
+                            for line in reader.lines().flatten() {
+                                eprintln!("[AI Backend] {}", line);
+                            }
+                        });
+                    }
+
                     if let Ok(mut state) = state_for_setup.lock() {
                         state.child = Some(child);
                     }
@@ -103,9 +126,11 @@ fn main() {
                 }
             });
 
-            // Open DevTools in Debug Mode
+            // Ensure main window is visible and focused
             if let Some(window) = _app.get_webview_window("main") {
-                let _ = window.open_devtools();
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
             }
 
             Ok(())
